@@ -29,6 +29,26 @@ class WearReadinessTest {
         val r = ready(failure = WearProbeFailure.AUTHENTICATION); assertTrue(r.providerReady && r.requestReady)
         assertEquals(WearProviderRuntimeState.PROVIDER_UNAVAILABLE, r.runtimeState); assertTrue(r.provider.bindingExists)
     }
+    @Test fun unsupportedStructuredToolsPermitOnlyChatWithoutChangingC6Facts() {
+        val r = ready(failure = WearProbeFailure.UNSUPPORTED_TOOLS)
+        assertTrue(r.structuredToolsUnavailable)
+        assertTrue(r.aiEntrySupported && r.effectiveAiEntryEnabled && r.providerReady && r.requestReady)
+        assertEquals(WearProviderRuntimeState.READY, r.runtimeState)
+        assertTrue(r.blockers.isEmpty())
+        assertFalse(WearProbeFailure.UNSUPPORTED_TOOLS.retryable)
+    }
+    @Test fun chatOnlyLimitationCannotMaskOrdinaryReadinessBlockersOrOtherProbeFailures() {
+        val chat = ready(failure = WearProbeFailure.UNSUPPORTED_TOOLS)
+        val blocked = listOf(chat.copy(networkReachable = false), chat.copy(userEnabledAiEntry = false),
+            chat.copy(provider = provider.copy(matchingSecretAvailable = false)),
+            chat.copy(provider = provider.copy(adapterSupported = false)), chat.copy(provider = provider.copy(installBlocked = true)))
+        blocked.forEach { assertNotEquals(WearProviderRuntimeState.READY, it.runtimeState) }
+        WearProbeFailure.entries.filter { it != WearProbeFailure.UNSUPPORTED_TOOLS }.forEach {
+            val r = ready(failure = it)
+            assertFalse(r.structuredToolsUnavailable)
+            assertEquals(WearProviderRuntimeState.PROVIDER_UNAVAILABLE, r.runtimeState)
+        }
+    }
     @Test fun credentialFreeDoesNotNeedSecret() { assertTrue(ready(p = provider.copy(credentialRequired = false, matchingSecretAvailable = false)).providerReady) }
     @Test fun multipleBlockersStayObservable() {
         val r = ready(enabled = false, p = provider.copy(installBlocked = true, matchingSecretAvailable = false), network = false)

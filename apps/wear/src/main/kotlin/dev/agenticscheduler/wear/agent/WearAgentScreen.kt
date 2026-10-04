@@ -43,6 +43,7 @@ fun WearAgentScreen(
     Column(modifier.verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 30.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Agent · ${readiness.runtimeState}", Modifier.testTag("readiness"))
         Text("Input ${readiness.aiEntrySupported} · Enabled ${readiness.effectiveAiEntryEnabled}\nProvider ${readiness.providerReady} · Request ${readiness.requestReady}")
+        if (readiness.structuredToolsUnavailable) Text("Chat-only · structured Tools unavailable", Modifier.testTag("chat-only"))
         Button(onClick = { onEnable(!readiness.userEnabledAiEntry) }, modifier = Modifier.testTag("entry-toggle")) {
             Text(if (readiness.userEnabledAiEntry) "Disable AI entry" else "Enable AI entry")
         }
@@ -59,7 +60,7 @@ fun WearAgentScreen(
         BasicTextField(session.draft, onDraft, textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).border(1.dp, MaterialTheme.colorScheme.onSurface).padding(8.dp).testTag("agent-input"))
-        Button(onClick = onSend, enabled = readiness.requestReady && !session.busy && session.pending == null && session.draft.isNotBlank(), modifier = Modifier.testTag("agent-send")) { Text("Send") }
+        Button(onClick = onSend, enabled = readiness.requestReady && readiness.runtimeState == WearProviderRuntimeState.READY && !session.busy && session.pending == null && session.draft.isNotBlank(), modifier = Modifier.testTag("agent-send")) { Text("Send") }
         Text("Optional on-device speech: ${readiness.capability.onDeviceSttAvailability} · ${readiness.capability.speechPermission}")
         Text("Speech language tag${if (readiness.capability.selectedLanguageTag == "und") " · not selected" else ""}")
         BasicTextField(language, { language = it }, textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp),

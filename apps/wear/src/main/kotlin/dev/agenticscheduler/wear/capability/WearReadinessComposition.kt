@@ -53,6 +53,7 @@ class WearReadinessComposition(
         val selected = binding ?: return@withLock null
         val observed = observation ?: return@withLock null
         val config = observed.config ?: return@withLock null
+        // READY permits ordinary chat; structuredCapability still returns Unsupported for chat-only leases.
         if (!mutableReadiness.value.requestReady || mutableReadiness.value.runtimeState != WearProviderRuntimeState.READY) return@withLock null
         WearRequestSnapshot(selected, config, observed.generation, selectionGeneration)
     }

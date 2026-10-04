@@ -150,6 +150,64 @@ class WearAgentRuntimeInstrumentedTest {
         assertFalse(fixture.bodies.any { it.contains("SecretRef") || it.contains("credential_secret_ref") || it.contains("bindingDigest") })
     }
 
+    @Test fun unsupportedStructuredProbeAllowsExplicitChatWithZeroToolSchemasOrMutations() = runBlocking {
+        fixture.probeSupported = false
+        agent.readiness.refresh(true)
+        withTimeout(20000) { agent.readiness.readiness.first { it.providerProbeFailure == WearProbeFailure.UNSUPPORTED_TOOLS } }
+        val snapshot = requireNotNull(agent.readiness.requestSnapshot())
+        assertEquals(dev.agenticscheduler.agent.provider.ProviderProbeResult.Unsupported, agent.readiness.structuredCapability(snapshot))
+        assertEquals(WearProviderRuntimeState.READY, agent.readiness.readiness.value.runtimeState)
+        compose.onNodeWithTag("chat-only").performScrollTo().assertTextContains("Chat-only · structured Tools unavailable")
+        val probes = fixture.probeRequests
+        val firstBody = fixture.bodies.size
+        for (prompt in listOf("normal chat", "create a task", "update the task")) {
+            send(prompt) // Actual production Send remains usable in chat-only mode.
+            val thread = requireNotNull(agent.session.ui.value.threadId)
+            assertEquals(StructuredFixture.CHAT_ONLY_REPLY, agent.state.messages(thread).last().content)
+            assertEquals(AgentMessageRole.ASSISTANT, agent.state.messages(thread).last().role)
+            assertTrue(agent.state.toolCalls(thread).isEmpty())
+            assertTrue(agent.state.toolResults(thread).isEmpty())
+            assertTrue(agent.state.actions(thread).isEmpty())
+            assertNull(agent.session.ui.value.pending)
+            assertEquals(WearAgentUiPhase.IDLE, agent.session.ui.value.phase)
+        }
+        val commands = fixture.bodies.drop(firstBody).map { Json.parseToJsonElement(it).jsonObject }
+        assertEquals(3, commands.size)
+        commands.forEach { assertTrue(it["tools"]?.jsonArray.orEmpty().isEmpty()) }
+        assertEquals(probes, fixture.probeRequests) // Explicit commands reuse terminal Unsupported proof.
+        assertTrue(RoomMutationJournalRepository(database).timeline().isEmpty())
+        assertTrue(RoomTaskRepository(database).observeTasks().first().isEmpty())
+    }
+
+    @Test fun authenticationInvalidConfigAndNetworkLossStillBlockExplicitCommands() = runBlocking {
+        for ((status, failure) in listOf(401 to WearProbeFailure.AUTHENTICATION, 400 to WearProbeFailure.INVALID_CONFIG)) {
+            fixture.probeStatus = status
+            agent.readiness.refresh(true)
+            withTimeout(20000) { agent.readiness.readiness.first { it.providerProbeFailure == failure } }
+            assertEquals(WearProviderRuntimeState.PROVIDER_UNAVAILABLE, agent.readiness.readiness.value.runtimeState)
+            assertNull(agent.readiness.requestSnapshot())
+            agent.session.editDraft("create task despite HTTP $status")
+            compose.onNodeWithTag("agent-send").performScrollTo().assertIsNotEnabled()
+            val requests = fixture.commandRequests
+            agent.session.submitFromUserAction()
+            assertEquals(requests, fixture.commandRequests)
+        }
+        agent.readiness.network.close()
+        agent.readiness.refresh()
+        assertEquals(WearProviderRuntimeState.OFFLINE, agent.readiness.readiness.value.runtimeState)
+        assertNull(agent.readiness.requestSnapshot())
+        agent.session.editDraft("create task despite network loss")
+        compose.onNodeWithTag("agent-send").performScrollTo().assertIsNotEnabled()
+        val requests = fixture.commandRequests
+        agent.session.submitFromUserAction()
+        assertEquals(requests, fixture.commandRequests)
+        val thread = requireNotNull(agent.session.ui.value.threadId)
+        assertTrue(agent.state.messages(thread).isEmpty())
+        assertTrue(agent.state.toolCalls(thread).isEmpty())
+        assertTrue(agent.state.actions(thread).isEmpty())
+        assertTrue(RoomMutationJournalRepository(database).timeline().isEmpty())
+    }
+
     @Test fun watchConfirmAfterFileRestartCommitsExactlyOnceWithLinkedAudit() = runBlocking {
         // Persisted ALLOW_DIRECT cannot relax the Watch write ceiling.
         agent.state.savePermissionPolicy(AgentPermissionPolicy.default().withMode(AgentToolCapability.LOW_RISK_CREATE, AgentPermissionMode.ALLOW_DIRECT))
@@ -447,6 +505,9 @@ private class StructuredFixture : AutoCloseable {
     val bodies = CopyOnWriteArrayList<String>()
     val authorizationHeaders = CopyOnWriteArrayList<String?>()
     @Volatile var commandRequests = 0
+    @Volatile var probeRequests = 0
+    @Volatile var probeSupported = true
+    @Volatile var probeStatus = 200
     @Volatile var updateTaskId: String? = null
     @Volatile var commandBarrier: java.util.concurrent.CountDownLatch? = null
     @Volatile var redirectCommands: String? = null
@@ -469,14 +530,15 @@ private class StructuredFixture : AutoCloseable {
                 val request = Json.parseToJsonElement(text).jsonObject
                 val messages = request["messages"]!!.jsonArray
                 val probe = messages.any { it.jsonObject["content"]?.jsonPrimitive?.content == "Call d9_capability_probe now." }
-                val tool = if (probe) "d9_capability_probe" else if (messages.last().jsonObject["role"]!!.jsonPrimitive.content == "tool") null
+                val chatOnly = !probe && request["tools"]?.jsonArray.orEmpty().isEmpty()
+                val tool = if (probe) "d9_capability_probe".takeIf { probeSupported } else if (chatOnly || messages.last().jsonObject["role"]!!.jsonPrimitive.content == "tool") null
                     else messages.last { it.jsonObject["role"]!!.jsonPrimitive.content == "user" }.jsonObject["content"]!!.jsonPrimitive.content.let {
                         if (it.contains("create")) "task.create" else if (it.contains("update")) "task.update" else "task.list"
                     }
-                if (!probe) { commandRequests++; commandBarrier?.await(15, java.util.concurrent.TimeUnit.SECONDS) }
+                if (probe) probeRequests++ else { commandRequests++; commandBarrier?.await(15, java.util.concurrent.TimeUnit.SECONDS) }
                 val external = tool?.let { "d9_" + it.encodeToByteArray().joinToString("") { byte -> "%02x".format(byte.toInt() and 255) } }
                 val args = if (tool == "task.create") """{"title":"Watch-created task","priority":"NORMAL","estimatedMinutes":30,"remainingMinutes":null,"deadline":null}""" else if (tool == "task.update") """{"taskId":"$updateTaskId","title":"Agent edit","status":"OPEN","priority":"NORMAL","estimatedMinutes":null,"completedMinutes":0,"remainingMinutes":null,"deadline":null}""" else if (tool == "task.list") """{"status":null}""" else "{}"
-                val message = if (external == null) buildJsonObject { put("role", "assistant"); put("content", "Structured fixture complete") }
+                val message = if (external == null) buildJsonObject { put("role", "assistant"); put("content", if (chatOnly) CHAT_ONLY_REPLY else "Structured fixture complete") }
                 else buildJsonObject { put("role", "assistant"); putJsonArray("tool_calls") { add(buildJsonObject {
                     put("id", if (probe) "probe" else "local-call"); put("type", "function"); putJsonObject("function") { put("name", external); put("arguments", args) }
                 }) } }
@@ -484,11 +546,12 @@ private class StructuredFixture : AutoCloseable {
                 connection.getOutputStream().apply {
                     val redirect = if (probe) null else redirectCommands
                     if (redirect != null) write("HTTP/1.1 302 Found\r\nLocation: $redirect\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".encodeToByteArray())
-                    else { write("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ${response.size}\r\nConnection: close\r\n\r\n".encodeToByteArray()); write(response) }
+                    else { val status = if (probe) probeStatus else 200; write("HTTP/1.1 $status Fixture\r\nContent-Type: application/json\r\nContent-Length: ${response.size}\r\nConnection: close\r\n\r\n".encodeToByteArray()); write(response) }
                     flush()
                 }
             }
         } catch (_: Exception) { if (!socket.isClosed) throw IllegalStateException("Deterministic Provider fixture failed") }
     }.apply { isDaemon = true; start() }
     override fun close() { socket.close(); worker.join(2000) }
+    companion object { const val CHAT_ONLY_REPLY = "I would create or update that task. This is conversation prose only." }
 }

@@ -26,10 +26,10 @@ Windows JDK 17, ASCII worktree `D:\codex\ASP-d9-03-03`, `GRADLE_USER_HOME=D:\gra
 
 | Command / suite | Executed result |
 | --- | --- |
-| `:apps:wear:testDebugUnitTest` | 57/57; C8 ceiling, C6 proof reuse/generation/single-flight/backoff, language initialization and existing capability/privacy tests |
+| `:apps:wear:testDebugUnitTest` | 60/60; C8 ceiling, C6 proof reuse/generation/single-flight/backoff, language initialization and existing capability/privacy tests |
 | `:shared:agent:desktopTest` | 48/48; guarded normal/streaming actual-send boundary, pre-secret rejection/races, unchanged shared adapter and typed Tools/Planner semantics |
 | `:shared:database:desktopTest --tests '*AgentRunIntegrationTest' --tests '*AgentHistoryExplicitExportTest'` | 17/17 (14 shared runtime, 3 export/privacy); real desktop Room, shared stale/Planner/Undo/context/audit regressions |
-| `ANDROID_SERIAL=emulator-5556 :apps:wear:connectedDebugAndroidTest` | 31/31 (18 runtime E2E + 2 UI + 11 predecessor platform/security), 0 skipped; required core tests assert FEATURE_WATCH |
+| `ANDROID_SERIAL=emulator-5556 :apps:wear:connectedDebugAndroidTest` | 34/34 (20 runtime E2E + 3 UI + 11 predecessor platform/security), 0 skipped; required core tests assert FEATURE_WATCH |
 | `:apps:wear:lintDebug` | Passed, including Compose StateFlow subscription checks |
 
 The Watch job runs the entire native suite; the phone job keeps the three predecessor Wear platform suites and does not mislabel phone execution as Watch runtime acceptance. Native core uses the production Android Ktor engine, file-backed Room, actual AgentRunService/Tools/application transaction paths and production composable Confirm/Deny. Only the local HTTP Provider responses are deterministic fixture responses with real structured calls; no fake AgentRunService, ToolResult or HTTP engine.
@@ -42,15 +42,21 @@ No live external commercial Provider or physical Watch acceptance is claimed. Th
 
 Implementation head `118a5ecc690808711c437fa76ae24072749d626d`: full CI [37214217488](https://github.com/fangbm/temvio/actions/runs/37214217488) passed all five jobs: build, desktop-windows, android-keystore, wear-keystore, agent-history-platform-e2e. Downloaded Wear XML confirms 31/31, zero failures/errors/skips. Actual Wear platform logs confirm absent on-device service and ServiceUnavailable rather than speech success. The earlier run 37212624712 failed Compose lint on StateFlow.value in composition; the subscription fix passed local lint and this full run.
 
-The generic Android job's relay test explicitly skips without the enrolled fixture (its assumption is represented as a failure in exported XML); the required actual relay round trip passed the independent agent-history-platform-e2e job. The phone job's comma-separated Wear class filter executed only the first class on this runner. Finalization changes only CI selection to three individual class invocations with separate preserved reports; the Watch job already executed all three classes plus the real Watch runtime/UI tests. Full CI is rerun on the finalization head; its final head/run is reported in the Draft PR delivery. No physical Watch, external Provider or actual speech-recognition acceptance is claimed.
+The generic Android job's relay test explicitly skips without the enrolled fixture (its assumption is represented as a failure in exported XML); the required actual relay round trip passed the independent agent-history-platform-e2e job. The phone job's comma-separated Wear class filter executed only the first class on this runner. Finalization changes only CI selection to three individual class invocations with separate preserved reports; the Watch job already executed all three classes plus the real Watch runtime/UI tests. Finalization head `59d29ec9c14780a1f67917cb734ca58e3b4a1db9` passed full CI [37215176238](https://github.com/fangbm/temvio/actions/runs/37215176238); downloaded reports confirm phone Keystore 1/1, Provider slot 3/3 and capability 7/7. No physical Watch, external Provider or actual speech-recognition acceptance is claimed.
 
 ## Scope / remaining decisions
+
+### Final-review follow-up: unsupported structured Tools
+
+AGT-006 chat-only degradation is preserved. `UNSUPPORTED_TOOLS` stays terminal for automatic probe refresh, with no backoff or hidden retry; explicit retry or config/binding change resets the proof. It is a capability limitation rather than whole-Provider unavailability. Ordinary C6 facts and runtime blockers remain independent: a valid approved/current binding with readable required credential and usable route can authorize an explicit chat-only lease. `structuredCapability` passes the cached `ProviderProbeResult.Unsupported` to the unchanged shared `AgentRunService`, which supplies an empty Tool set. The existing Adapter omits `tools` for that empty set. No prose parsing or write fallback is added.
+
+The UI displays `Chat-only · structured Tools unavailable` and permits Send only with ordinary readiness and no blocking runtime reason. Authentication, invalid configuration, missing credential, install/wipe, network and Provider failures still block. Regression evidence: Wear JVM 60/60; actual Wear instrumentation 34/34 (20 runtime, 3 UI, 11 predecessor), zero skipped; lint and AndroidTest compilation passed. New real-engine/Room tests prove ordinary chat and create/update prompts persist final assistant text with zero Tool schemas, ToolCall, AgentAction or D7 mutation, and HTTP 401/config rejection/network loss still produce zero command request. The full native suite preserves existing supported structured read/write/confirmation behavior. Full CI is rerun on this follow-up's exact head; its final head/run is recorded in the Draft PR delivery.
 
 No new Tool/module, Domain rule, Room schema/migration, D7/V3 DTO or causal semantics, provisioning wire, Envelope/AAD/crypto/server implementation was changed. No D9-02 production receive/storage/upload composition, remote context ingestion, PhoneContextBridge, nearby delivery, remote approval, background Agent/notification or D10 UI redesign.
 
 No new BLOCKED_BY_DECISION for this slice. OD-012 remains an independent OPEN release gate; D9-03 implementation does not resolve or bypass it. Draft PR must not be merged automatically.
 
-## Changed files (22)
+## Changed files (24)
 
 - `.github/workflows/ci.yml`
 - `apps/wear/build.gradle.kts`
@@ -64,10 +70,12 @@ No new BLOCKED_BY_DECISION for this slice. OD-012 remains an independent OPEN re
 - `apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearCapabilityService.kt`
 - `apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearProviderBindingSource.kt`
 - `apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearProviderProbe.kt`
+- `apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearReadiness.kt`
 - `apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearReadinessComposition.kt`
 - `apps/wear/src/test/kotlin/dev/agenticscheduler/wear/agent/WatchPermissionPolicyTest.kt`
 - `apps/wear/src/test/kotlin/dev/agenticscheduler/wear/capability/WearCapabilityServiceTest.kt`
 - `apps/wear/src/test/kotlin/dev/agenticscheduler/wear/capability/WearProviderProbeTest.kt`
+- `apps/wear/src/test/kotlin/dev/agenticscheduler/wear/capability/WearReadinessTest.kt`
 - `docs/D9_03_03_WEAR_AGENT_ACCEPTANCE_RECORD.md`
 - `docs/ROADMAP_D5_D9.md`
 - `docs/tasks/D9_03_03_WEAR_AGENT_RUNTIME.md`

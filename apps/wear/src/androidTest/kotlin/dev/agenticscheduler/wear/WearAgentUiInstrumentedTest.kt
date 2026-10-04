@@ -47,4 +47,19 @@ class WearAgentUiInstrumentedTest {
         ui.runOnIdle { config.value = config.value.copy(baseUrl = "https://provider.example/v1") }
         ui.onNodeWithTag("http-warning").assertDoesNotExist()
     }
+    @Test fun chatOnlyModeTruthfullyShowsLimitationAndAllowsSendButFailuresDoNot() {
+        val readiness = mutableStateOf(ready.copy(providerProbeFailure = WearProbeFailure.UNSUPPORTED_TOOLS))
+        ui.setContent { MaterialTheme { WearAgentScreen(WearAgentSessionState(draft = "explicit chat"), readiness.value, null,
+            {}, {}, {}, { _, _, _ -> }, {}, {}, {}, {}, {}) } }
+        ui.onNodeWithTag("readiness").assertTextContains("READY", substring = true)
+        ui.onNodeWithTag("chat-only").assertTextContains("Chat-only · structured Tools unavailable")
+        ui.onNodeWithTag("agent-send").performScrollTo().assertIsEnabled()
+        for (failure in listOf(WearProbeFailure.AUTHENTICATION, WearProbeFailure.INVALID_CONFIG, WearProbeFailure.NETWORK)) {
+            ui.runOnIdle { readiness.value = ready.copy(providerProbeFailure = failure) }
+            ui.onNodeWithTag("chat-only").assertDoesNotExist()
+            ui.onNodeWithTag("agent-send").assertIsNotEnabled()
+        }
+        ui.runOnIdle { readiness.value = ready.copy(providerProbeFailure = WearProbeFailure.UNSUPPORTED_TOOLS, networkReachable = false) }
+        ui.onNodeWithTag("agent-send").assertIsNotEnabled()
+    }
 }
