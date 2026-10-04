@@ -16,7 +16,7 @@ class DesktopPlatformSecureStore private constructor(
     private val backend: DesktopSecureBackend,
     private val pairingHpke: TinkPairingHpke,
     @Suppress("UNUSED_PARAMETER") private val constructorMarker: Unit,
-) : PlatformD8SecureStore {
+) : PlatformD8SecureStore, PlatformProviderCredentialStore {
     constructor(pairingHpke: TinkPairingHpke = TinkPairingHpke()) : this(DesktopSecureBackend.system(), pairingHpke, Unit)
 
     internal constructor(backend: DesktopSecureBackend, pairingHpke: TinkPairingHpke) : this(backend, pairingHpke, Unit)
@@ -25,7 +25,7 @@ class DesktopPlatformSecureStore private constructor(
         store(SecretKind.GENERIC, material.copyRawSecretBytesForSecureStore())
 
     override suspend fun readSecret(reference: SecretReference): PlatformSecretMaterial? =
-        read(reference, SecretKind.GENERIC)?.let(::StoredSecret)
+        (read(reference, SecretKind.GENERIC) ?: readProviderSecret(reference))?.let(::StoredSecret)
 
     override suspend fun store(value: DeviceCredential): SecretReference =
         store(SecretKind.DEVICE_CREDENTIAL, value.value.encodeToByteArray())
@@ -110,6 +110,33 @@ class DesktopPlatformSecureStore private constructor(
         backend.delete(id)
     }
 
+        override suspend fun prepareProviderSlot(): PreparedProviderSecretSlot = synchronized(providerSlotLock) {
+        val owner = UUID.randomUUID().toString()
+        PreparedProviderSecretSlot(store(SecretKind.PROVIDER_PREPARED, owner.encodeToByteArray()), owner)
+    }
+
+    override suspend fun restoreProviderSlot(reference: SecretReference, installIdentity: String): PreparedProviderSecretSlot? = synchronized(providerSlotLock) {
+        val owned = read(reference, SecretKind.PROVIDER_PREPARED) ?: read(reference, SecretKind.PROVIDER_INSTALLED)?.take(36)?.toByteArray()
+        if (owned?.decodeToString() == installIdentity) PreparedProviderSecretSlot(reference, installIdentity) else null
+    }
+
+    override suspend fun importPreparedProviderSecret(slot: PreparedProviderSecretSlot, credential: ByteArray) = synchronized(providerSlotLock) {
+        validateProviderCredentialBytes(credential)
+        check(read(slot.reference, SecretKind.PROVIDER_PREPARED)?.decodeToString() == slot.installIdentity) { "PROVIDER_SLOT_NOT_PREPARED" }
+        val id = requireNotNull(referenceId(slot.reference))
+        backend.store(id, byteArrayOf(SecretKind.PROVIDER_INSTALLED.tag) + slot.installIdentity.encodeToByteArray() + credential)
+    }
+
+    override suspend fun readProviderSecret(reference: SecretReference): ByteArray? =
+        read(reference, SecretKind.PROVIDER_INSTALLED)?.let { if (it.size > 36) it.copyOfRange(36, it.size) else null }
+
+    override suspend fun deleteProviderSlot(slot: PreparedProviderSecretSlot) = synchronized(providerSlotLock) {
+        val raw = read(slot.reference, SecretKind.PROVIDER_PREPARED) ?: read(slot.reference, SecretKind.PROVIDER_INSTALLED)?.take(36)?.toByteArray()
+        if (raw == null) return@synchronized
+        check(raw.decodeToString() == slot.installIdentity) { "PROVIDER_SLOT_OWNERSHIP_MISMATCH" }
+        backend.delete(requireNotNull(referenceId(slot.reference)))
+    }
+
     private fun store(kind: SecretKind, raw: ByteArray): SecretReference {
         val id = UUID.randomUUID().toString()
         backend.store(id, byteArrayOf(kind.tag) + raw)
@@ -133,10 +160,11 @@ class DesktopPlatformSecureStore private constructor(
     }
 
     private enum class SecretKind(val tag: Byte) {
-        GENERIC(1), CONTENT_KEY(2), ACCOUNT_MASTER_KEY(3), PAIRING_PRIVATE_KEY(4), DEVICE_CREDENTIAL(5),
+        GENERIC(1), CONTENT_KEY(2), ACCOUNT_MASTER_KEY(3), PAIRING_PRIVATE_KEY(4), DEVICE_CREDENTIAL(5), PROVIDER_PREPARED(6), PROVIDER_INSTALLED(7),
     }
 
     private companion object {
+        val providerSlotLock = Any()
         const val CONTENT_KEY_BYTES = 32
         val UUID_PATTERN = Regex("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
     }

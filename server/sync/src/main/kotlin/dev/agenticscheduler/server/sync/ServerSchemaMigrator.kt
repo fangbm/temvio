@@ -16,6 +16,7 @@ object ServerMigrationCatalog {
         ServerMigration(7, "db/migration/V7__atomic_key_rotation.sql"),
         ServerMigration(8, "db/migration/V8__device_hpke_identity.sql"),
         ServerMigration(9, "db/migration/V9__recovery_enrollment_fingerprint.sql"),
+        ServerMigration(10, "db/migration/V10__provider_credential_mailbox.sql"),
     )
 }
 

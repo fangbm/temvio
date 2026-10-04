@@ -13,7 +13,7 @@ import java.sql.Timestamp
 import java.nio.ByteBuffer
 import javax.sql.DataSource
 
-class JdbcOpaqueSyncRepository(private val dataSource: DataSource) : OpaqueSyncRepository, ServerBootstrapRepository, ServerEnrollmentRepository, ServerSecurityLifecycleRepository {
+class JdbcOpaqueSyncRepository(private val dataSource: DataSource) : OpaqueSyncRepository, ServerBootstrapRepository, ServerEnrollmentRepository, ServerSecurityLifecycleRepository, ServerProviderCredentialMailbox by JdbcProviderCredentialMailbox(dataSource) {
     private val random = SecureRandom()
 
     override fun createInvitation(accountId: String, syncSpaceId: String, ttlSeconds: Long): InvitationCreateResponse {

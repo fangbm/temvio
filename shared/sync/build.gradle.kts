@@ -21,5 +21,6 @@ kotlin {
             api(libs.kotlinx.serialization.json)
         }
         commonTest.dependencies { implementation(kotlin("test")) }
+        named("desktopTest") { resources.srcDir(rootProject.file("docs/tasks/fixtures/d9-03-00")) }
     }
 }

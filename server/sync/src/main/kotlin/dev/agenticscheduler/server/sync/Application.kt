@@ -62,6 +62,7 @@ fun Application.syncServerModule(
         }
     }
     routing {
+        providerCredentialRoutes(repository)
         get("/health") { call.respond(mapOf("status" to "ok")) }
         post("/v1/admin/invitations") {
             val configured = config.adminToken

@@ -10,6 +10,10 @@ import dev.agenticscheduler.agent.permission.AgentPermissionMode
 import dev.agenticscheduler.agent.permission.AgentPermissionPolicy
 import dev.agenticscheduler.agent.permission.AgentToolCapability
 import dev.agenticscheduler.application.sync.SecretReference
+import dev.agenticscheduler.application.sync.ProviderCredentialRevisionState
+import dev.agenticscheduler.application.sync.ProviderCredentialInstallJournal
+import dev.agenticscheduler.application.sync.ProviderInstallPhase
+import dev.agenticscheduler.application.sync.ProviderReservationPhase
 import dev.agenticscheduler.database.AgenticSchedulerDatabase
 import dev.agenticscheduler.sync.SyncSpaceId
 import kotlinx.serialization.Serializable
@@ -156,10 +160,30 @@ class RoomAgentStateRepository(private val database: AgenticSchedulerDatabase) :
             value.baseUrl, value.model, value.maxContextUnits, value.reservedOutputUnits,
             value.streamingSupported, value.toolCallingSupported,
         )
+        val encodedPayload = json.encodeToString(ProviderConfigPayload.serializer(), payload)
+        val previousPayload = query("SELECT payload_json FROM provider_config WHERE config_id = ?", listOf(value.id.value)) { it.getText(0) }.singleOrNull()
+        val managed = query("SELECT state_json FROM provider_credential_revision WHERE provider_config_id = ?", listOf(value.id.value)) {
+            json.decodeFromString<ProviderCredentialRevisionState>(it.getText(0))
+        }
+        // Managed refs can be published only with install-journal ownership. A local edit cannot redirect an active credential.
+        managed.forEach { require(value.credentialReference == null || value.credentialReference?.value == it.activeReference) { "PROVIDER_CREDENTIAL_JOURNAL_REQUIRED" } }
+        val invalidates = managed.isNotEmpty() && (previousPayload != encodedPayload || managed.any { it.activeReference != null && value.credentialReference == null })
+        if (invalidates) for (state in managed) {
+            val disabled = state.copy(rejectionFloor = state.nextRevision(), liveRevision = null, selectedProvisioner = null,
+                phase = ProviderReservationPhase.DISABLED, approvedBinding = null, envelopeDigest = null, approvalBindingDigest = null,
+                activeReference = null, activeInstallIdentity = null, activeBinding = null, generation = state.generation + 1)
+            execute("UPDATE provider_credential_revision SET state_json = ? WHERE target_device_id = ? AND provider_config_id = ?",
+                listOf(json.encodeToString(disabled), state.targetDeviceId.value, state.providerConfigId))
+            val journals = query("SELECT journal_json FROM provider_credential_install_journal WHERE target_device_id = ? AND provider_config_id = ?",
+                listOf(state.targetDeviceId.value, state.providerConfigId)) { json.decodeFromString<ProviderCredentialInstallJournal>(it.getText(0)) }
+            for (journal in journals.filter { it.phase !in setOf(ProviderInstallPhase.COMPLETED, ProviderInstallPhase.REJECTED) })
+                execute("UPDATE provider_credential_install_journal SET journal_json = ? WHERE install_identity = ?",
+                    listOf(json.encodeToString(journal.copy(phase = ProviderInstallPhase.CLEANUP_PENDING)), journal.installIdentity))
+        }
         execute(
             "INSERT INTO provider_config(config_id, selected, credential_secret_ref, payload_json) VALUES (?, ?, ?, ?) " +
                 "ON CONFLICT(config_id) DO UPDATE SET credential_secret_ref = excluded.credential_secret_ref, payload_json = excluded.payload_json",
-            listOf(value.id.value, selected, value.credentialReference?.value, json.encodeToString(ProviderConfigPayload.serializer(), payload)),
+            listOf(value.id.value, selected, if (invalidates) null else value.credentialReference?.value, encodedPayload),
         )
     }
 

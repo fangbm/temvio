@@ -21,7 +21,7 @@ import javax.crypto.spec.GCMParameterSpec
 class AndroidKeystoreSecureStore(
     context: Context,
     private val pairingHpke: TinkPairingHpke = TinkPairingHpke(),
-) : PlatformD8SecureStore {
+) : PlatformD8SecureStore, PlatformProviderCredentialStore {
     private val applicationContext = context.applicationContext
     private val preferences = applicationContext.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
 
@@ -29,7 +29,7 @@ class AndroidKeystoreSecureStore(
         store(SecretKind.GENERIC, material.copyRawSecretBytesForSecureStore())
 
     override suspend fun readSecret(reference: SecretReference): PlatformSecretMaterial? =
-        read(reference, SecretKind.GENERIC)?.let(::StoredSecret)
+        (read(reference, SecretKind.GENERIC) ?: readProviderSecret(reference))?.let(::StoredSecret)
 
     override suspend fun store(value: DeviceCredential): SecretReference =
         store(SecretKind.DEVICE_CREDENTIAL, value.value.encodeToByteArray())
@@ -112,9 +112,40 @@ class AndroidKeystoreSecureStore(
         check(preferences.edit().remove(id).commit()) { "Android secure-store ciphertext could not be deleted." }
     }
 
+        override suspend fun prepareProviderSlot(): PreparedProviderSecretSlot = synchronized(providerSlotLock) {
+        val owner = UUID.randomUUID().toString()
+        PreparedProviderSecretSlot(store(SecretKind.PROVIDER_PREPARED, owner.encodeToByteArray()), owner)
+    }
+
+    override suspend fun restoreProviderSlot(reference: SecretReference, installIdentity: String): PreparedProviderSecretSlot? = synchronized(providerSlotLock) {
+        val owned = read(reference, SecretKind.PROVIDER_PREPARED) ?: read(reference, SecretKind.PROVIDER_INSTALLED)?.take(36)?.toByteArray()
+        if (owned?.decodeToString() == installIdentity) PreparedProviderSecretSlot(reference, installIdentity) else null
+    }
+
+    override suspend fun importPreparedProviderSecret(slot: PreparedProviderSecretSlot, credential: ByteArray) = synchronized(providerSlotLock) {
+        validateProviderCredentialBytes(credential)
+        check(read(slot.reference, SecretKind.PROVIDER_PREPARED)?.decodeToString() == slot.installIdentity) { "PROVIDER_SLOT_NOT_PREPARED" }
+        storeAt(slot.reference, SecretKind.PROVIDER_INSTALLED, slot.installIdentity.encodeToByteArray() + credential)
+    }
+
+    override suspend fun readProviderSecret(reference: SecretReference): ByteArray? =
+        read(reference, SecretKind.PROVIDER_INSTALLED)?.let { if (it.size > 36) it.copyOfRange(36, it.size) else null }
+
+    override suspend fun deleteProviderSlot(slot: PreparedProviderSecretSlot) = synchronized(providerSlotLock) {
+        val raw = read(slot.reference, SecretKind.PROVIDER_PREPARED) ?: read(slot.reference, SecretKind.PROVIDER_INSTALLED)?.take(36)?.toByteArray()
+        if (raw == null) return@synchronized
+        check(raw.decodeToString() == slot.installIdentity) { "PROVIDER_SLOT_OWNERSHIP_MISMATCH" }
+        check(preferences.edit().remove(requireNotNull(referenceId(slot.reference))).commit())
+    }
+
     private fun store(kind: SecretKind, raw: ByteArray): SecretReference {
-        val id = UUID.randomUUID().toString()
-        val reference = SecretReference("$REFERENCE_PREFIX$id")
+        val reference = SecretReference("$REFERENCE_PREFIX${UUID.randomUUID()}")
+        storeAt(reference, kind, raw)
+        return reference
+    }
+
+    private fun storeAt(reference: SecretReference, kind: SecretKind, raw: ByteArray) {
+        val id = requireNotNull(referenceId(reference))
         val plaintext = byteArrayOf(kind.tag) + raw
         val cipher = Cipher.getInstance(CIPHER)
         cipher.init(Cipher.ENCRYPT_MODE, masterKey())
@@ -123,7 +154,6 @@ class AndroidKeystoreSecureStore(
         check(preferences.edit().putString(id, Base64.encodeToString(encoded, Base64.NO_WRAP)).commit()) {
             "Android secure-store ciphertext could not be persisted."
         }
-        return reference
     }
 
     private fun newRandomKey(): ByteArray = ByteArray(CONTENT_KEY_BYTES).also(SecureRandom()::nextBytes)
@@ -169,10 +199,11 @@ class AndroidKeystoreSecureStore(
     }
 
     private enum class SecretKind(val tag: Byte) {
-        GENERIC(1), CONTENT_KEY(2), ACCOUNT_MASTER_KEY(3), PAIRING_PRIVATE_KEY(4), DEVICE_CREDENTIAL(5),
+        GENERIC(1), CONTENT_KEY(2), ACCOUNT_MASTER_KEY(3), PAIRING_PRIVATE_KEY(4), DEVICE_CREDENTIAL(5), PROVIDER_PREPARED(6), PROVIDER_INSTALLED(7),
     }
 
     private companion object {
+        val providerSlotLock = Any()
         const val PREFERENCES = "agentic_scheduler_secure_store_v1"
         const val ANDROID_KEYSTORE = "AndroidKeyStore"
         const val MASTER_KEY_ALIAS = "agentic-scheduler.d8.secure-store.v1"
