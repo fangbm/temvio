@@ -133,15 +133,20 @@ is claimed; actual Wear Keystore evidence comes from CI's Wear API 35-ext15 AVD.
 
 ## CI evidence and limits
 
-[Run 37180206937](https://github.com/fangbm/temvio/actions/runs/37180206937),
-head `277cdb76824e1bcb26680ab42365031bd835cc14`, all five jobs green:
+[Run 37181816670](https://github.com/fangbm/temvio/actions/runs/37181816670),
+implementation head `5cb5a4a2dd3561bbb8b02316d31abaa7e9fb98e8`, all five jobs green:
 Linux build/real PostgreSQL/Secret Service, Windows DPAPI, Android Keystore,
 Wear Keystore, and existing enrolled Desktop↔Android history/platform relay E2E.
 Downloaded XML proves PostgreSQL repository 14/14 and provisioning PostgreSQL
 E2E 1/1, both zero skipped; Android/Wear Provider slot tests each 3/3, zero skipped.
-This run precedes the local-counter exhaustion and expanded canary-scan regressions;
-The latest head's full CI is tracked in [PR #26 checks](https://github.com/fangbm/temvio/pull/26/checks);
-the final delivery identifies its exact run/head and downloaded XML counts.
+Wire 6/6, crypto 5/5, install/recovery 20/20 (including exact local-counter
+exhaustion/wipe), HTTP transport 3/3, migration 2/2 and native Linux secure store
+5/5 also have zero failures/skips. The public-table canary scan includes raw,
+JSON-escaped, base64 and UTF-8 hex representations; local metadata/SQLite scans
+include both the credential and its forbidden plaintext digest.
+The final evidence-only documentation commit changes no implementation. Its full
+CI is tracked in [PR #26 checks](https://github.com/fangbm/temvio/pull/26/checks);
+the final delivery identifies that exact documentation head/run.
 
 Provisioning PostgreSQL E2E is real SQL/Room/native Linux secure-store/Tink plus
 Ktor's in-process HTTP application engine, not external TLS networking or final
