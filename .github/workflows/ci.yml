@@ -73,6 +73,7 @@ jobs:
             shared/application/build/test-results/desktopTest/TEST-*DesktopPlatformSecureStoreTest.xml
             shared/database/build/test-results/desktopTest/TEST-*ProviderCredential*.xml
             server/sync/build/test-results/test/TEST-*ProviderCredential*.xml
+            apps/wear/build/test-results/testDebugUnitTest/TEST-*Wear*.xml
           if-no-files-found: warn
           retention-days: 14
 
@@ -208,13 +209,18 @@ jobs:
           api-level: 35
           target: google_apis
           arch: x86_64
-          script: ./gradlew :apps:android:connectedDebugAndroidTest --no-daemon
+          script: |
+            ./gradlew :apps:android:connectedDebugAndroidTest :apps:wear:connectedDebugAndroidTest --no-daemon
+            adb logcat -d -s D90302Evidence:I > apps/wear/build/d90302-platform-evidence.txt
       - name: Upload Android provisioning reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: provider-credential-android-reports
-          path: apps/android/build/outputs/androidTest-results/connected/**/TEST-*.xml
+          path: |
+            apps/android/build/outputs/androidTest-results/connected/**/TEST-*.xml
+            apps/wear/build/outputs/androidTest-results/connected/**/TEST-*.xml
+            apps/wear/build/d90302-platform-evidence.txt
           if-no-files-found: warn
           retention-days: 14
 
@@ -241,12 +247,16 @@ jobs:
           system-image-api-level: 35-ext15
           target: android-wear
           arch: x86_64
-          script: ./gradlew :apps:wear:connectedDebugAndroidTest --no-daemon
+          script: |
+            ./gradlew :apps:wear:connectedDebugAndroidTest --no-daemon
+            adb logcat -d -s D90302Evidence:I > apps/wear/build/d90302-platform-evidence.txt
       - name: Upload Wear provisioning reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: provider-credential-wear-reports
-          path: apps/wear/build/outputs/androidTest-results/connected/**/TEST-*.xml
+          path: |
+            apps/wear/build/outputs/androidTest-results/connected/**/TEST-*.xml
+            apps/wear/build/d90302-platform-evidence.txt
           if-no-files-found: warn
           retention-days: 14
