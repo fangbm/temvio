@@ -1199,7 +1199,52 @@ A credential envelope is never a workspace SyncOperation and is never written to
 
 Revocation/wipe deletes the target device's secure-store secret and increments credential revision before any replacement envelope.
 
-D9-03-00 audit note (not an approved amendment): OD-042 resolves this crypto baseline, not the exact wire/AAD bytes, provisioning delivery/ACK/retention, revision allocator or cross-store install recovery. These candidates are tracked in `docs/tasks/D9_03_00_WEAR_AGENT_PROVIDER_FREEZE.md` and **OD-058 PENDING**. Existing HPKE base-mode decryption authenticates ciphertext/context to the recipient but does not by itself prove a provisioner identity; the review packet explicitly blocks sender-approval/delivery implementation until a decision is recorded.
+## Approved D9-03-00 amendment — C1–C5 (2026-10-04)
+
+Maintainer approved the exact wire/context/bounds and provisioning/install
+contracts in `docs/tasks/D9_03_00_WEAR_AGENT_PROVIDER_FREEZE.md`; OD-058 is
+RESOLVED FOR D9-03. OD-042 and SYN-006/006A/007A/009 remain unchanged.
+
+- Target/provisioner DeviceId is the exact existing opaque enrolled D8 value:
+  no UUID requirement, lowercasing, trimming or normalization. HPKE context/SAS
+  uses its exact stored UTF-8 bytes; admission uses exact ACTIVE directory state.
+  ProviderConfigId remains canonical UUIDv7 under the existing Agent contract.
+- The v1 wire, fixed existing target-key HPKE profile, exact context construction,
+  strict JSON/base64/secret representation and numeric limits are frozen in C1.
+  No new public-key hierarchy, crypto suite or workspace Envelope/AAD change.
+- C2 selects Option A only: dedicated authenticated opaque mailbox; both devices
+  ACTIVE in the same D8 account, checked transactionally on publish/fetch/ACK.
+  Target public key comes from the existing active directory. Server never
+  decrypts/rewrites the envelope; workspace/enrollment/rotation storage and
+  cursors remain separate. Nearby/Data Layer credential delivery is deferred.
+- HPKE base mode does not authenticate a provisioner against a malicious relay.
+  Independent 8-digit credential-domain comparison binds exact source/target IDs,
+  target config/revision, canonical encrypted envelope hash and locally computed
+  canonical binding hash. Watch imports only after local user confirmation of
+  matching codes; D8 pairing SAS state/approval never grants this authorization.
+- Watch owns/approves binding metadata. Source independently constructs the target
+  metadata from the target config ID and user's selected local config values.
+  Relay/request/ACK receive no baseUrl/model/budgets/capabilities/credentialRequired,
+  canonical binding JSON or binding digest; no metadata authority is transferred.
+- Retry exact durable ciphertext after ambiguous/lost responses. Same delivery
+  identity + same bytes is idempotent; changed bytes conflict. ACK is informational;
+  only committed Watch state determines installation/providerReady. Ciphertext
+  expires after 7 days with DELIVERY_EXPIRED, never installation success.
+- Target owns per-(target,config) revisions/reservations; initial counters 0,
+  first reservation 1, next max(reserved, accepted, floor)+1, one selected-source
+  reservation/config. Wipe/removal advances a durable barrier; skipped revision
+  is allowed. No silent reset after state loss or HLC/cursor authority.
+- Platform secure store allocates fresh unique Provider-purpose one-install slots.
+  Application cannot nominate arbitrary existing references or overwrite AMK,
+  SyncSpace/HPKE keys, RecoverySecret, DeviceCredential, active Provider credentials
+  or unrelated secrets. Journal before import; atomically publish ref/revision/
+  binding/committed journal; inspect durable state on uncertain commit. Cleanup
+  touches only journal-owned prepared/retired Provider slots, never an active
+  committed slot because an ACK was lost. Failed cleanup remains durable/retryable;
+  no plaintext SQLite fallback.
+
+No implementation files change in this freeze. D9-03-01 waits for final human
+review; OD-012 remains OPEN and production-sensitive V3 is not enabled.
 
 ---
 

@@ -2,7 +2,7 @@
 
 > Task ID: **D9-01 / D9-02 / D9-03**  
 > Milestone: **D9 — Agent / Universal Command**  
-> Status: **D9-01 COMPLETE / MERGED — D9-02 COMPLETE / PR #24 MERGED (`6583e61`) — D9-03-00 CONTRACT REVIEW (OD-058 PENDING) — OD-012 PRODUCTION RELEASE GATE OPEN — D8 COMPLETE**
+> Status: **D9-01 COMPLETE / MERGED — D9-02 COMPLETE / PR #24 MERGED (`6583e61`) — D9-03-00 CONTRACT FROZEN (OD-058 RESOLVED FOR D9-03; FINAL HUMAN REVIEW PENDING) — OD-012 PRODUCTION RELEASE GATE OPEN — D8 COMPLETE**
 > Date: 2026-09-12  
 > Acceptance evidence updated: 2026-09-29
 > Decision source: `docs/AGENT_DECISIONS.md`
@@ -355,7 +355,7 @@ Thread delete tombstone is retained; OD-032 still controls physical compaction.
 
 # 14. D9-03 Wear
 
-D9-03-00 now has a documentation-only [contract review packet](D9_03_00_WEAR_AGENT_PROVIDER_FREEZE.md). Inherited AGT/SYN principles are frozen; exact provisioning wire/delivery/source approval/revision/install and first-alpha platform contracts remain PENDING in OD-058. D9-03-01/runtime implementation has not started.
+D9-03-00 has a documentation-only [frozen contract packet](D9_03_00_WEAR_AGENT_PROVIDER_FREEZE.md), maintainer approved 2026-10-04. C1–C8 and opaque D8 identity/relay privacy/platform-issued slot amendments are synchronized in AGT-014, SYN-018 and OD-058 RESOLVED FOR D9-03. Keep PR #25 Draft; D9-03-01/runtime implementation has not started and waits for final human review.
 
 Provision provider credentials only through `ProviderCredentialEnvelope`; never ordinary workspace sync.
 

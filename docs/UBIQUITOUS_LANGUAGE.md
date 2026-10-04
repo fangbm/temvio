@@ -221,7 +221,7 @@ Git terms such as commit/branch/rebase/merge are analogies unless explicitly dis
 
 Do not call the phone app an `AI proxy` in the default architecture. Watch-originated LLM calls remain Watch-originated even when the OS routes network traffic through the paired phone.
 
-AGT-014 makes STT optional: `aiEntrySupported` is not synonymous with STT support or microphone permission. Stable capability plus `userEnabledAiEntry` determines `effectiveAiEntryEnabled`; approved binding/credential availability determines `providerReady`; current request availability adds network reachability in `requestReady`. A transient offline state does not remove AI entry capability. Exact first-alpha DTO/probe proposals are under OD-058, not approved defaults.
+AGT-014 makes STT optional: `aiEntrySupported` is not synonymous with STT support or microphone permission. Stable capability plus `userEnabledAiEntry` determines `effectiveAiEntryEnabled`; approved binding/credential availability determines `providerReady`; current request availability adds network reachability in `requestReady`. A transient offline state does not remove AI entry capability. First-alpha contracts are frozen in D9-03-00 / OD-058 RESOLVED FOR D9-03 (2026-10-04); AI entry preference defaults OFF. PhoneContextBridge is DEFERRED for first alpha. Target/provisioner DeviceId retains exact opaque D8 semantics; ProviderConfigId stays UUIDv7. WearProviderBinding metadata/hash is constructed independently on source/Watch and never carried through the relay.
 
 ---
 

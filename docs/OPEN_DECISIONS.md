@@ -526,8 +526,8 @@ Source: docs/AGENT_DECISIONS.md AGT-018; maintainer approval 2026-10-03
 ## OD-058 — D9-03-00 implementation-contract sign-off
 
 ```text
-Status: PENDING / BLOCKED_BY_DECISION
-Must resolve by: before D9-03-01 or affected later-slice implementation
+Status: RESOLVED FOR D9-03
+Resolved by: maintainer approved C1–C8 with amendments, 2026-10-04
 Impact: SECURITY / DEVICE INTEROPERABILITY / PERSISTENCE / TOOL PERMISSIONS
 Source: docs/tasks/D9_03_00_WEAR_AGENT_PROVIDER_FREEZE.md
 ```
@@ -535,24 +535,38 @@ Source: docs/tasks/D9_03_00_WEAR_AGENT_PROVIDER_FREEZE.md
 AGT-006/007/014, SYN-009/017/018 and OD-042 remain frozen. This item does not
 reopen the target-device D8 HPKE suite or allow credential workspace sync.
 
-Required sign-off is explicit per C1–C8 in the review packet:
+Approved contracts are explicit per C1–C8 in the frozen packet:
 
-- C1 exact DTO/encoding/AAD/bounds/fixtures;
-- C2 dedicated opaque delivery vs nearby adapter, provisioner authenticity/user
-  comparison, ACK/idempotency/offline/revoked-device checks and retention;
-- C3 revision allocator/reservation/wipe-floor/restart/state-loss recovery;
-- C4 tracked secure-store import, atomic metadata publication and orphan cleanup;
-- C5 non-secret WearProviderBinding metadata/approval/credential association;
-- C6 stable capability/readiness DTOs and bounded network/Provider probe behavior;
-- C7 optional on-device STT/language/permission contract;
-- C8 first-alpha Watch-local permission ceiling/confirmation and context bridge defer.
+- C1 exact DTO/encoding/context/bounds/fixtures, corrected to exact opaque D8
+  target/provisioner DeviceId values (no UUID/case/trim/normalization changes);
+  ProviderConfigId remains UUIDv7.
+- C2 Option A only: dedicated authenticated opaque mailbox, transactionally ACTIVE
+  same-account source/target, independent 8-digit user comparison, exact ciphertext
+  retry/idempotency/conflict, informational ACK, 7-day expiry. Nearby is DEFERRED.
+  Watch/source independently construct target binding metadata locally; relay/
+  request/ACK carry no plaintext binding contents, canonical JSON or binding digest.
+- C3 target-owned per-(target,config) revisions, initial counters 0/first reservation
+  1, one live selected-source reservation, max(counters)+1, durable wipe floor and
+  fail-closed state-loss/replay checks; a skipped barrier revision is acceptable.
+- C4 platform-issued fresh unique Provider-purpose one-install prepared slots;
+  application cannot select arbitrary existing destinations or overwrite secrets.
+  Durable journal before import, atomic metadata/journal publication, uncertain
+  commit inspected before cleanup, active slot preserved on lost ACK; cleanup
+  only journal-owned prepared/retired Provider slots, no SQLite plaintext fallback.
+- C5 locally approved target-owned canonical WearProviderBinding using existing
+  OpenAI-compatible ProviderConfig; local SecretRef association, HTTPS-before-secret,
+  binding-change invalidation/new endpoint credential reservation.
+- C6 stable capability/readiness separation, AI preference OFF, single-flight
+  10-second synthetic probe and 2/4/8/16/30 s backoff, no Agent write replay.
+- C7 optional on-device STT, separate input/permission/language facts, explicit
+  speech permission/model-download actions, no cloud or Phone microphone fallback.
+- C8 Watch-local permission ceiling/confirmation: writes cannot relax to direct;
+  bulk/destructive/external remain DENY. PhoneContextBridge is DEFERRED.
 
-Recommended package is authenticated opaque server delivery with explicit
-source/target content comparison, target-owned revisions, durable prepared
-secret-reference imports and Watch-local confirmation. These are recommendations,
-not approved wire/security/persistence defaults. No server route, second keypair,
-new credential crypto, remote Tool approval or D9-03 runtime is implemented.
-OD-012 remains independently OPEN.
+AGT-014 and SYN-018 record synchronized approved amendments. No server route,
+schema, crypto implementation or D9-03 runtime is implemented in D9-03-00.
+Keep PR #25 Draft and await final human review before D9-03-01. OD-012 remains
+independently OPEN; no production-sensitive V3 composition is enabled.
 
 ---
 

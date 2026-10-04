@@ -641,7 +641,40 @@ STT is optional capability, not assumed from network access. If unavailable, tex
 
 Watch-originated Tool calls use exactly the same permission/application/Planner contracts as Android/Desktop. Watch may impose a stricter local permission policy than the phone.
 
-D9-03-00 audits these inherited boundaries in `docs/tasks/D9_03_00_WEAR_AGENT_PROVIDER_FREEZE.md`. Its exact provisioning wire/delivery/source-authentication/revision/install and first-alpha capability/permission proposals are **PENDING (OD-058)**, not a new approved amendment. STT remains optional; no Phone Agent proxy or Provider abstraction change is authorized.
+## Approved D9-03-00 amendment — C1–C8 (2026-10-04)
+
+Maintainer approved the frozen packet in
+`docs/tasks/D9_03_00_WEAR_AGENT_PROVIDER_FREEZE.md`; OD-058 is RESOLVED FOR D9-03.
+
+- DeviceIds remain exact opaque enrolled D8 values, without UUID enforcement or
+  case/trim/normalization changes; ProviderConfigId remains UUIDv7.
+- First-alpha provisioning uses only the authenticated opaque mailbox, with
+  independent 8-digit local content comparison and 7-day ciphertext expiry.
+  Source/Watch independently construct canonical target binding metadata locally;
+  relay receives neither binding contents nor binding digest. Nearby is deferred.
+- Watch owns revisions/reservations/floor. Platform secure store issues fresh,
+  unique Provider-purpose prepared slots; arbitrary existing import destinations
+  and secret overwrite are forbidden. Durable journal/atomic metadata publication
+  and cleanup preserve committed active slots when ACK/commit outcome is unknown.
+- WearProviderBinding is explicitly approved local metadata using the existing
+  OpenAI-compatible ProviderConfig. No second Provider abstraction is introduced.
+- AI entry preference defaults OFF; stable capability, Provider readiness and
+  request readiness remain separate. Synthetic probe is single-flight, has a
+  10-second deadline and bounded 2/4/8/16/30 s readiness backoff; restored network
+  never automatically replays an Agent command/write.
+- STT is optional and independent from text support/mic permission. Permission
+  requires explicit user speech action; no cloud/Phone microphone fallback or
+  automatic model download.
+- READ/PLAN_PREVIEW may be ALLOW_DIRECT. Confirmation-required writes cannot be
+  relaxed to ALLOW_DIRECT; user may tighten to DENY. BULK_CHANGE/DESTRUCTIVE/
+  EXTERNAL_SIDE_EFFECT stay DENY; exact pending Tool/preview is confirmed locally
+  on Watch. PhoneContextBridge is DEFERRED; AGT-008 truth priority is unchanged.
+- Conversation consent, V2 business compatibility and credential provisioning
+  remain independent. Credential never enters V3; OD-012 remains OPEN.
+
+Keep PR #25 Draft. This documentation amendment starts no runtime implementation;
+D9-03-01 waits for final human review of the frozen packet. No Phone Agent proxy
+or remote Tool approval is authorized. SYN-018 records the security amendment.
 
 ---
 
