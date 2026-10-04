@@ -5,9 +5,10 @@ Branch: `codex/d9-03-01-provider-credential-provisioning`.
 Review: [Draft PR #26](https://github.com/fangbm/temvio/pull/26), targeting
 `feature/d9-02-agent-sync`. Do not merge or start D9-03-02/03 or D10.
 
-Status: **OD-059 RESOLVED FOR D9-03-01**; maintainer accepted C1–C5 otherwise.
-The minimal-tombstone follow-up is implemented; real PostgreSQL/full-CI verification
-is pending before declaring implementation acceptance complete for review.
+Status: **D9-03-01 IMPLEMENTED / AWAITING REVIEW — implementation acceptance
+complete for review**. OD-059 is **RESOLVED FOR D9-03-01**; maintainer accepted
+C1–C5 otherwise. The minimal-tombstone follow-up passed real PostgreSQL/E2E and
+full CI. Keep Draft; no merge or next slice is authorized.
 OD-058 remains resolved for C1–C8. This record authorizes no production deployment.
 **OD-012 remains OPEN.**
 
@@ -142,23 +143,47 @@ is claimed; actual Wear Keystore evidence comes from CI's Wear API 35-ext15 AVD.
 
 ## CI evidence and limits
 
-[Run 37181816670](https://github.com/fangbm/temvio/actions/runs/37181816670),
-implementation head `5cb5a4a2dd3561bbb8b02316d31abaa7e9fb98e8`, all five jobs green:
+[Run 37191578433](https://github.com/fangbm/temvio/actions/runs/37191578433),
+accepted follow-up head `a4daebe5ba475daa3c48cd3afa3e24585acd0c21`, all five jobs green:
 Linux build/real PostgreSQL/Secret Service, Windows DPAPI, Android Keystore,
 Wear Keystore, and existing enrolled Desktop↔Android history/platform relay E2E.
-Downloaded XML proves PostgreSQL repository 14/14 and provisioning PostgreSQL
+Downloaded XML proves PostgreSQL repository **17/17** and provisioning PostgreSQL
 E2E 1/1, both zero skipped; Android/Wear Provider slot tests each 3/3, zero skipped.
 Wire 6/6, crypto 5/5, install/recovery 20/20 (including exact local-counter
 exhaustion/wipe), HTTP transport 3/3, migration 2/2 and native Linux secure store
 5/5 also have zero failures/skips. The public-table canary scan includes raw,
 JSON-escaped, base64 and UTF-8 hex representations; local metadata/SQLite scans
 include both the credential and its forbidden plaintext digest.
-The prior final documentation head `4b6df6767ee9e92704246fde366d7354ba614839`
-also passed all five jobs in [run 37182421694](https://github.com/fangbm/temvio/actions/runs/37182421694).
-Those results predate the OD-059 retention amendment. Follow-up real PostgreSQL
-17-test repository acceptance and extended E2E/full CI are pending; exact new
-head/run and XML counts will be recorded after execution in
-[PR #26 checks](https://github.com/fangbm/temvio/pull/26/checks).
+The earlier [run 37182421694](https://github.com/fangbm/temvio/actions/runs/37182421694)
+on `4b6df6767ee9e92704246fde366d7354ba614839` passed before the OD-059 amendment.
+The evidence-only finalization commit changes documentation only; its full CI
+is tracked in [PR #26 checks](https://github.com/fangbm/temvio/pull/26/checks),
+and the final delivery reports that exact documentation head/run.
+
+OD-059 regression evidence:
+
+- Expiry at the precise seven-day cutoff leaves only the five permitted non-NULL
+  logical fields. Source/ciphertext/digest/ACK/created/expiry timestamps are gone.
+  SQL CHECKs reject expired remnants and incomplete/incorrect-window active rows;
+  populated V9→V10 and fresh V10 agree including CHECK definitions.
+- REQUESTED, DELIVERED and ACKNOWLEDGED all retire to the same minimal marker.
+  Repeated maintenance yields byte-identical logical row JSON. Immediate and
+  100-years-later/restarted same-revision retries stay DELIVERY_EXPIRED; lower
+  revisions reject. Eligible higher revision gets a new exact seven-day window,
+  then advances the marker at its own cutoff. Revocation never resets the marker.
+- Repository tests use isolated PostgreSQL schemas so far-future maintenance
+  cannot retire parallel workers' deliveries. E2E still scans every real public
+  table for synthetic credential/binding/ref/ciphertext/digest/delivery-timestamp
+  canaries. D8 device directory identity is preserved; expired mailbox source is
+  NULL. HTTP returns 410 without manufacturing an expired delivery DTO, while
+  committed target credential/binding/accepted counters remain unchanged.
+
+The first follow-up run `37190989354` had repository **17/17** but its build E2E
+failed because the fixture injected a whole-second wire deadline, earlier than
+the precise SQL cutoff; the superseded run was cancelled. A test-only correction
+uses the persisted SQL deadline and tests one microsecond before/at/after it.
+Production time/wire semantics were unchanged; the corrected E2E passed 1/1 in
+run `37191578433` above. Neither compilation nor that earlier failure is acceptance.
 
 Provisioning PostgreSQL E2E is real SQL/Room/native Linux secure-store/Tink plus
 Ktor's in-process HTTP application engine, not external TLS networking or final
@@ -182,7 +207,8 @@ Compilation success and PostgreSQL skips are not represented as test acceptance.
   or credential/revision authority. Test-only synthetic canaries/fault hooks.
 - OD-059 is RESOLVED FOR D9-03-01 by maintainer review, with the exact five-field
   indefinite security marker frozen in D9-03-00 section 4.4. No remaining decision
-  blocker in this follow-up; implementation acceptance awaits real PostgreSQL/CI.
+  or implementation blocker in this follow-up; implementation acceptance is
+  complete for review with actual PostgreSQL/E2E/full-CI evidence above.
 - OD-012 local SQLite encryption remains OPEN; no production-sensitive V3
   enablement is claimed. No changes to D2, D7 semantics, V3 DTOs/consent/frontier,
   workspace Envelope/AAD, SyncTransportWorker, or cryptographic primitives.
