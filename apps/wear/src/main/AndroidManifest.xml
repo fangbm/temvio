@@ -10,6 +10,7 @@
 
     <application
         android:allowBackup="false"
+        android:usesCleartextTraffic="true"
         android:icon="@drawable/temvio_icon"
         android:label="Temvio"
         android:theme="@style/Theme.AgenticSchedulerWear">

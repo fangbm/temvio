@@ -19,6 +19,14 @@ import org.junit.runners.MethodSorters
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
+import android.security.NetworkSecurityPolicy
+import dev.agenticscheduler.agent.provider.*
+import dev.agenticscheduler.application.sync.SecretReference
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.*
+import java.net.InetAddress
+import java.net.ServerSocket
 
 @RunWith(AndroidJUnit4::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -91,6 +99,44 @@ class WearCapabilityInstrumentedTest {
                 assertEquals(SpeechPermission.DENIED, service.facts.value.speechPermission); assertEquals(1, requests); service.close()
             }
         } finally { assertTrue(preferences.edit().putBoolean("speech_permission_requested", old).commit()) }
+    }
+    @Test fun eExplicitCredentialFreeLocalHttpProbeUsesNativeClientWithoutPublicValidation(): Unit = runBlocking {
+        assertTrue("frozen explicit credential-free HTTP path requires platform permission", NetworkSecurityPolicy.getInstance().isCleartextTrafficPermitted("127.0.0.1"))
+        val captured = AtomicReference<String>()
+        val headers = AtomicReference<String>()
+        val server = ServerSocket(0, 1, InetAddress.getByName("127.0.0.1"))
+        val fixture = Thread {
+            try {
+                server.accept().use { socket ->
+                    val reader = socket.getInputStream().bufferedReader()
+                    val lines = mutableListOf<String>()
+                    while (true) { val line = reader.readLine() ?: break; if (line.isEmpty()) break; lines += line }
+                    headers.set(lines.joinToString("\n"))
+                    val length = lines.first { it.startsWith("Content-Length:", true) }.substringAfter(':').trim().toInt()
+                    val chars = CharArray(length); var read = 0
+                    while (read < length) { val n = reader.read(chars, read, length - read); check(n > 0); read += n }
+                    val body = chars.concatToString(); captured.set(body)
+                    val name = Json.parseToJsonElement(body).jsonObject["tools"]!!.jsonArray.single().jsonObject["function"]!!.jsonObject["name"]!!.jsonPrimitive.content
+                    val response = """{"choices":[{"message":{"role":"assistant","tool_calls":[{"id":"native-probe","type":"function","function":{"name":"$name","arguments":"{}"}}]}}]}""".encodeToByteArray()
+                    socket.getOutputStream().apply {
+                        write("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ${response.size}\r\nConnection: close\r\n\r\n".encodeToByteArray()); write(response); flush()
+                    }
+                }
+            } catch (_: java.net.SocketException) { /* Fixture closed during failure/timeout. */ }
+        }.apply { isDaemon = true; start() }
+        val client = WearReadinessComposition.newProviderHttpClient()
+        var resolves = 0
+        try {
+            val config = ProviderConfig(ProviderConfigId("01900000-0000-7000-8000-000000000098"), "http://127.0.0.1:${server.localPort}/v1", "synthetic-fixture-model", 2048, 512, false, true, null)
+            val binding = WearProviderBinding(config.provisioningBinding(config.id, false), WearEndpointRoute.EXPLICIT_CREDENTIAL_FREE_LOCAL)
+            assertTrue(WearNetworkFacts(true, false, false).reachable(binding.route))
+            val provider = OpenAiCompatibleProvider(client, ProviderCredentialResolver { resolves++; error("HTTP must never resolve credential") })
+            assertEquals(ProviderProbeResult.Supported, withTimeout(10_000) { provider.probe(config) })
+            assertEquals(ProviderProbeResult.Unavailable("INSECURE_CREDENTIAL_TRANSPORT"), provider.probe(config.copy(credentialReference = SecretReference("native-no-read"))))
+            assertEquals(0, resolves); assertFalse(headers.get().contains("Authorization", true))
+            assertTrue(captured.get().contains("Call d9_capability_probe now.")); assertFalse(captured.get().contains("native-no-read"))
+            Log.i("D90302Evidence", "native credential-free loopback HTTP synthetic probe=Supported; no VALIDATED requirement; zero secret reads/auth headers")
+        } finally { client.close(); server.close(); fixture.join(2000) }
     }
     @Test fun zRealGrantedPermissionIsObservedAndNeverStartsRecognitionDuringInspect() {
         instrumentation.uiAutomation.grantRuntimePermission(context.packageName, Manifest.permission.RECORD_AUDIO)

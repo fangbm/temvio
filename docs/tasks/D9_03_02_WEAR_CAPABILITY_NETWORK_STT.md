@@ -80,6 +80,13 @@ public ping, `/health` or `/models` endpoint. Credentialed endpoints require HTT
 before secret resolution; local HTTP retains the frozen plaintext-risk boundary
 for subsequent D9-03-03 presentation.
 
+Wear manifest permits cleartext transport for that existing explicit credential-free
+HTTP allowance. The source rejects credentialed/public HTTP before secret access;
+the existing Provider adapter and D8 `ActiveSyncRuntime` HTTPS checks are unchanged.
+Native loopback instrumentation exercises the real Android client, not MockEngine.
+It does not prove a physical LAN route without public Internet; unvalidated-route
+eligibility is tested separately with deterministic route facts.
+
 Existing `OpenAiCompatibleProvider.probe` sends its fixed synthetic instruction
 and structured schema only; no Domain/user/history/summary/audio/SecretRef/
 provisioning/binding digest in body. Credential is only HTTPS Authorization.
