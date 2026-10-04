@@ -10,6 +10,30 @@ import kotlin.test.assertNull
 
 class DesktopPlatformSecureStoreTest {
     @Test
+    fun `real native Provider prepared slots survive recreation and cannot overwrite generic secrets`() = runBlocking {
+        val supported = System.getProperty("os.name").startsWith("Windows", ignoreCase = true) || System.getenv("AGENTIC_SCHEDULER_SECRET_SERVICE_INTEGRATION") == "1"
+        org.junit.Assume.assumeTrue("Native secure store required", supported)
+        val first = DesktopPlatformSecureStore()
+        val generic = first.importSecret(RawMaterial(96))
+        val slot = first.prepareProviderSlot()
+        try {
+            val reopened = DesktopPlatformSecureStore()
+            assertNull(reopened.restoreProviderSlot(generic, slot.installIdentity))
+            assertNull(reopened.readProviderSecret(slot.reference))
+            val restored = assertNotNull(reopened.restoreProviderSlot(slot.reference, slot.installIdentity))
+            reopened.importPreparedProviderSecret(restored, "public-native-provider-canary".encodeToByteArray())
+            assertFails { reopened.importPreparedProviderSecret(restored, "overwrite".encodeToByteArray()) }
+            val third = DesktopPlatformSecureStore()
+            assertEquals("public-native-provider-canary", assertNotNull(third.readProviderSecret(slot.reference)).decodeToString())
+            assertEquals(RawMaterial(96).copyRawKeyBytesForPairing().toList(), third.readSecret(generic)?.copyRawSecretBytesForSecureStore()?.toList())
+            third.deleteProviderSlot(assertNotNull(third.restoreProviderSlot(slot.reference, slot.installIdentity)))
+            assertNull(first.readProviderSecret(slot.reference))
+        } finally {
+            first.restoreProviderSlot(slot.reference, slot.installIdentity)?.let { first.deleteProviderSlot(it) }
+            first.delete(generic)
+        }
+    }
+    @Test
     fun `secure-store contract survives reopen and fails closed for missing or deleted references`() = runBlocking {
         val backend = MemoryBackend()
         val first = DesktopPlatformSecureStore(backend, TinkPairingHpke())
