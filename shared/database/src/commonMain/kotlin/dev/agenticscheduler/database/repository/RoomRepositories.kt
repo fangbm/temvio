@@ -444,6 +444,9 @@ class RoomLocalEnrollmentRepository(private val database: AgenticSchedulerDataba
             }
 
             database.localPairingEnrollmentDao().save(pendingRecord)
+            usePrepared("INSERT INTO provider_credential_target_identity(target_device_id, config_ids_json) VALUES (?, '[]')") {
+                it.bindText(1, value.deviceId.value); it.step(); Unit
+            }
         }
     }
 
@@ -488,6 +491,9 @@ class RoomLocalEnrollmentRepository(private val database: AgenticSchedulerDataba
                 }
             }
             database.localPairingEnrollmentDao().save(value.toRecord())
+            if (current == null) usePrepared("INSERT INTO provider_credential_target_identity(target_device_id, config_ids_json) VALUES (?, '[]')") {
+                it.bindText(1, value.deviceId.value); it.step(); Unit
+            }
         }
     }
 }

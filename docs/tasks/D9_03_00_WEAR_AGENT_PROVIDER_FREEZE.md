@@ -297,7 +297,8 @@ through that expiry. Expiration is explicit `DELIVERY_EXPIRED`, never installati
 or counter success. A returning Watch requests a fresh higher reservation if its
 delivery is gone. Source keeps encrypted retry bytes until acknowledged/cancelled/
 expired. This numeric lifetime and metadata cleanup are frozen C2 decisions, not D8
-history/tombstone compaction.
+history/tombstone compaction. The approved minimal post-expiry security exception
+is specified in section 4.4; no ordinary delivery metadata survives that cutoff.
 
 Revoked source/target devices cannot publish/fetch/ACK. Both devices' same-account
 ACTIVE eligibility is checked transactionally with every publish/fetch/ACK.
@@ -310,6 +311,40 @@ Dedicated opaque route/storage implementation belongs to D9-03-01 after final
 human review; this documentation PR adds no HTTP route or server migration.
 Nearby remains deferred. Server receives zero provider plaintext or binding
 contents/digest; do not log bodies or secret comparison values.
+
+### 4.4 OD-059 — minimal post-expiry anti-replay tombstone (APPROVED)
+
+PR #26 final review resolved OD-059 for D9-03-01 without reopening C1–C8.
+After the frozen seven-day deadline, persist only `accountId`, `targetDeviceId`,
+`providerConfigId`, `credentialRevision` and `DELIVERY_EXPIRED`. Account ownership
+is authorization/routing metadata, never revision authority. This is a separate
+anti-replay high-watermark, not an active delivery or retained delivery history.
+
+Purge provisioner/source assignment, canonical ciphertext, envelope digest, ACK
+result, delivery created/expiry timestamps and any other delivery/retry data.
+Credential plaintext/hash, binding contents/digest, baseUrl/model, SecretRef and
+ProviderConfig payload remain prohibited at the relay.
+
+The marker has **no time-based expiry**. Only a strictly higher target-owned
+revision accepted as a valid reservation for the same `(target, config)` replaces
+it, or a future explicit permanent account/device identity deletion removes it.
+Maintenance, local credential wipe/binding removal and source/target revocation
+never reset this high-watermark. No tombstone compaction policy is introduced.
+
+An authorized exact target retry of the expired revision always reports
+`DELIVERY_EXPIRED`, even after arbitrary elapsed time/restart or source revocation.
+A lower revision rejects as stale/unreserved. Neither recreates REQUESTED/source,
+ciphertext, timestamps or a new deadline; neither alters local target counters.
+A higher revision must pass all existing exact-target, ACTIVE source/target,
+same-account and valid-identity checks, and receives one new seven-day window.
+The server continues to allocate no revisions.
+
+Amend unmerged/unshipped Server V10 in place, using nullable delivery timestamps
+and CHECK constraints that require appropriate non-expired fields and forbid all
+delivery remnants in an expired marker. Independent, idempotent, restart-safe
+maintenance clears expired delivery data without mutating an existing marker.
+This is the approved exception to the earlier bounded-delivery-metadata wording;
+the seven-day ciphertext/source/digest/ACK/active-delivery boundary is unchanged.
 
 ## 5. C3 — credentialRevision ownership (APPROVED)
 

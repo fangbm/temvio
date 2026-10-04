@@ -62,6 +62,20 @@ jobs:
             ./gradlew build --no-daemon
           '
 
+      - name: Upload provisioning acceptance reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: provider-credential-jvm-reports
+          path: |
+            shared/sync/build/test-results/desktopTest/TEST-*ProviderCredential*.xml
+            shared/application/build/test-results/desktopTest/TEST-*ProviderCredential*.xml
+            shared/application/build/test-results/desktopTest/TEST-*DesktopPlatformSecureStoreTest.xml
+            shared/database/build/test-results/desktopTest/TEST-*ProviderCredential*.xml
+            server/sync/build/test-results/test/TEST-*ProviderCredential*.xml
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Upload Linux test reports on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -195,6 +209,14 @@ jobs:
           target: google_apis
           arch: x86_64
           script: ./gradlew :apps:android:connectedDebugAndroidTest --no-daemon
+      - name: Upload Android provisioning reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: provider-credential-android-reports
+          path: apps/android/build/outputs/androidTest-results/connected/**/TEST-*.xml
+          if-no-files-found: warn
+          retention-days: 14
 
   wear-keystore:
     runs-on: ubuntu-latest
@@ -220,3 +242,11 @@ jobs:
           target: android-wear
           arch: x86_64
           script: ./gradlew :apps:wear:connectedDebugAndroidTest --no-daemon
+      - name: Upload Wear provisioning reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: provider-credential-wear-reports
+          path: apps/wear/build/outputs/androidTest-results/connected/**/TEST-*.xml
+          if-no-files-found: warn
+          retention-days: 14

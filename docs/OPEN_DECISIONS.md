@@ -565,8 +565,42 @@ Approved contracts are explicit per C1–C8 in the frozen packet:
 
 AGT-014 and SYN-018 record synchronized approved amendments. No server route,
 schema, crypto implementation or D9-03 runtime is implemented in D9-03-00.
-Keep PR #25 Draft and await final human review before D9-03-01. OD-012 remains
-independently OPEN; no production-sensitive V3 composition is enabled.
+D9-03-00 subsequently passed final human review and merged as
+`82f4c62e4ca772e9b1daf192760e2ff835067bcc`. The current D9-03-01 task explicitly
+authorizes C1–C5 implementation; C6–C8 runtime work remains outside that slice.
+OD-012 remains independently OPEN; no production-sensitive V3 composition is enabled.
+
+## OD-059 — Provider mailbox post-expiry replay marker
+
+```text
+Status: RESOLVED FOR D9-03-01
+Impact: SECURITY / PERSISTENCE / MAILBOX RETENTION
+Source: PR #26 maintainer review; D9_03_00_WEAR_AGENT_PROVIDER_FREEZE.md §4.4
+```
+
+Maintainer approved a minimal indefinite server anti-replay tombstone after the
+hard seven-day cutoff. Exactly `accountId`, `targetDeviceId`, `providerConfigId`,
+`credentialRevision` and `DELIVERY_EXPIRED` remain. Account identifies authorization
+ownership only; target-local state remains the sole revision allocator/authority.
+
+Purge source assignment, ciphertext, encrypted-envelope digest, ACK result,
+delivery created/expiry timestamps and all other delivery-specific data. Retain
+no credential plaintext/hash, binding contents/digest, baseUrl/model, SecretRef or
+ProviderConfig payload. This is the explicit C2 exception for a separate security
+marker, not permission to retain ordinary delivery metadata indefinitely.
+
+There is no time-based expiry or compaction policy for the marker. It remains
+until a strictly higher target-owned reservation passes every existing exact-target,
+ACTIVE source/target, same-account and valid-identity check, or a future explicit
+permanent account/device identity deletion. Maintenance, credential wipe, binding
+removal and source/target revocation must not reset the high-watermark.
+
+Same expired revision always reports DELIVERY_EXPIRED to an authorized target,
+including after arbitrary elapsed time/restart; lower revision rejects as
+UNRESERVED_REVISION. Neither recreates source assignment, ciphertext or timestamps.
+Only an eligible higher revision creates one new seven-day delivery window. Amend
+the unmerged Server V10 in place with SQL CHECK-enforced minimal expired state;
+do not introduce V11 or change C1–C8, wire/HPKE/SAS or local revision semantics.
 
 ---
 

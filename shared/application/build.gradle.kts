@@ -17,6 +17,7 @@ kotlin {
     sourceSets.named("desktopMain") { dependencies { implementation(libs.tink); implementation(libs.ktor.client.cio); implementation(libs.jna.platform) } }
     sourceSets.named("desktopTest") {
         kotlin.srcDir(rootProject.file("test-support/d9-02-05"))
+        resources.srcDir(rootProject.file("docs/tasks/fixtures/d9-03-00"))
         dependencies {
             implementation(kotlin("test"))
             implementation(project(":shared:database"))

@@ -68,7 +68,7 @@ class AgentSyncPersistenceTest {
         v12.exec("INSERT INTO sync_space_cursor(sync_space_id, server_cursor) VALUES (?, ?)", "personal", 44L)
         v12.close()
 
-        val upgraded = migrations.runMigrationsAndValidate(15, listOf(AgentSyncMigration12To13, AgentSyncTransportMigration13To14, AgentHistoryProvenanceMigration14To15))
+        val upgraded = migrations.runMigrationsAndValidate(16, listOf(AgentSyncMigration12To13, AgentSyncTransportMigration13To14, AgentHistoryProvenanceMigration14To15, ProviderCredentialMigration15To16))
         try {
             AgentSchema.validate(upgraded)
             AgentSyncSchema.validate(upgraded)
