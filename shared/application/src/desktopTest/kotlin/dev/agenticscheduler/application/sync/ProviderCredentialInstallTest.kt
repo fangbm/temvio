@@ -194,6 +194,16 @@ class ProviderCredentialInstallTest {
             assertEquals(1L, h.service().reserveForExplicitUser(binding, source).liveRevision)
         }
     }
+    @Test fun `Room cannot publish an arbitrary ref without same transaction committed journal ownership`() = runBlocking {
+        Harness().use { h ->
+            h.initialize(); h.service().reserveForExplicitUser(binding, source)
+            val before = h.repo.state(target, config)!!
+            assertFailsWith<IllegalArgumentException> { h.repo.compareAndSet(before, before.copy(highestAcceptedRevision = 1,
+                activeReference = "test://arbitrary-secret", activeInstallIdentity = "forged-owner", generation = before.generation + 1)) }
+            assertEquals(before, h.repo.state(target, config))
+            assertNull(RoomAgentStateRepository(h.db).providerConfig(ProviderConfigId(config))!!.credentialReference)
+        }
+    }
     @Test fun `retained enrolled identity with missing known config or whole state fails closed`() = runBlocking {
         Harness().use { h ->
             h.initialize(); h.service().reserveForExplicitUser(binding, source)
@@ -225,7 +235,10 @@ class ProviderCredentialInstallTest {
         val references = listOf(store.generateAccountMasterKey(), store.generateContentKey().reference, store.generatePairingDeviceKey().privateKeyReference,
             store.store(DeviceCredential(encodeCanonicalBase64Url(ByteArray(32) { 1 }))), store.importSecret(material))
         val saved = backend.values.mapValues { it.value.toList() }
-        for (ref in references) assertNull(store.restoreProviderSlot(ref, "00000000-0000-0000-0000-000000000001"))
+        for (ref in references) {
+            assertNull(store.restoreProviderSlot(ref, "00000000-0000-0000-0000-000000000001"))
+            assertFails { store.importPreparedProviderSecret(PreparedProviderSecretSlot(ref, "00000000-0000-0000-0000-000000000001"), secret.encodeToByteArray()) }
+        }
         val slot = store.prepareProviderSlot(); assertNull(store.readProviderSecret(slot.reference))
         store.importPreparedProviderSecret(slot, secret.encodeToByteArray())
         assertFails { store.importPreparedProviderSecret(slot, "overwrite".encodeToByteArray()) }

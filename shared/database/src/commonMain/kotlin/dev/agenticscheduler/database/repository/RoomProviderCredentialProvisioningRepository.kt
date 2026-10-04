@@ -51,6 +51,14 @@ class RoomProviderCredentialProvisioningRepository(private val database: Agentic
             execute("INSERT INTO provider_credential_install_journal(install_identity, target_device_id, provider_config_id, prepared_ref, journal_json) VALUES (?, ?, ?, ?, ?) ON CONFLICT(install_identity) DO UPDATE SET journal_json = excluded.journal_json",
                 listOf(journal.installIdentity, journal.targetDeviceId.value, journal.providerConfigId, journal.preparedReference, json.encodeToString(journal)))
         }
+        if (updated.activeReference != null) {
+            val owner = query("SELECT journal_json FROM provider_credential_install_journal WHERE install_identity = ?", listOf(updated.activeInstallIdentity)) {
+                json.decodeFromString<ProviderCredentialInstallJournal>(it.getText(0))
+            }.singleOrNull()
+            require(owner != null && owner.phase == ProviderInstallPhase.METADATA_COMMITTED &&
+                owner.preparedReference == updated.activeReference && owner.targetDeviceId == updated.targetDeviceId &&
+                owner.providerConfigId == updated.providerConfigId && owner.revision == updated.highestAcceptedRevision) { "PROVIDER_CREDENTIAL_JOURNAL_REQUIRED" }
+        }
         execute("UPDATE provider_credential_revision SET state_json = ? WHERE target_device_id = ? AND provider_config_id = ?", listOf(json.encodeToString(updated), updated.targetDeviceId.value, updated.providerConfigId))
         if (expected.activeReference != updated.activeReference) {
             execute("UPDATE provider_config SET credential_secret_ref = ? WHERE config_id = ?", listOf(updated.activeReference, updated.providerConfigId))

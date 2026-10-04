@@ -102,7 +102,7 @@ worktree, `GRADLE_USER_HOME=D:\gradle-home-agent`):
 | --- | --- |
 | `ProviderCredentialWireTest` | 6/6 passed |
 | `ProviderCredentialCryptoTest` | 5/5 passed; committed HPKE vector actually decrypted; exact SAS `51070555` |
-| `ProviderCredentialInstallTest` | 17/17 passed; real Room file reopen/rollback/unknown commit; fault-injected secure-store backend |
+| `ProviderCredentialInstallTest` | 18/18 passed; real Room file reopen/rollback/unknown commit and journal ownership guard; fault-injected secure-store backend |
 | `ProviderCredentialTransportTest` | 3/3 passed; mocked HTTP auth/exact bytes/stream cap/redaction |
 | `ProviderCredentialMigrationTest` | 2/2 passed; populated v15→16 + fresh parity, altered catalog rejection |
 | `AgentSyncPersistenceTest` | 20/20 passed; latest-version migration updated to include v16 |
@@ -123,7 +123,8 @@ Android local command:
   --no-configuration-cache --console=plain
 ```
 
-Actual Android API 35 emulator Keystore: 2/2 passed. No local Wear emulator result
+Actual Android API 35 emulator Keystore: 3/3 passed, including corrupted-ciphertext
+read failure preserving cleanup ownership. No local Wear emulator result
 is claimed; actual Wear Keystore evidence comes from CI's Wear API 35-ext15 AVD.
 
 ## CI evidence and limits
@@ -135,7 +136,8 @@ Wear Keystore, and existing enrolled Desktop↔Android history/platform relay E2
 Downloaded XML proves PostgreSQL repository 13/13 and provisioning PostgreSQL
 E2E 1/1, both zero skipped; new Android/Wear Provider slot tests each 2/2.
 This run precedes the additional recovery/retention/streaming regressions above;
-new-head full CI evidence will be added after it finishes.
+The latest head's full CI is tracked in [PR #26 checks](https://github.com/fangbm/temvio/pull/26/checks);
+the final delivery identifies its exact run/head and downloaded XML counts.
 
 Provisioning PostgreSQL E2E is real SQL/Room/native Linux secure-store/Tink plus
 Ktor's in-process HTTP application engine, not external TLS networking or final
@@ -164,4 +166,3 @@ Compilation success and PostgreSQL skips are not represented as test acceptance.
   workspace Envelope/AAD, SyncTransportWorker, or cryptographic primitives.
 - D9-03-02 capability/network/STT, D9-03-03 Wear Agent/runtime/UI, nearby delivery,
   Phone proxy/context bridge, and D10 remain out of scope. Full D9-03 is not complete.
-

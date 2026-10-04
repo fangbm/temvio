@@ -51,6 +51,30 @@ class ProviderCredentialSlotInstrumentedTest {
             protected.forEach { first.delete(it) }
         }
     }
+    @Test fun corruptedProviderCiphertextIsUnavailableRatherThanAnAbsentCleanupSlot() = runBlocking {
+        val first = AndroidKeystoreSecureStore(context)
+        val slot = first.prepareProviderSlot()
+        first.importPreparedProviderSecret(slot, "public-corruption-canary".encodeToByteArray())
+        val preferences = context.getSharedPreferences("agentic_scheduler_secure_store_v1", android.content.Context.MODE_PRIVATE)
+        val id = slot.reference.value.removePrefix("android-keystore://")
+        val original = checkNotNull(preferences.getString(id, null))
+        try {
+            val ciphertext = android.util.Base64.decode(original, android.util.Base64.NO_WRAP)
+            ciphertext[ciphertext.lastIndex] = (ciphertext.last().toInt() xor 1).toByte()
+            assertTrue(preferences.edit().putString(id, android.util.Base64.encodeToString(ciphertext, android.util.Base64.NO_WRAP)).commit())
+            val reopened = AndroidKeystoreSecureStore(context)
+            var unavailable = false
+            try { reopened.restoreProviderSlot(slot.reference, slot.installIdentity) }
+            catch (_: SecureStoreUnavailableException) { unavailable = true }
+            assertTrue(unavailable)
+            // Existing generic D8 read semantics remain fail-closed/null.
+            assertNull(reopened.readSecret(slot.reference))
+            assertTrue(preferences.contains(id))
+        } finally {
+            assertTrue(preferences.edit().putString(id, original).commit())
+            first.deleteProviderSlot(checkNotNull(first.restoreProviderSlot(slot.reference, slot.installIdentity)))
+        }
+    }
     @Test fun preparedBeforeImportCanBeRecoveredAndCleanedWithoutTouchingActiveSlot() = runBlocking {
         val first = AndroidKeystoreSecureStore(context)
         val active = first.prepareProviderSlot()

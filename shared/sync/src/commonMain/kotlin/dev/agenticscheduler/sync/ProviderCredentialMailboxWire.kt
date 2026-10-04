@@ -11,7 +11,10 @@ data class ProviderCredentialReservationRequestV1(
     val providerConfigId: String,
     val credentialRevision: Long,
     val provisionerDeviceId: DeviceId,
-) { init { MutationId(providerConfigId); require(credentialRevision > 0) } }
+) { init {
+    MutationId(providerConfigId); require(credentialRevision > 0)
+    for (identity in listOf(targetDeviceId, provisionerDeviceId)) require(identity.value.encodeToByteArray().decodeToString(throwOnInvalidSequence = true) == identity.value)
+} }
 
 @Serializable enum class ProviderCredentialMailboxState { REQUESTED, DELIVERED, ACKNOWLEDGED, DELIVERY_EXPIRED }
 @Serializable

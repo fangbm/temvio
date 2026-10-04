@@ -16,6 +16,7 @@ data class ProviderCredentialEnvelopeV1(
 ) {
     init {
         require(providerCredentialEnvelopeVersion == 1)
+        require(validUnicode(targetDeviceId.value))
         credentialIdentity(providerConfigId, credentialRevision)
         boundedBase64(encapsulatedKeyBase64Url, 32, 32)
         boundedBase64(ciphertextBase64Url, 16, 8208)
@@ -32,6 +33,7 @@ data class ProviderCredentialPlaintextV1(
 ) {
     init {
         require(providerCredentialEnvelopeVersion == 1)
+        require(validUnicode(targetDeviceId.value))
         credentialIdentity(providerConfigId, credentialRevision)
         val raw = boundedBase64(credentialSecretBase64Url, 1, 4096)
         try { require(raw.all { it.toInt() in 0x21..0x7e }) } finally { raw.fill(0) }
@@ -52,6 +54,7 @@ data class ProviderCredentialAcknowledgementV1(
 ) {
     init {
         require(providerCredentialAcknowledgementVersion == 1)
+        require(validUnicode(targetDeviceId.value))
         credentialIdentity(providerConfigId, credentialRevision)
         boundedBase64(envelopeDigestBase64Url, 32, 32)
     }
@@ -74,7 +77,7 @@ data class WearProviderBindingMetadataV1(
     init {
         require(bindingVersion == 1 && adapterProfile == "OPENAI_COMPATIBLE_CHAT_TOOLS")
         MutationId(providerConfigId)
-        require(baseUrl.isNotBlank() && model.isNotBlank())
+        require(baseUrl.isNotBlank() && model.isNotBlank() && validUnicode(baseUrl) && validUnicode(model))
         require(maxContextUnits > 0 && reservedOutputUnits > 0 && reservedOutputUnits < maxContextUnits)
         require(!credentialRequired || baseUrl.startsWith("https://"))
     }

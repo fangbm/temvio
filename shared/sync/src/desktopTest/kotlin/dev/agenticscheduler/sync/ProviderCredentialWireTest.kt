@@ -49,6 +49,7 @@ class ProviderCredentialWireTest {
     }
     @Test fun `order whitespace accepted but base64 noncanonical tails and unexpected fields rejected`() {
         val e = envelope()
+        assertFails { e.copy(targetDeviceId = DeviceId("\uD800")) }
         val reordered = "{ \"ciphertextBase64Url\":\"${e.ciphertextBase64Url}\",\"encapsulatedKeyBase64Url\":\"${e.encapsulatedKeyBase64Url}\",\"credentialRevision\":1,\"providerConfigId\":\"${e.providerConfigId}\",\"targetDeviceId\":\"${e.targetDeviceId.value}\",\"providerCredentialEnvelopeVersion\":1 }"
         assertEquals(e, (ProviderCredentialWireCodec.decodeEnvelope(reordered.encodeToByteArray()) as ProviderCredentialDecodeResult.Accepted).value)
         assertFails { e.copy(encapsulatedKeyBase64Url = "A".repeat(42) + "B") }
