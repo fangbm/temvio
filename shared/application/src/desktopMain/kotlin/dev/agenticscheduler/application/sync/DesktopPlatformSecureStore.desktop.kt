@@ -25,7 +25,8 @@ class DesktopPlatformSecureStore private constructor(
         store(SecretKind.GENERIC, material.copyRawSecretBytesForSecureStore())
 
     override suspend fun readSecret(reference: SecretReference): PlatformSecretMaterial? =
-        (read(reference, SecretKind.GENERIC) ?: readProviderSecret(reference))?.let(::StoredSecret)
+        (read(reference, SecretKind.GENERIC) ?: read(reference, SecretKind.PROVIDER_INSTALLED)
+            ?.takeIf { it.size > 36 }?.let { it.copyOfRange(36, it.size) })?.let(::StoredSecret)
 
     override suspend fun store(value: DeviceCredential): SecretReference =
         store(SecretKind.DEVICE_CREDENTIAL, value.value.encodeToByteArray())
@@ -110,28 +111,28 @@ class DesktopPlatformSecureStore private constructor(
         backend.delete(id)
     }
 
-        override suspend fun prepareProviderSlot(): PreparedProviderSecretSlot = synchronized(providerSlotLock) {
+    override suspend fun prepareProviderSlot(): PreparedProviderSecretSlot = synchronized(providerSlotLock) {
         val owner = UUID.randomUUID().toString()
         PreparedProviderSecretSlot(store(SecretKind.PROVIDER_PREPARED, owner.encodeToByteArray()), owner)
     }
 
     override suspend fun restoreProviderSlot(reference: SecretReference, installIdentity: String): PreparedProviderSecretSlot? = synchronized(providerSlotLock) {
-        val owned = read(reference, SecretKind.PROVIDER_PREPARED) ?: read(reference, SecretKind.PROVIDER_INSTALLED)?.take(36)?.toByteArray()
+        val owned = readProvider(reference, SecretKind.PROVIDER_PREPARED) ?: readProvider(reference, SecretKind.PROVIDER_INSTALLED)?.take(36)?.toByteArray()
         if (owned?.decodeToString() == installIdentity) PreparedProviderSecretSlot(reference, installIdentity) else null
     }
 
     override suspend fun importPreparedProviderSecret(slot: PreparedProviderSecretSlot, credential: ByteArray) = synchronized(providerSlotLock) {
         validateProviderCredentialBytes(credential)
-        check(read(slot.reference, SecretKind.PROVIDER_PREPARED)?.decodeToString() == slot.installIdentity) { "PROVIDER_SLOT_NOT_PREPARED" }
+        check(readProvider(slot.reference, SecretKind.PROVIDER_PREPARED)?.decodeToString() == slot.installIdentity) { "PROVIDER_SLOT_NOT_PREPARED" }
         val id = requireNotNull(referenceId(slot.reference))
         backend.store(id, byteArrayOf(SecretKind.PROVIDER_INSTALLED.tag) + slot.installIdentity.encodeToByteArray() + credential)
     }
 
     override suspend fun readProviderSecret(reference: SecretReference): ByteArray? =
-        read(reference, SecretKind.PROVIDER_INSTALLED)?.let { if (it.size > 36) it.copyOfRange(36, it.size) else null }
+        readProvider(reference, SecretKind.PROVIDER_INSTALLED)?.let { if (it.size > 36) it.copyOfRange(36, it.size) else null }
 
     override suspend fun deleteProviderSlot(slot: PreparedProviderSecretSlot) = synchronized(providerSlotLock) {
-        val raw = read(slot.reference, SecretKind.PROVIDER_PREPARED) ?: read(slot.reference, SecretKind.PROVIDER_INSTALLED)?.take(36)?.toByteArray()
+        val raw = readProvider(slot.reference, SecretKind.PROVIDER_PREPARED) ?: readProvider(slot.reference, SecretKind.PROVIDER_INSTALLED)?.take(36)?.toByteArray()
         if (raw == null) return@synchronized
         check(raw.decodeToString() == slot.installIdentity) { "PROVIDER_SLOT_OWNERSHIP_MISMATCH" }
         backend.delete(requireNotNull(referenceId(slot.reference)))
@@ -149,6 +150,17 @@ class DesktopPlatformSecureStore private constructor(
         val id = referenceId(reference) ?: return null
         val stored = try { backend.read(id) } catch (_: Throwable) { null } ?: return null
         return if (stored.isNotEmpty() && stored[0] == expected.tag) stored.copyOfRange(1, stored.size) else null
+    }
+
+    /** Missing and unavailable are distinct: cleanup must not retire ownership after a failed read. */
+    private fun readProvider(reference: SecretReference, expected: SecretKind): ByteArray? {
+        val id = referenceId(reference) ?: return null
+        val stored = try { backend.readProvider(id) } catch (failure: Throwable) {
+            throw SecureStoreUnavailableException("Provider secure-store read unavailable.", failure)
+        } ?: return null
+        return try {
+            if (stored.isNotEmpty() && stored[0] == expected.tag) stored.copyOfRange(1, stored.size) else null
+        } finally { stored.fill(0) }
     }
 
     private fun referenceId(reference: SecretReference): String? =
@@ -175,6 +187,7 @@ internal interface DesktopSecureBackend {
     val referencePrefix: String
     fun store(id: String, value: ByteArray)
     fun read(id: String): ByteArray?
+    fun readProvider(id: String): ByteArray? = read(id)
     fun delete(id: String)
 
     companion object {
@@ -205,6 +218,10 @@ internal class WindowsDpapiSecureBackend(
     } catch (_: Throwable) {
         null
     }
+
+    override fun readProvider(id: String): ByteArray? =
+        preferences.get(id, null)?.let(Base64.getUrlDecoder()::decode)
+            ?.let { Crypt32Util.cryptUnprotectData(it, CRYPTPROTECT_UI_FORBIDDEN) }
 
     override fun delete(id: String) {
         preferences.remove(id)
@@ -242,6 +259,20 @@ internal class LinuxSecretServiceSecureBackend(
         if (process.waitFor() != 0) null else Base64.getUrlDecoder().decode(output.decodeToString().trim())
     } catch (_: Throwable) {
         null
+    }
+
+    override fun readProvider(id: String): ByteArray? {
+        val process = ProcessBuilder(command, "lookup", "service", SERVICE, "reference", id)
+            .redirectErrorStream(true).start()
+        val output = process.inputStream.readBytes()
+        return try {
+            val exit = process.waitFor()
+            if (exit == 1 && output.isEmpty()) null // libsecret: no matching item
+            else {
+                check(exit == 0) { "Provider Secret Service lookup unavailable." }
+                Base64.getUrlDecoder().decode(output.decodeToString().trim())
+            }
+        } finally { output.fill(0) }
     }
 
     override fun delete(id: String) {

@@ -565,8 +565,34 @@ Approved contracts are explicit per C1–C8 in the frozen packet:
 
 AGT-014 and SYN-018 record synchronized approved amendments. No server route,
 schema, crypto implementation or D9-03 runtime is implemented in D9-03-00.
-Keep PR #25 Draft and await final human review before D9-03-01. OD-012 remains
-independently OPEN; no production-sensitive V3 composition is enabled.
+D9-03-00 subsequently passed final human review and merged as
+`82f4c62e4ca772e9b1daf192760e2ff835067bcc`. The current D9-03-01 task explicitly
+authorizes C1–C5 implementation; C6–C8 runtime work remains outside that slice.
+OD-012 remains independently OPEN; no production-sensitive V3 composition is enabled.
+
+## OD-059 — Provider mailbox post-expiry replay marker
+
+```text
+Status: PENDING / BLOCKED_BY_DECISION
+Impact: SECURITY / PERSISTENCE / MAILBOX RETENTION
+Source: D9_03_00_WEAR_AGENT_PROVIDER_FREEZE.md §4.4; current D9-03-01 task §8
+```
+
+Frozen C2 deletes ciphertext and permits bounded delivery/ACK metadata only
+through the seven-day expiry; an expired delivery reports DELIVERY_EXPIRED and
+the target must reserve a fresh higher revision. The lifetime of a minimum
+identity/revision replay marker after that deadline is not explicitly specified.
+Deleting the entire row loses the server's ability to recognize an authenticated
+retry of the exact old request; retaining routing identity/revision indefinitely
+needs explicit permission under the bounded-retention rule.
+
+PR #26's current candidate clears ciphertext, source assignment, envelope digest
+and ACK at expiry but retains latest target/config/revision/account/state/deadline
+fields. This is **not** an approved extension of C2; its retention/minimization
+acceptance is blocked. Maintainer must choose whether to allow a minimal replay
+marker (and its exact retained metadata/lifetime), or delete the complete row and
+rely on target-owned local revision state for post-expiry request replay handling.
+Do not change frozen wire/HPKE/revision ownership or claim full C2 completion.
 
 ---
 

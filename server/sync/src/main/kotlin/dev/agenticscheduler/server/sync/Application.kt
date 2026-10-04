@@ -9,6 +9,7 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopped
 import io.ktor.server.application.install
+import io.ktor.server.application.log
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
@@ -27,6 +28,10 @@ import io.ktor.utils.io.readRemaining
 import kotlinx.serialization.KSerializer
 import kotlinx.io.readByteArray
 import kotlinx.serialization.SerializationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import java.util.Base64
 
@@ -35,8 +40,17 @@ fun main() {
     val dataSource = hikariDataSource(config, "agentic-sync")
     ServerSchemaMigrator(dataSource).migrate()
     embeddedServer(CIO, host = config.bindHost, port = config.port) {
+        val repository = JdbcOpaqueSyncRepository(dataSource)
+        // Internal maintenance cadence only. Authorization uses the exact 7-day clock cutoff on every request.
+        launch(Dispatchers.IO) {
+            while (isActive) {
+                try { repository.expireCredentialDeliveries() }
+                catch (_: Exception) { log.warn("Provider credential retention cleanup unavailable; retry scheduled.") }
+                delay(60_000)
+            }
+        }
         monitor.subscribe(ApplicationStopped) { dataSource.close() }
-        syncServerModule(JdbcOpaqueSyncRepository(dataSource), config)
+        syncServerModule(repository, config)
     }.start(wait = true)
 }
 

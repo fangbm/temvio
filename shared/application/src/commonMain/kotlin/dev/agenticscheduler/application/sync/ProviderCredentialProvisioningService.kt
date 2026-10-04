@@ -68,8 +68,12 @@ class ProviderCredentialProvisioningService(
         if (envelope.credentialRevision == current.highestAcceptedRevision && current.activeReference != null && current.rejectionFloor < envelope.credentialRevision) {
             if (current.acceptedProvisioner != source || current.activeBinding == null) reject(ProviderCredentialRejection.WRONG_PROVISIONER)
             val incoming = decodeCanonicalBase64Url(decrypt(envelope).credentialSecretBase64Url, null, "credential")
-            val stored = secrets.readProviderSecret(SecretReference(current.activeReference)) ?: reject(ProviderCredentialRejection.SECURE_STORE_UNAVAILABLE)
-            val equal = try { incoming.contentEquals(stored) } finally { incoming.fill(0); stored.fill(0) }
+            val equal = try {
+                val stored = try { secrets.readProviderSecret(SecretReference(current.activeReference)) }
+                    catch (_: SecureStoreUnavailableException) { reject(ProviderCredentialRejection.CREDENTIAL_UNAVAILABLE) }
+                    ?: reject(ProviderCredentialRejection.CREDENTIAL_UNAVAILABLE)
+                try { incoming.contentEquals(stored) } finally { stored.fill(0) }
+            } finally { incoming.fill(0) }
             if (!equal) reject(ProviderCredentialRejection.CREDENTIAL_INTEGRITY_CONFLICT)
             // CAS also validates locally owned config/binding and closes wipe races.
             val next = current.copy(generation = current.generation + 1)
@@ -132,8 +136,8 @@ class ProviderCredentialProvisioningService(
             if (journal.phase == ProviderInstallPhase.COMPLETED) continue
             val rejected = journal.copy(phase = ProviderInstallPhase.REJECTED)
             if (journal != rejected && !repository.updateJournal(journal, rejected)) continue
-            val slot = secrets.restoreProviderSlot(SecretReference(journal.preparedReference), journal.installIdentity)
             try {
+                val slot = secrets.restoreProviderSlot(SecretReference(journal.preparedReference), journal.installIdentity)
                 if (slot != null) secrets.deleteProviderSlot(slot)
                 repository.updateJournal(rejected, rejected.copy(phase = ProviderInstallPhase.COMPLETED))
             } catch (_: SecureStoreUnavailableException) { /* Durable rejected ownership retries on next recovery. */ }

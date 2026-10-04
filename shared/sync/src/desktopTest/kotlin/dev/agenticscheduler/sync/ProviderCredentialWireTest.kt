@@ -56,5 +56,23 @@ class ProviderCredentialWireTest {
         assertFails { e.copy(ciphertextBase64Url = encodeCanonicalBase64Url(ByteArray(15))) }
         val binding = fixture("wear-provider-binding.v1.json").decodeToString()
         assertIs<ProviderCredentialDecodeResult.Rejected>(ProviderCredentialWireCodec.decodeBinding((binding.dropLast(1) + ",\"secretReference\":\"local\"}").encodeToByteArray()))
+        assertIs<ProviderCredentialDecodeResult.Rejected>(ProviderCredentialWireCodec.decodeBinding(binding.replace("\"streamingSupported\":true", "\"streamingSupported\":\"true\"").encodeToByteArray()))
+        val text = fixture("credential-envelope.v1.json").decodeToString()
+        assertIs<ProviderCredentialDecodeResult.Rejected>(ProviderCredentialWireCodec.decodeEnvelope(text.replace("\"WearTarget:opaque-A_01\"", "123").encodeToByteArray()))
+    }
+    @Test fun `mailbox routing retains exact opaque IDs and rejects unknown duplicate coercions and inconsistent payload state`() {
+        val request = ProviderCredentialReservationRequestV1(envelope().targetDeviceId, envelope().providerConfigId, 1, DeviceId("PhoneSource:opaque-B_02"))
+        val canonical = ProviderCredentialMailboxWireCodec.encodeRequest(request)
+        assertEquals(request, ProviderCredentialMailboxWireCodec.decodeRequest(canonical))
+        val text = canonical.decodeToString()
+        listOf(text.dropLast(1) + ",\"bindingDigest\":\"x\"}", text.replace("\"credentialRevision\":1", "\"credentialRevision\":\"1\""),
+            text.replace("\"credentialRevision\":1", "\"credentialRevision\":1,\"credentialRevision\":1"), text.replace("PhoneSource:opaque-B_02", "\\uD800")).forEach {
+            assertNull(ProviderCredentialMailboxWireCodec.decodeRequest(it.encodeToByteArray()))
+        }
+        val delivery = ProviderCredentialMailboxDeliveryV1(request, ProviderCredentialMailboxState.DELIVERED, 604800, envelope())
+        val encoded = ProviderCredentialMailboxWireCodec.encodeDelivery(delivery)
+        assertEquals(delivery, ProviderCredentialMailboxWireCodec.decodeDelivery(encoded))
+        assertNull(ProviderCredentialMailboxWireCodec.decodeDelivery(encoded.decodeToString().replace("DELIVERED", "REQUESTED").encodeToByteArray()))
+        assertFails { delivery.copy(envelope = null) }
     }
 }

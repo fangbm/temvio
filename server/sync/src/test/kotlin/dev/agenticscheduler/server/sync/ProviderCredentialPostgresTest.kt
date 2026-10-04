@@ -71,6 +71,20 @@ class ProviderCredentialPostgresTest {
         fail(CredentialMailboxFailure.DELIVERY_CONFLICT) { repo.publishCredentialRequest(targetActor, request.copy(provisionerDeviceId = DeviceId(other))) }
         assertNull(repo.assignedCredentialRequest(AuthenticatedDevice(account, other)))
     }
+    @Test fun `expiry maintenance purges ciphertext and ACK metadata even without ACTIVE clients`() {
+        repo.publishCredentialRequest(targetActor, request); repo.uploadCredentialEnvelope(sourceActor, bytes())
+        revoke(source); revoke(target)
+        clock.now = clock.now.plusSeconds(7 * 86400L)
+        repo.expireCredentialDeliveries(); repo.expireCredentialDeliveries()
+        ds.connection.use { c ->
+            c.prepareStatement("SELECT delivery_state, canonical_envelope, envelope_digest, provisioner_device_id, acknowledgement_result FROM provider_credential_mailbox WHERE target_device_id = ?").use { s ->
+                s.setString(1, target); s.executeQuery().use { r ->
+                    assertTrue(r.next()); assertEquals("DELIVERY_EXPIRED", r.getString(1))
+                    for (column in 2..5) assertNull(r.getObject(column))
+                }
+            }
+        }
+    }
     @Test fun `cross account source and non target request publication reject`() {
         fail(CredentialMailboxFailure.UNAUTHORIZED) { repo.publishCredentialRequest(targetActor, request.copy(provisionerDeviceId = DeviceId(foreign))) }
         fail(CredentialMailboxFailure.UNAUTHORIZED) { repo.publishCredentialRequest(sourceActor, request) }

@@ -11,6 +11,8 @@ import javax.sql.DataSource
 enum class CredentialMailboxFailure { UNAUTHORIZED, NOT_ASSIGNED, DELIVERY_CONFLICT, DELIVERY_EXPIRED, UNRESERVED_REVISION, INVALID_CREDENTIAL_ENVELOPE }
 class CredentialMailboxException(val reason: CredentialMailboxFailure) : IllegalStateException(reason.name)
 interface ServerProviderCredentialMailbox {
+    /** Retention maintenance, independent of client traffic or ACTIVE eligibility. */
+    fun expireCredentialDeliveries()
     fun publishCredentialRequest(actor: AuthenticatedDevice, request: ProviderCredentialReservationRequestV1)
     fun assignedCredentialRequest(actor: AuthenticatedDevice): ProviderCredentialMailboxDeliveryV1?
     fun uploadCredentialEnvelope(actor: AuthenticatedDevice, canonicalBytes: ByteArray)
@@ -20,6 +22,24 @@ interface ServerProviderCredentialMailbox {
 
 /** D8 account row lock serializes provisioning with revoke/rotate; auth is rechecked inside each transaction. */
 class JdbcProviderCredentialMailbox(private val dataSource: DataSource, private val clock: Clock = Clock.systemUTC()) : ServerProviderCredentialMailbox {
+    override fun expireCredentialDeliveries() {
+        val now = clock.instant()
+        val accounts = dataSource.connection.use { c ->
+            c.prepareStatement("SELECT DISTINCT account_id FROM provider_credential_mailbox WHERE expires_at <= ? AND delivery_state <> 'DELIVERY_EXPIRED' ORDER BY account_id").use { s ->
+                s.setTimestamp(1, Timestamp.from(now)); s.executeQuery().use { r -> buildList { while (r.next()) add(r.getString(1)) } }
+            }
+        }
+        for (account in accounts) dataSource.connection.use { c ->
+            c.autoCommit = false
+            try {
+                c.prepareStatement("SELECT account_id FROM account WHERE account_id = ? FOR UPDATE").use { s ->
+                    s.setString(1, account); s.executeQuery().use { it.next() }
+                }
+                expire(c, account, now)
+                c.commit()
+            } catch (failure: Throwable) { c.rollback(); throw failure }
+        }
+    }
     override fun publishCredentialRequest(actor: AuthenticatedDevice, request: ProviderCredentialReservationRequestV1) = transaction(actor) { c, now ->
         if (request.targetDeviceId.value != actor.deviceId || !active(c, actor.accountId, request.provisionerDeviceId.value)) fail(CredentialMailboxFailure.UNAUTHORIZED)
         val old = row(c, request.targetDeviceId.value, request.providerConfigId)
@@ -97,13 +117,16 @@ class JdbcProviderCredentialMailbox(private val dataSource: DataSource, private 
             val now = clock.instant()
             // Retain only the latest routing revision/expiry marker to reject deadline-reset retries.
             // Ciphertext, source assignment, digest and ACK metadata are purged at the frozen deadline.
-            c.prepareStatement("UPDATE provider_credential_mailbox SET delivery_state = 'DELIVERY_EXPIRED', canonical_envelope = NULL, envelope_digest = NULL, acknowledgement_result = NULL, provisioner_device_id = NULL WHERE account_id = ? AND expires_at <= ? AND delivery_state <> 'DELIVERY_EXPIRED'").use { s ->
-                s.setString(1, actor.accountId); s.setTimestamp(2, Timestamp.from(now)); s.executeUpdate()
-            }
+            expire(c, actor.accountId, now)
             // Expiry is committed even if the requested operation reports DELIVERY_EXPIRED.
             val result = try { block(c, now) } catch (e: CredentialMailboxException) { c.commit(); throw e }
             c.commit(); result
         } catch (e: Throwable) { c.rollback(); throw e } finally { c.autoCommit = true }
+    }
+    private fun expire(c: Connection, account: String, now: Instant) {
+        c.prepareStatement("UPDATE provider_credential_mailbox SET delivery_state = 'DELIVERY_EXPIRED', canonical_envelope = NULL, envelope_digest = NULL, acknowledgement_result = NULL, provisioner_device_id = NULL WHERE account_id = ? AND expires_at <= ? AND delivery_state <> 'DELIVERY_EXPIRED'").use { s ->
+            s.setString(1, account); s.setTimestamp(2, Timestamp.from(now)); s.executeUpdate()
+        }
     }
     private fun active(c: Connection, account: String, device: String): Boolean = c.prepareStatement("SELECT 1 FROM device WHERE account_id = ? AND device_id = ? AND revoked_at IS NULL").use { s ->
         s.setString(1, account); s.setString(2, device); s.executeQuery().use { it.next() }

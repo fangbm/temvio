@@ -35,14 +35,16 @@ class KtorProviderCredentialTransport(private val client: HttpClient, baseUrl: S
     override suspend fun fetch(config: String): ProviderCredentialMailboxDeliveryV1? { MutationId(config); return get("mailbox/${encodePathSegment(config)}") }
     private suspend fun send(path: String, bytes: ByteArray) {
         require(bytes.size <= ProviderCredentialWireCodec.MAX_HTTP_BODY_BYTES)
-        val response = client.post("$url/$path") { authorization(); contentType(ContentType.Application.Json); setBody(bytes) }
-        checkResponse(response)
+        // Scoped streaming prevents Ktor's default saved-body allocation before our cap check.
+        client.preparePost("$url/$path") { authorization(); contentType(ContentType.Application.Json); setBody(bytes) }
+            .execute { response -> checkResponse(response) }
     }
     private suspend fun get(path: String): ProviderCredentialMailboxDeliveryV1? {
-        val response = client.get("$url/$path") { authorization() }
-        checkResponse(response)
-        if (response.status == HttpStatusCode.NoContent) return null
-        return ProviderCredentialMailboxWireCodec.decodeDelivery(bounded(response)) ?: throw ProviderCredentialTransportException(0, "INVALID_CREDENTIAL_RESPONSE")
+        return client.prepareGet("$url/$path") { authorization() }.execute { response ->
+            checkResponse(response)
+            if (response.status == HttpStatusCode.NoContent) null
+            else ProviderCredentialMailboxWireCodec.decodeDelivery(bounded(response)) ?: throw ProviderCredentialTransportException(0, "INVALID_CREDENTIAL_RESPONSE")
+        }
     }
     private suspend fun checkResponse(response: HttpResponse) {
         if (response.status.value in 200..299) return
@@ -67,32 +69,69 @@ class KtorProviderCredentialTransport(private val client: HttpClient, baseUrl: S
 
 /** Source upload retry always reads the durable outbox first. This never automatically selects a Provider or credential. */
 class ProviderCredentialSourceDeliveryService(private val repository: ProviderCredentialProvisioningRepository,
-    private val hpke: PairingHpke, private val source: DeviceId, private val transport: ProviderCredentialTransport) {
-    suspend fun prepareByExplicitLocalUser(request: ProviderCredentialReservationRequestV1, recipient: HpkePublicKeyBase64Url,
+    private val hpke: PairingHpke, private val source: DeviceId, private val transport: ProviderCredentialTransport,
+    private val activeDevices: suspend () -> List<ClientActiveDeviceDirectoryEntry>,
+    private val nowEpochSeconds: () -> Long = { kotlin.time.Clock.System.now().epochSeconds }) {
+    suspend fun prepareByExplicitLocalUser(delivery: ProviderCredentialMailboxDeliveryV1,
         sourceBinding: WearProviderBindingMetadataV1, credential: ByteArray): ProviderCredentialComparison {
+        val request = delivery.request
+        require(delivery.state == ProviderCredentialMailboxState.REQUESTED && delivery.envelope == null)
+        if (delivery.expiresAtEpochSeconds <= nowEpochSeconds()) throw ProviderCredentialTransportException(410, "DELIVERY_EXPIRED")
         require(request.provisionerDeviceId == source && request.providerConfigId == sourceBinding.providerConfigId)
         validateProviderCredentialBytes(credential)
         val old = repository.delivery(source, request.targetDeviceId, request.providerConfigId, request.credentialRevision)
-        val envelope = if (old != null) old.envelope else {
+        // An explicit new selection cannot silently reuse a different prior transfer. Retry uses uploadReserved.
+        if (old != null) throw ProviderProvisioningException(ProviderCredentialRejection.CREDENTIAL_INTEGRITY_CONFLICT)
+        // Reuse the authenticated D8 ACTIVE directory/key; no provisioning-specific key or cached eligibility.
+        val directory = activeDevices()
+        require(directory.map { it.deviceId }.distinct().size == directory.size && directory.any { it.deviceId == source.value })
+        val recipient = HpkePublicKeyBase64Url(requireNotNull(directory.singleOrNull { it.deviceId == request.targetDeviceId.value }).hpkePublicKeyBase64Url)
+        val envelope = run {
             val plain = ProviderCredentialPlaintextV1(targetDeviceId = request.targetDeviceId, providerConfigId = request.providerConfigId,
                 credentialRevision = request.credentialRevision, credentialSecretBase64Url = encodeCanonicalBase64Url(credential))
             val e = hpke.encryptProviderCredential(recipient, plain)
-            repository.saveDelivery(ProviderCredentialDeliveryOutbox(source, e, ProviderCredentialWireCodec.encodeEnvelope(e).decodeToString(), providerEnvelopeDigest(e), ProviderDeliveryOutboxState.PREPARED))
+            repository.saveDelivery(ProviderCredentialDeliveryOutbox(source, e, ProviderCredentialWireCodec.encodeEnvelope(e).decodeToString(), providerEnvelopeDigest(e), ProviderDeliveryOutboxState.PREPARED, delivery.expiresAtEpochSeconds))
             e
         }
         return ProviderCredentialComparison(source, envelope, providerBindingDigest(sourceBinding), ProviderProvisioningSas.calculate(source, envelope, sourceBinding))
+    }
+    suspend fun comparisonForPendingDelivery(request: ProviderCredentialReservationRequestV1, sourceBinding: WearProviderBindingMetadataV1): ProviderCredentialComparison {
+        require(request.provisionerDeviceId == source && request.providerConfigId == sourceBinding.providerConfigId)
+        val row = repository.delivery(source, request.targetDeviceId, request.providerConfigId, request.credentialRevision)
+            ?: throw ProviderProvisioningException(ProviderCredentialRejection.UNRESERVED_REVISION)
+        require(row.state !in setOf(ProviderDeliveryOutboxState.DELIVERY_EXPIRED, ProviderDeliveryOutboxState.ACKNOWLEDGED))
+        if (row.expiresAtEpochSeconds <= nowEpochSeconds()) {
+            repository.removeDelivery(source, request.targetDeviceId, request.providerConfigId, request.credentialRevision)
+            throw ProviderCredentialTransportException(410, "DELIVERY_EXPIRED")
+        }
+        return ProviderCredentialComparison(source, row.envelope, providerBindingDigest(sourceBinding), ProviderProvisioningSas.calculate(source, row.envelope, sourceBinding))
     }
     suspend fun uploadReserved(request: ProviderCredentialReservationRequestV1) {
         require(request.provisionerDeviceId == source)
         val row = repository.delivery(source, request.targetDeviceId, request.providerConfigId, request.credentialRevision)
             ?: throw ProviderProvisioningException(ProviderCredentialRejection.UNRESERVED_REVISION)
         if (row.state in setOf(ProviderDeliveryOutboxState.ACKNOWLEDGED, ProviderDeliveryOutboxState.DELIVERY_EXPIRED)) return
+        if (row.expiresAtEpochSeconds <= nowEpochSeconds()) {
+            repository.removeDelivery(source, request.targetDeviceId, request.providerConfigId, request.credentialRevision)
+            throw ProviderCredentialTransportException(410, "DELIVERY_EXPIRED")
+        }
         try {
             transport.uploadExact(row.canonicalEnvelopeJson.encodeToByteArray())
-            repository.saveDelivery(row.copy(state = ProviderDeliveryOutboxState.UPLOADED))
+            // Cancellation/expiry/receipt may have removed it while HTTP was in flight; never recreate retry bytes.
+            repository.markDeliveryUploaded(row)
         } catch (e: ProviderCredentialTransportException) {
-            if (e.code == "DELIVERY_EXPIRED") repository.saveDelivery(row.copy(state = ProviderDeliveryOutboxState.DELIVERY_EXPIRED))
+            if (e.code == "DELIVERY_EXPIRED") repository.removeDelivery(source, request.targetDeviceId, request.providerConfigId, request.credentialRevision)
             throw e
         }
+    }
+    /** Receipt terminates encrypted retry retention only; it never authorizes target installation. */
+    suspend fun receivedInformationalAcknowledgement(ack: ProviderCredentialAcknowledgementV1) {
+        val row = repository.delivery(source, ack.targetDeviceId, ack.providerConfigId, ack.credentialRevision) ?: return
+        if (row.envelopeDigest != ack.envelopeDigestBase64Url) throw ProviderProvisioningException(ProviderCredentialRejection.CREDENTIAL_INTEGRITY_CONFLICT)
+        repository.removeDelivery(source, ack.targetDeviceId, ack.providerConfigId, ack.credentialRevision)
+    }
+    suspend fun cancelByExplicitLocalUser(request: ProviderCredentialReservationRequestV1) {
+        require(request.provisionerDeviceId == source)
+        repository.removeDelivery(source, request.targetDeviceId, request.providerConfigId, request.credentialRevision)
     }
 }

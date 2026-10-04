@@ -127,6 +127,16 @@ object ProviderCredentialWireCodec {
             require(root.keys == keys)
             // Check decoded strings too: escaped unpaired surrogates must not survive parsing.
             root.values.forEach { require(it is JsonPrimitive && it != JsonNull && (!it.isString || validUnicode(it.content))) }
+            val integers = setOf(versionKey, "credentialRevision", "maxContextUnits", "reservedOutputUnits")
+            val booleans = setOf("streamingSupported", "toolCallingSupported", "credentialRequired")
+            for ((key, value) in root) {
+                val primitive = value as JsonPrimitive
+                when (key) {
+                    in integers -> require(!primitive.isString)
+                    in booleans -> require(!primitive.isString && primitive.content in setOf("true", "false"))
+                    else -> require(primitive.isString)
+                }
+            }
             val version = integer(root, versionKey)
             if (version != 1L) return ProviderCredentialDecodeResult.Rejected(ProviderCredentialWireFailure.UNSUPPORTED_CREDENTIAL_ENVELOPE_VERSION)
             listOf("credentialRevision", "maxContextUnits", "reservedOutputUnits").filter { it in keys }.forEach { integer(root, it) }

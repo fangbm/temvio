@@ -1,3 +1,13 @@
+# D9-03-01 — Provider Credential Provisioning
+
+Implementation evidence: [acceptance record](../D9_03_01_PROVISIONING_ACCEPTANCE_RECORD.md).
+Review: [Draft PR #26](https://github.com/fangbm/temvio/pull/26).
+Status: implementation submitted for review; C2 post-expiry marker retention
+**BLOCKED_BY_DECISION (OD-059)**. The original approved Task Spec follows unchanged.
+OD-012 remains OPEN. Do not merge or start the next slice.
+
+---
+
 D9-03-00 已完成最终人工复审并合并。
 
 Baseline / merge commit：

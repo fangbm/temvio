@@ -20,7 +20,13 @@ data class ProviderCredentialMailboxDeliveryV1(
     val state: ProviderCredentialMailboxState,
     val expiresAtEpochSeconds: Long,
     val envelope: ProviderCredentialEnvelopeV1?,
-)
+) {
+    init {
+        require(expiresAtEpochSeconds > 0)
+        require((state == ProviderCredentialMailboxState.DELIVERED) == (envelope != null))
+        if (envelope != null) require(envelope.targetDeviceId == request.targetDeviceId && envelope.providerConfigId == request.providerConfigId && envelope.credentialRevision == request.credentialRevision)
+    }
+}
 
 /** One routing identity per request. JSON has the same strict lexical and UTF-8 policy as C1. */
 object ProviderCredentialMailboxWireCodec {

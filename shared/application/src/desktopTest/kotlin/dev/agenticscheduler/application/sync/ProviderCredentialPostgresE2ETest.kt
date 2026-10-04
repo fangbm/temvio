@@ -54,6 +54,7 @@ class ProviderCredentialPostgresE2ETest {
                 application { syncServerModule(server, SyncServerConfig(ds.jdbcUrl, ds.username, ds.password)) }
                 val targetTransport = KtorProviderCredentialTransport(client, "https://localhost") { targetAuth }
                 val sourceTransport = KtorProviderCredentialTransport(client, "https://localhost") { sourceAuth }
+                val directory = KtorSyncLifecycleTransport(client, "https://localhost", { sourceAuth })
                 val sourceRef = store.importSecret(object : PlatformSecretMaterial { override fun copyRawSecretBytesForSecureStore() = rawCredential.encodeToByteArray() }); ownedRefs += sourceRef
                 val sourceConfig = ProviderConfig(sourceConfigId, baseUrlCanary, modelCanary, 32768, 4096, true, true, sourceRef)
                 val targetConfig = sourceConfig.copy(id = targetConfigId, credentialReference = null)
@@ -69,22 +70,23 @@ class ProviderCredentialPostgresE2ETest {
                 val reserved = targetService.reserveForExplicitUser(targetBinding, source)
                 val request = ProviderCredentialReservationRequestV1(target, targetConfigId.value, reserved.liveRevision!!, source)
                 targetTransport.publish(request); targetTransport.publish(request)
-                assertEquals(request, checkNotNull(sourceTransport.assignedRequest()).request)
+                val assigned = checkNotNull(sourceTransport.assignedRequest())
+                assertEquals(request, assigned.request)
                 var sourceRepo = RoomProviderCredentialProvisioningRepository(sourceDb)
-                val sourceService = ProviderCredentialSourceDeliveryService(sourceRepo, TinkPairingHpke(), source, sourceTransport)
+                val sourceService = ProviderCredentialSourceDeliveryService(sourceRepo, TinkPairingHpke(), source, sourceTransport, directory::activeDevices)
                 val selected = RoomAgentStateRepository(sourceDb).providerConfig(sourceConfigId)!!
                 val sourceBinding = selected.provisioningBinding(ProviderConfigId(request.providerConfigId), true)
                 assertEquals(targetConfigId.value, sourceBinding.providerConfigId)
                 assertNotEquals(selected.id.value, sourceBinding.providerConfigId)
                 val secret = checkNotNull(store.readSecret(selected.credentialReference!!)).copyRawSecretBytesForSecureStore()
-                val sourceComparison = try { sourceService.prepareByExplicitLocalUser(request, targetKey.publicKey, sourceBinding, secret) } finally { secret.fill(0) }
+                val sourceComparison = try { sourceService.prepareByExplicitLocalUser(assigned, sourceBinding, secret) } finally { secret.fill(0) }
                 val original = sourceRepo.delivery(source, target, targetConfigId.value, 1)!!
                 // Simulate failed send/lost response: durable bytes survive close/reopen and encrypt is not invoked again.
                 sourceDb.close(); sourceDb = openDesktopDatabase(sourceFile.toString()); sourceRepo = RoomProviderCredentialProvisioningRepository(sourceDb)
                 val noEncryptRetry = object : PairingHpke by TinkPairingHpke() {
                     override fun encrypt(publicKey: HpkePublicKeyBase64Url, plaintext: ByteArray, contextInfo: ByteArray): HpkeCiphertextComponents = error("RETRY_MUST_NOT_ENCRYPT")
                 }
-                val retrySource = ProviderCredentialSourceDeliveryService(sourceRepo, noEncryptRetry, source, sourceTransport)
+                val retrySource = ProviderCredentialSourceDeliveryService(sourceRepo, noEncryptRetry, source, sourceTransport, directory::activeDevices)
                 retrySource.uploadReserved(request); retrySource.uploadReserved(request)
                 assertEquals(original.canonicalEnvelopeJson, sourceRepo.delivery(source, target, targetConfigId.value, 1)!!.canonicalEnvelopeJson)
                 val fetched = targetTransport.fetch(targetConfigId.value)!!
@@ -104,6 +106,8 @@ class ProviderCredentialPostgresE2ETest {
                 assertEquals(rawCredential, checkNotNull(store.readProviderSecret(SecretReference(state.activeReference))).decodeToString())
                 assertEquals(ProviderCredentialAcknowledgementResult.DUPLICATE, targetService.installApproved(source, envelope).result)
                 targetTransport.acknowledge(installed)
+                retrySource.receivedInformationalAcknowledgement(installed)
+                assertNull(sourceRepo.delivery(source, target, targetConfigId.value, 1))
                 assertEquals(ProviderCredentialMailboxState.ACKNOWLEDGED, targetTransport.fetch(targetConfigId.value)!!.state)
                 assertNull(targetTransport.fetch(targetConfigId.value)!!.envelope)
                 // Every public table is scanned; secret/plaintext hash/binding JSON/digest/ref stay client-only.

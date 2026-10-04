@@ -62,6 +62,7 @@ data class ProviderCredentialDeliveryOutbox(
     val canonicalEnvelopeJson: String,
     val envelopeDigest: String,
     val state: ProviderDeliveryOutboxState,
+    val expiresAtEpochSeconds: Long,
 )
 
 class ProviderProvisioningException(val reason: ProviderCredentialRejection) : IllegalStateException(reason.name)
@@ -76,5 +77,8 @@ interface ProviderCredentialProvisioningRepository {
     suspend fun journals(target: DeviceId): List<ProviderCredentialInstallJournal>
     suspend fun updateJournal(expected: ProviderCredentialInstallJournal, updated: ProviderCredentialInstallJournal): Boolean
     suspend fun saveDelivery(value: ProviderCredentialDeliveryOutbox): ProviderCredentialDeliveryOutbox
+    suspend fun markDeliveryUploaded(expected: ProviderCredentialDeliveryOutbox): Boolean
     suspend fun delivery(source: DeviceId, target: DeviceId, config: String, revision: Long): ProviderCredentialDeliveryOutbox?
+    /** End retry retention for this exact delivery only; never affects target installation/counters. */
+    suspend fun removeDelivery(source: DeviceId, target: DeviceId, config: String, revision: Long)
 }

@@ -2,12 +2,15 @@ package dev.agenticscheduler.application.sync
 
 import androidx.room3.useReaderConnection
 import androidx.room3.useWriterConnection
+import androidx.room3.withWriteTransaction
 import dev.agenticscheduler.agent.history.*
 import dev.agenticscheduler.database.AgenticSchedulerDatabase
 import dev.agenticscheduler.database.openDesktopDatabase
 import dev.agenticscheduler.database.repository.*
 import dev.agenticscheduler.sync.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import java.nio.file.Files
 import kotlin.test.*
 
@@ -50,8 +53,12 @@ class ProviderCredentialInstallTest {
         override val referencePrefix = "test-provider://"
         val values = mutableMapOf<String, ByteArray>()
         var deletionFails = false
+        var readingFails = false
         override fun store(id: String, value: ByteArray) { values[id] = value.copyOf() }
-        override fun read(id: String) = values[id]?.copyOf()
+        override fun read(id: String): ByteArray? {
+            if (readingFails) throw SecureStoreUnavailableException("TEST_READ_FAILED")
+            return values[id]?.copyOf()
+        }
         override fun delete(id: String) { if (deletionFails) throw SecureStoreUnavailableException("TEST_DELETE_FAILED"); values.remove(id) }
     }
     private fun reject(reason: ProviderCredentialRejection, block: () -> Unit) { assertEquals(reason, assertFailsWith<ProviderProvisioningException>(block = block).reason) }
@@ -131,6 +138,25 @@ class ProviderCredentialInstallTest {
             assertEquals(ProviderCredentialAcknowledgementResult.DUPLICATE, h.service().installApproved(source, second).result)
         }
     }
+    @Test fun `unavailable Provider read retains cleanup ownership through restart instead of assuming absent slot`() = runBlocking {
+        Harness().use { h ->
+            h.initialize()
+            val crashing = h.service(ProviderInstallCheckpoint { if (it == ProviderInstallPhase.SECRET_IMPORTED) error("SIMULATED_PROCESS_STOP") })
+            val e = h.reserveAndApprove(crashing)
+            assertFails { crashing.installApproved(source, e) }
+            val imported = h.repo.journals(target).single()
+            h.backend.readingFails = true
+            h.reopen(); h.service().recover()
+            assertEquals(ProviderInstallPhase.REJECTED, h.repo.journals(target).single().phase)
+            assertEquals(1, h.backend.values.size)
+            assertNull(h.repo.state(target, config)!!.activeReference)
+            h.backend.readingFails = false
+            h.reopen(); h.service().recover()
+            assertEquals(ProviderInstallPhase.COMPLETED, h.repo.journals(target).single().phase)
+            assertNull(h.slots.restoreProviderSlot(SecretReference(imported.preparedReference), imported.installIdentity))
+            assertTrue(h.backend.values.isEmpty())
+        }
+    }
     @Test fun `wipe between import and publish rejects late install and cleans journal slots`() = runBlocking {
         Harness().use { h ->
             h.initialize()
@@ -141,6 +167,31 @@ class ProviderCredentialInstallTest {
             assertNull(h.repo.state(target, config)!!.activeReference)
             assertTrue(h.backend.values.isEmpty())
             assertNull(RoomAgentStateRepository(h.db).providerConfig(ProviderConfigId(config))!!.credentialReference)
+        }
+    }
+    @Test fun `publish rechecks ACTIVE enrollment after import and observed revocation wipe retains the floor`() = runBlocking {
+        Harness().use { h ->
+            h.initialize()
+            val racing = h.service(ProviderInstallCheckpoint { if (it == ProviderInstallPhase.SECRET_IMPORTED) {
+                h.db.useWriterConnection { c -> c.usePrepared("DELETE FROM local_pairing_enrollment") { it.step() } }
+            } })
+            val e = h.reserveAndApprove(racing)
+            reject(ProviderCredentialRejection.CREDENTIAL_STATE_LOST) { runBlocking { racing.installApproved(source, e) } }
+            assertNull(h.repo.state(target, config)!!.activeReference)
+            h.service().disableAndWipe(config)
+            h.reopen(); h.service().recover()
+            assertEquals(2L, h.repo.state(target, config)!!.rejectionFloor)
+            assertTrue(h.backend.values.isEmpty())
+            reject(ProviderCredentialRejection.CREDENTIAL_STATE_LOST) { runBlocking { h.service().reserveForExplicitUser(binding, source) } }
+        }
+    }
+    @Test fun `caller binding mismatch rejects rather than looping CAS or silently approving source metadata`() = runBlocking {
+        Harness().use { h ->
+            h.initialize()
+            reject(ProviderCredentialRejection.PROVIDER_BINDING_MISMATCH) { runBlocking { h.service().reserveForExplicitUser(binding.copy(model = "unapproved-model"), source) } }
+            assertEquals(0L, h.repo.state(target, config)!!.highestReservedRevision)
+            assertTrue(h.backend.values.isEmpty())
+            assertEquals(1L, h.service().reserveForExplicitUser(binding, source).liveRevision)
         }
     }
     @Test fun `retained enrolled identity with missing known config or whole state fails closed`() = runBlocking {
@@ -199,6 +250,150 @@ class ProviderCredentialInstallTest {
             h.reopen(); h.service().recover()
             assertNull(h.slots.readProviderSecret(oldRef))
             assertEquals(3L, h.service().reserveForExplicitUser(binding.copy(baseUrl = "https://changed.example/v1"), source).liveRevision)
+        }
+    }
+    @Test fun `source failed upload and restart retry exact canonical bytes without encryption or secret reselection`() = runBlocking {
+        Harness().use { h ->
+            h.initialize(); h.service().reserveForExplicitUser(binding, source)
+            val request = ProviderCredentialReservationRequestV1(target, config, 1, source)
+            val delivery = ProviderCredentialMailboxDeliveryV1(request, ProviderCredentialMailboxState.REQUESTED, 604800, null)
+            val sent = mutableListOf<List<Byte>>()
+            var fails = true
+            val transport = object : ProviderCredentialTransport {
+                override suspend fun uploadExact(canonicalEnvelope: ByteArray) {
+                    sent += canonicalEnvelope.toList()
+                    if (fails) throw ProviderCredentialTransportException(503, "HTTP_503")
+                }
+                override suspend fun assignedRequest(): ProviderCredentialMailboxDeliveryV1? = null
+                override suspend fun fetch(config: String): ProviderCredentialMailboxDeliveryV1? = null
+                override suspend fun publish(request: ProviderCredentialReservationRequestV1) = Unit
+                override suspend fun acknowledge(value: ProviderCredentialAcknowledgementV1) = Unit
+            }
+            val directory = suspend { listOf(ClientActiveDeviceDirectoryEntry(target.value, h.key.publicKey.value), ClientActiveDeviceDirectoryEntry(source.value, h.key.publicKey.value)) }
+            val first = ProviderCredentialSourceDeliveryService(h.repo, h.hpke, source, transport, directory, { 0 })
+            val comparison = first.prepareByExplicitLocalUser(delivery, binding, secret.encodeToByteArray())
+            assertFailsWith<ProviderCredentialTransportException> { first.uploadReserved(request) }
+            assertEquals(ProviderDeliveryOutboxState.PREPARED, h.repo.delivery(source, target, config, 1)!!.state)
+            h.reopen(); fails = false
+            val noEncrypt = object : PairingHpke by h.hpke {
+                override fun encrypt(publicKey: HpkePublicKeyBase64Url, plaintext: ByteArray, contextInfo: ByteArray): HpkeCiphertextComponents = error("NO_REENCRYPT")
+            }
+            val retry = ProviderCredentialSourceDeliveryService(h.repo, noEncrypt, source, transport, directory, { 0 })
+            assertEquals(comparison, retry.comparisonForPendingDelivery(request, binding))
+            retry.uploadReserved(request); retry.uploadReserved(request)
+            assertEquals(3, sent.size); assertTrue(sent.all { it == sent[0] })
+            assertEquals(ProviderDeliveryOutboxState.UPLOADED, h.repo.delivery(source, target, config, 1)!!.state)
+            reject(ProviderCredentialRejection.CREDENTIAL_INTEGRITY_CONFLICT) { runBlocking {
+                retry.prepareByExplicitLocalUser(delivery, binding, "different-selected-secret".encodeToByteArray())
+            } }
+        }
+    }
+    @Test fun `actual Room rollback cleans imported slot while unknown commit preserves published ownership`() = runBlocking {
+        for (commitUnknown in listOf(false, true)) Harness().use { h ->
+            h.initialize(); val first = h.reserveAndApprove(h.service(), "old-secret"); h.service().installApproved(source, first)
+            val old = h.repo.state(target, config)!!.activeReference!!
+            val delegate = h.repo
+            val faulting = object : ProviderCredentialProvisioningRepository by delegate {
+                override suspend fun compareAndSet(expected: ProviderCredentialRevisionState, updated: ProviderCredentialRevisionState, journals: List<ProviderCredentialInstallJournal>): Boolean {
+                    if (journals.any { it.phase == ProviderInstallPhase.METADATA_COMMITTED }) {
+                        if (commitUnknown) { assertTrue(delegate.compareAndSet(expected, updated, journals)); error("DB_COMMIT_RESPONSE_LOST") }
+                        h.db.withWriteTransaction { assertTrue(delegate.compareAndSet(expected, updated, journals)); error("REAL_ROOM_TRANSACTION_ROLLBACK") }
+                    }
+                    return delegate.compareAndSet(expected, updated, journals)
+                }
+            }
+            val service = ProviderCredentialProvisioningService(faulting, h.slots, h.hpke, target, h.key.privateKey)
+            val second = h.reserveAndApprove(service, "new-secret")
+            assertFails { service.installApproved(source, second) }
+            val prepared = h.repo.journals(target).single { it.revision == 2L }.preparedReference
+            h.reopen(); h.service().recover()
+            val state = h.repo.state(target, config)!!
+            if (commitUnknown) {
+                assertEquals(prepared, state.activeReference); assertEquals(2L, state.highestAcceptedRevision)
+                assertNotNull(h.slots.readProviderSecret(SecretReference(prepared))); assertNull(h.slots.readProviderSecret(SecretReference(old)))
+            } else {
+                assertEquals(old, state.activeReference); assertEquals(1L, state.highestAcceptedRevision)
+                assertNull(h.slots.readProviderSecret(SecretReference(prepared))); assertNotNull(h.slots.readProviderSecret(SecretReference(old)))
+            }
+        }
+    }
+    @Test fun `two source reservations serialize through Room CAS and only the latest is live`() = runBlocking {
+        Harness().use { h ->
+            h.initialize()
+            val states = listOf(source, DeviceId("OtherSource")).map { selected ->
+                async { h.service().reserveForExplicitUser(binding, selected) }
+            }.awaitAll()
+            assertEquals(listOf(1L, 2L), states.map { it.liveRevision!! }.sorted())
+            val live = h.repo.state(target, config)!!
+            assertEquals(2L, live.liveRevision)
+            assertEquals(states.single { it.liveRevision == 2L }.selectedProvisioner, live.selectedProvisioner)
+            val old = states.single { it.liveRevision == 1L }
+            reject(ProviderCredentialRejection.UNRESERVED_REVISION) { runBlocking { h.service().compare(old.selectedProvisioner!!, h.envelope(1)) } }
+        }
+    }
+    @Test fun `missing or unreadable accepted secret fails closed and only a fresh higher reservation can replace it`() = runBlocking {
+        Harness().use { h ->
+            h.initialize(); val e = h.reserveAndApprove(h.service()); h.service().installApproved(source, e)
+            val accepted = h.repo.state(target, config)!!
+            h.backend.readingFails = true
+            reject(ProviderCredentialRejection.CREDENTIAL_UNAVAILABLE) { runBlocking { h.service().installApproved(source, e) } }
+            h.backend.readingFails = false
+            val slot = assertNotNull(h.slots.restoreProviderSlot(SecretReference(accepted.activeReference!!), accepted.activeInstallIdentity!!))
+            h.slots.deleteProviderSlot(slot)
+            h.reopen(); h.service().recover()
+            reject(ProviderCredentialRejection.CREDENTIAL_UNAVAILABLE) { runBlocking { h.service().installApproved(source, e) } }
+            assertEquals(accepted, h.repo.state(target, config))
+            val replacement = h.reserveAndApprove(h.service(), "replaced-explicitly")
+            assertEquals(2L, replacement.credentialRevision)
+            h.service().installApproved(source, replacement)
+            assertEquals(2L, h.repo.state(target, config)!!.highestAcceptedRevision)
+        }
+    }
+    @Test fun `source expiry cancellation receipt and in flight cancellation purge exact retry bytes without target authority`() = runBlocking {
+        for (terminal in listOf("expired", "relay-expired", "cancel", "ack", "cancel-in-flight")) Harness().use { h ->
+            h.initialize(); h.service().reserveForExplicitUser(binding, source)
+            val request = ProviderCredentialReservationRequestV1(target, config, 1, source)
+            val assigned = ProviderCredentialMailboxDeliveryV1(request, ProviderCredentialMailboxState.REQUESTED, 604800, null)
+            var now = 0L
+            var sends = 0
+            val transport = object : ProviderCredentialTransport {
+                override suspend fun uploadExact(canonicalEnvelope: ByteArray) {
+                    sends++
+                    if (terminal == "relay-expired") throw ProviderCredentialTransportException(410, "DELIVERY_EXPIRED")
+                    if (terminal == "cancel-in-flight") h.repo.removeDelivery(source, target, config, 1)
+                }
+                override suspend fun assignedRequest(): ProviderCredentialMailboxDeliveryV1? = null
+                override suspend fun fetch(config: String): ProviderCredentialMailboxDeliveryV1? = null
+                override suspend fun publish(request: ProviderCredentialReservationRequestV1) = Unit
+                override suspend fun acknowledge(value: ProviderCredentialAcknowledgementV1) = Unit
+            }
+            val delivery = ProviderCredentialSourceDeliveryService(h.repo, h.hpke, source, transport,
+                { listOf(ClientActiveDeviceDirectoryEntry(target.value, h.key.publicKey.value), ClientActiveDeviceDirectoryEntry(source.value, h.key.publicKey.value)) }, { now })
+            val comparison = delivery.prepareByExplicitLocalUser(assigned, binding, secret.encodeToByteArray())
+            val targetBefore = h.repo.state(target, config)
+            when (terminal) {
+                "expired" -> {
+                    now = 604800
+                    assertEquals("DELIVERY_EXPIRED", assertFailsWith<ProviderCredentialTransportException> { delivery.uploadReserved(request) }.code)
+                    assertEquals(0, sends)
+                    assertFailsWith<ProviderCredentialTransportException> { delivery.prepareByExplicitLocalUser(assigned, binding, secret.encodeToByteArray()) }
+                }
+                "relay-expired" -> assertFailsWith<ProviderCredentialTransportException> { delivery.uploadReserved(request) }
+                "cancel" -> delivery.cancelByExplicitLocalUser(request)
+                "ack" -> {
+                    val receipt = ProviderCredentialAcknowledgementV1(targetDeviceId = target, providerConfigId = config, credentialRevision = 1,
+                        envelopeDigestBase64Url = providerEnvelopeDigest(comparison.envelope), result = ProviderCredentialAcknowledgementResult.INSTALLED)
+                    reject(ProviderCredentialRejection.CREDENTIAL_INTEGRITY_CONFLICT) { runBlocking {
+                        delivery.receivedInformationalAcknowledgement(receipt.copy(envelopeDigestBase64Url = encodeCanonicalBase64Url(ByteArray(32))))
+                    } }
+                    assertNotNull(h.repo.delivery(source, target, config, 1))
+                    delivery.receivedInformationalAcknowledgement(receipt)
+                }
+                "cancel-in-flight" -> delivery.uploadReserved(request)
+            }
+            h.reopen()
+            assertNull(h.repo.delivery(source, target, config, 1))
+            assertEquals(targetBefore, h.repo.state(target, config), "Outbox receipt/expiry never authorizes installation or advances counters")
         }
     }
 }
