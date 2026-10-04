@@ -11,6 +11,8 @@ import dev.agenticscheduler.sync.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.nio.file.Files
 import kotlin.test.*
 
@@ -96,7 +98,7 @@ class ProviderCredentialInstallTest {
             reject(ProviderCredentialRejection.UNRESERVED_REVISION) { runBlocking { service.approveComparisonByExplicitLocalUser(comparison, comparison.comparisonCode) } }
             service.disableAndWipe(config)
             val wiped = h.repo.state(target, config)!!
-            assertEquals(3L, wiped.rejectionFloor)
+            assertEquals(3L, wiped.rejectionFloor.toLongExact())
             assertNull(wiped.activeReference)
             reject(ProviderCredentialRejection.ROLLBACK_REJECTED) { runBlocking { service.compare(source, h.envelope(1)) } }
             h.reopen(); assertEquals(4L, h.service().reserveForExplicitUser(binding, source).liveRevision)
@@ -180,7 +182,7 @@ class ProviderCredentialInstallTest {
             assertNull(h.repo.state(target, config)!!.activeReference)
             h.service().disableAndWipe(config)
             h.reopen(); h.service().recover()
-            assertEquals(2L, h.repo.state(target, config)!!.rejectionFloor)
+            assertEquals(2L, h.repo.state(target, config)!!.rejectionFloor.toLongExact())
             assertTrue(h.backend.values.isEmpty())
             reject(ProviderCredentialRejection.CREDENTIAL_STATE_LOST) { runBlocking { h.service().reserveForExplicitUser(binding, source) } }
         }
@@ -222,12 +224,60 @@ class ProviderCredentialInstallTest {
             assertTrue(h.repo.compareAndSet(s, s.copy(highestReservedRevision = Long.MAX_VALUE, generation = s.generation + 1)))
             reject(ProviderCredentialRejection.REVISION_OVERFLOW) { runBlocking { h.service().reserveForExplicitUser(binding, source) } }
             val dump = h.db.useReaderConnection { c -> c.usePrepared("SELECT state_json FROM provider_credential_revision UNION ALL SELECT journal_json FROM provider_credential_install_journal") { row -> buildString { while (row.step()) append(row.getText(0)) } } }
-            assertFalse(secret in dump)
-            assertFalse(encodeCanonicalBase64Url(pairingSha256(secret.encodeToByteArray())) in dump)
+            val canaries = listOf(secret, encodeCanonicalBase64Url(secret.encodeToByteArray()),
+                encodeCanonicalBase64Url(pairingSha256(secret.encodeToByteArray())),
+                pairingSha256(secret.encodeToByteArray()).joinToString("") { "%02x".format(it) })
+            canaries.forEach { assertFalse(it in dump, "Credential or plaintext digest persisted in metadata") }
             h.db.close()
-            assertFalse(secret in Files.readAllBytes(h.path).decodeToString())
+            val persisted = Files.readAllBytes(h.path).decodeToString()
+            canaries.forEach { assertFalse(it in persisted, "Credential or plaintext digest persisted in SQLite") }
             h.db = openDesktopDatabase(h.path.toString())
         }
+    }
+    @Test fun `wipe after wire revision exhaustion clears secret and preserves exact barrier and CAS generation after restart`() = runBlocking {
+        Harness().use { h ->
+            h.initialize(); val installed = h.reserveAndApprove(h.service()); h.service().installApproved(source, installed)
+            val oldReference = SecretReference(h.repo.state(target, config)!!.activeReference!!)
+            val exhausted = h.repo.state(target, config)!!.copy(highestReservedRevision = Long.MAX_VALUE,
+                generation = ProviderLocalCounter.of(Long.MAX_VALUE))
+            // Fault injection reaches both signed-64-bit boundaries without allocating billions of revisions.
+            h.db.withWriteTransaction {
+                h.db.useWriterConnection { c -> c.usePrepared("UPDATE provider_credential_revision SET state_json = ? WHERE target_device_id = ? AND provider_config_id = ?") {
+                    it.bindText(1, Json.encodeToString(exhausted)); it.bindText(2, target.value); it.bindText(3, config); it.step()
+                } }
+            }
+            h.service().disableAndWipe(config)
+            val wiped = h.repo.state(target, config)!!
+            assertEquals("9223372036854775808", wiped.rejectionFloor.decimal)
+            assertEquals("9223372036854775808", wiped.generation.decimal)
+            assertEquals(1L, wiped.highestAcceptedRevision) // A wipe barrier is never an installed revision.
+            assertNull(wiped.activeReference)
+            assertNull(RoomAgentStateRepository(h.db).providerConfig(ProviderConfigId(config))!!.credentialReference)
+            assertNull(h.slots.readProviderSecret(oldReference))
+            h.reopen(); h.service().recover()
+            assertEquals(wiped, h.repo.state(target, config))
+            reject(ProviderCredentialRejection.ROLLBACK_REJECTED) { runBlocking { h.service().compare(source, h.envelope(Long.MAX_VALUE)) } }
+            reject(ProviderCredentialRejection.REVISION_OVERFLOW) { runBlocking { h.service().reserveForExplicitUser(binding, source) } }
+            h.service().disableAndWipe(config)
+            h.reopen()
+            assertEquals("9223372036854775809", h.repo.state(target, config)!!.rejectionFloor.decimal)
+            assertEquals("9223372036854775809", h.repo.state(target, config)!!.generation.decimal)
+            assertTrue(h.backend.values.isEmpty())
+        }
+    }
+    @Test fun `local counter arithmetic is exact while wire revision remains signed 64 bit`() {
+        assertEquals("1000000000000000000000000000000", (ProviderLocalCounter("999999999999999999999999999999") + 1).decimal)
+        assertTrue(ProviderLocalCounter("100") > ProviderLocalCounter("99"))
+        assertTrue(ProviderLocalCounter("101") > ProviderLocalCounter("100"))
+        for (invalid in listOf("", "-1", "+1", "01", " 1", "1.0")) assertFailsWith<IllegalArgumentException> { ProviderLocalCounter(invalid) }
+        val state = ProviderCredentialRevisionState(target, config, highestReservedRevision = Long.MAX_VALUE - 1)
+        assertEquals(Long.MAX_VALUE, state.nextRevision())
+        val exhausted = state.copy(highestReservedRevision = Long.MAX_VALUE)
+        reject(ProviderCredentialRejection.REVISION_OVERFLOW) { exhausted.nextRevision() }
+        val barrier = exhausted.nextRejectionFloor()
+        assertTrue(barrier > Long.MAX_VALUE)
+        assertFailsWith<NumberFormatException> { barrier.toLongExact() }
+        assertEquals(barrier, Json.decodeFromString<ProviderCredentialRevisionState>(Json.encodeToString(exhausted.copy(rejectionFloor = barrier))).rejectionFloor)
     }
     @Test fun `slot purposes one install and ownership cannot overwrite D8 material`() = runBlocking {
         val backend = Backend(); val store = DesktopPlatformSecureStore(backend, TinkPairingHpke())
@@ -258,7 +308,7 @@ class ProviderCredentialInstallTest {
             assertNull(agent.providerConfig(ProviderConfigId(config))!!.credentialReference)
             val invalidated = h.repo.state(target, config)!!
             assertEquals(ProviderReservationPhase.DISABLED, invalidated.phase)
-            assertEquals(2L, invalidated.rejectionFloor)
+            assertEquals(2L, invalidated.rejectionFloor.toLongExact())
             reject(ProviderCredentialRejection.ROLLBACK_REJECTED) { runBlocking { h.service().installApproved(source, e) } }
             h.reopen(); h.service().recover()
             assertNull(h.slots.readProviderSecret(oldRef))

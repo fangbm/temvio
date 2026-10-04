@@ -169,7 +169,7 @@ class RoomAgentStateRepository(private val database: AgenticSchedulerDatabase) :
         managed.forEach { require(value.credentialReference == null || value.credentialReference?.value == it.activeReference) { "PROVIDER_CREDENTIAL_JOURNAL_REQUIRED" } }
         val invalidates = managed.isNotEmpty() && (previousPayload != encodedPayload || managed.any { it.activeReference != null && value.credentialReference == null })
         if (invalidates) for (state in managed) {
-            val disabled = state.copy(rejectionFloor = state.nextRevision(), liveRevision = null, selectedProvisioner = null,
+            val disabled = state.copy(rejectionFloor = state.nextRejectionFloor(), liveRevision = null, selectedProvisioner = null,
                 phase = ProviderReservationPhase.DISABLED, approvedBinding = null, envelopeDigest = null, approvalBindingDigest = null,
                 activeReference = null, activeInstallIdentity = null, activeBinding = null, generation = state.generation + 1)
             execute("UPDATE provider_credential_revision SET state_json = ? WHERE target_device_id = ? AND provider_config_id = ?",

@@ -31,6 +31,10 @@ for C1–C8; OD-059 asks only about the uncovered post-expiry persistence bounda
   Same accepted secret permits transient secure-store equality comparison;
   unequal value rejects. Missing/unreadable accepted secret fails closed; only an
   explicit higher reservation repairs it. Known-state loss cannot reset counters.
+  Wire revisions remain positive signed 64-bit values and fail closed at exhaustion.
+  Local rejection-floor/CAS generation use exact canonical nonnegative decimal
+  counters, so `max + 1` wipe still clears credentials after `Long.MAX_VALUE`;
+  that floor is not an installed revision or a new wire value. Restart preserves it.
 - C4: platform-issued Provider-purpose one-install prepared capability, durable
   journal before import, Room recheck of ACTIVE enrollment/binding/floor after
   import, atomic reference/counter/journal publication. Recovery reads durable
@@ -102,7 +106,7 @@ worktree, `GRADLE_USER_HOME=D:\gradle-home-agent`):
 | --- | --- |
 | `ProviderCredentialWireTest` | 6/6 passed |
 | `ProviderCredentialCryptoTest` | 5/5 passed; committed HPKE vector actually decrypted; exact SAS `51070555` |
-| `ProviderCredentialInstallTest` | 18/18 passed; real Room file reopen/rollback/unknown commit and journal ownership guard; fault-injected secure-store backend |
+| `ProviderCredentialInstallTest` | 20/20 passed; real Room file reopen/rollback/unknown commit, journal ownership guard and exhausted-revision wipe/restart; fault-injected secure-store backend |
 | `ProviderCredentialTransportTest` | 3/3 passed; mocked HTTP auth/exact bytes/stream cap/redaction |
 | `ProviderCredentialMigrationTest` | 2/2 passed; populated v15→16 + fresh parity, altered catalog rejection |
 | `AgentSyncPersistenceTest` | 20/20 passed; latest-version migration updated to include v16 |
@@ -129,13 +133,13 @@ is claimed; actual Wear Keystore evidence comes from CI's Wear API 35-ext15 AVD.
 
 ## CI evidence and limits
 
-[Run 37178346473](https://github.com/fangbm/temvio/actions/runs/37178346473),
-head `3c25e3ccaf4d11ccae476271f4792fde1ef6beed`, all five jobs green:
+[Run 37180206937](https://github.com/fangbm/temvio/actions/runs/37180206937),
+head `277cdb76824e1bcb26680ab42365031bd835cc14`, all five jobs green:
 Linux build/real PostgreSQL/Secret Service, Windows DPAPI, Android Keystore,
 Wear Keystore, and existing enrolled Desktop↔Android history/platform relay E2E.
-Downloaded XML proves PostgreSQL repository 13/13 and provisioning PostgreSQL
-E2E 1/1, both zero skipped; new Android/Wear Provider slot tests each 2/2.
-This run precedes the additional recovery/retention/streaming regressions above;
+Downloaded XML proves PostgreSQL repository 14/14 and provisioning PostgreSQL
+E2E 1/1, both zero skipped; Android/Wear Provider slot tests each 3/3, zero skipped.
+This run precedes the local-counter exhaustion and expanded canary-scan regressions;
 The latest head's full CI is tracked in [PR #26 checks](https://github.com/fangbm/temvio/pull/26/checks);
 the final delivery identifies its exact run/head and downloaded XML counts.
 

@@ -12,6 +12,7 @@ import org.junit.Assume
 import java.nio.file.Files
 import java.util.UUID
 import kotlin.test.*
+import kotlinx.serialization.json.JsonPrimitive
 
 /** HTTP application engine + actual PostgreSQL + Room + production secure store + existing Tink.
  * No real network/TLS or Wear UI claim. Platform secure-store CI runs with its actual native backend.
@@ -112,8 +113,12 @@ class ProviderCredentialPostgresE2ETest {
                 assertNull(targetTransport.fetch(targetConfigId.value)!!.envelope)
                 // Every public table is scanned; secret/plaintext hash/binding JSON/digest/ref stay client-only.
                 val bindingText = ProviderCredentialWireCodec.encodeBinding(targetBinding).decodeToString()
-                val forbidden = listOf(rawCredential, baseUrlCanary, modelCanary, bindingText, providerBindingDigest(targetBinding), state.activeReference,
+                val privateValues = listOf(rawCredential, baseUrlCanary, modelCanary, bindingText, providerBindingDigest(targetBinding), state.activeReference,
+                    decodeCanonicalBase64Url(providerBindingDigest(targetBinding), 32, "local binding digest").joinToString("") { "%02x".format(it) },
                     encodeCanonicalBase64Url(pairingSha256(rawCredential.encodeToByteArray())), pairingSha256(rawCredential.encodeToByteArray()).joinToString("") { "%02x".format(it) })
+                // row_to_json represents BYTEA as hex and embedded JSON as escaped strings.
+                val forbidden = privateValues.flatMap { value -> listOf(value, JsonPrimitive(value).toString(),
+                    encodeCanonicalBase64Url(value.encodeToByteArray()), value.encodeToByteArray().joinToString("") { "%02x".format(it) }) }.distinct()
                 ds.connection.use { c ->
                     val tables = c.createStatement().use { s -> s.executeQuery("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'").use { r -> buildList { while (r.next()) add(r.getString(1)) } } }
                     for (table in tables) {

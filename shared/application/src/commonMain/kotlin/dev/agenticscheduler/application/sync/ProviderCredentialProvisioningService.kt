@@ -117,7 +117,7 @@ class ProviderCredentialProvisioningService(
     suspend fun disableAndWipe(config: String) = mutex.withLock {
         while (true) {
             val current = repository.state(target, config) ?: reject(ProviderCredentialRejection.CREDENTIAL_STATE_LOST)
-            val next = current.copy(rejectionFloor = current.nextRevision(), liveRevision = null, selectedProvisioner = null,
+            val next = current.copy(rejectionFloor = current.nextRejectionFloor(), liveRevision = null, selectedProvisioner = null,
                 phase = ProviderReservationPhase.DISABLED, approvedBinding = null, envelopeDigest = null, approvalBindingDigest = null,
                 activeReference = null, activeInstallIdentity = null, activeBinding = null, generation = current.generation + 1)
             val journals = repository.journals(target).filter { it.providerConfigId == config && it.phase !in setOf(ProviderInstallPhase.REJECTED, ProviderInstallPhase.COMPLETED) }
