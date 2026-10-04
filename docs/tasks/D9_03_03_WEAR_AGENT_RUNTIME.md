@@ -1328,7 +1328,7 @@ Provider fixture可以 deterministic，但不能 fake掉 Agent runtime/Tool/appl
 
 同一 proposal：
 
-→ Deny  
+→ Deny
 → zero Task write。
 
 ---

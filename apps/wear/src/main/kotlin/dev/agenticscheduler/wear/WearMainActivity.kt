@@ -158,6 +158,8 @@ class WearMainActivity : ComponentActivity() {
         }
         setContent {
             val startupState by d8StartupState
+            val localEnabled by remember { WearLocalSettings(this@WearMainActivity) }.userEnabledAiEntry.collectAsState()
+            val entryEnabled = agentRuntime.value?.readiness?.readiness?.collectAsState()?.value?.effectiveAiEntryEnabled ?: localEnabled
             var showAgent by remember { mutableStateOf(false) }
             MaterialTheme {
                 when (startupState) {
@@ -179,7 +181,7 @@ class WearMainActivity : ComponentActivity() {
                             d8SyncTrigger?.retryNow()
                         },
                         onAgent = { showAgent = true; openAgent() },
-                        agentEntryEnabled = agentRuntime.value?.readiness?.readiness?.value?.effectiveAiEntryEnabled ?: WearLocalSettings(this@WearMainActivity).userEnabledAiEntry.value,
+                        agentEntryEnabled = entryEnabled,
                     )
                     D8StartupState.Activating -> Text("Connecting to your secure sync space…")
                     D8StartupState.Blocked -> Text("Sync setup is unavailable. Restore the device credential or check the configured account and server.")

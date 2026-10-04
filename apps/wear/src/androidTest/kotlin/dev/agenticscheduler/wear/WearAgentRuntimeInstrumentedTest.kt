@@ -13,6 +13,8 @@ import androidx.wear.compose.material3.MaterialTheme
 import dev.agenticscheduler.agent.history.*
 import dev.agenticscheduler.agent.permission.*
 import dev.agenticscheduler.application.history.MutationWallClock
+import dev.agenticscheduler.application.id.*
+import dev.agenticscheduler.agent.runtime.AgentClock
 import dev.agenticscheduler.application.sync.*
 import dev.agenticscheduler.database.*
 import dev.agenticscheduler.database.repository.*
@@ -33,7 +35,6 @@ import java.io.File
 import java.net.InetAddress
 import java.net.ServerSocket
 import java.util.concurrent.CopyOnWriteArrayList
-import kotlin.time.Clock
 
 /** Core acceptance: actual Watch platform, Android Ktor engine, file Room, shared AgentRunService and Tools. */
 @RunWith(AndroidJUnit4::class)
@@ -53,6 +54,10 @@ class WearAgentRuntimeInstrumentedTest {
     private val renderedConfig = mutableStateOf<ProviderConfig?>(null)
     private var rendered = false
     private val cleanupReferences = mutableListOf<SecretReference>()
+    private var nextIdEpoch = 1_800_000_000_000L
+    private var nextEventEpoch = 1_800_000_000_000L
+    private val testIds = RfcUuidV7Generator(EpochMillisecondsClock { nextIdEpoch++ }, RandomBytes { size -> ByteArray(size) })
+    private val testClock = AgentClock { nextEventEpoch++ }
     private val configId = ProviderConfigId("01900000-0000-7000-8000-000000000321")
 
     @Before fun start() = runBlocking {
@@ -81,9 +86,9 @@ class WearAgentRuntimeInstrumentedTest {
     private suspend fun open() {
         database = openAndroidDatabase(context)
         d8 = RoomD8RuntimeComposition(database, AndroidKeystoreSecureStore(context), TinkPairingHpke(),
-            dev.agenticscheduler.application.id.productionUuidV7Generator(), MutationWallClock { Clock.System.now().toEpochMilliseconds() })
+            testIds, MutationWallClock { nextEventEpoch++ })
         assertEquals(ActiveSyncRuntimeCreation.NoEnrollment, d8.activateWithoutConfiguration())
-        agent = WearAgentRuntimeComposition.createActive(context, database, scope, d8, { callback -> permissionRequests++; callback(false) }, "en-US")
+        agent = WearAgentRuntimeComposition.createActive(context, database, scope, d8, { callback -> permissionRequests++; callback(false) }, "en-US", testIds, testClock)
         closed = false
     }
     private suspend fun awaitReady() = withTimeout(20000) {
@@ -302,6 +307,47 @@ class WearAgentRuntimeInstrumentedTest {
         assertTrue(agent.session.ui.value.messages.isEmpty())
     }
 
+    @Test fun tombstoneBeforeSendBlocksProviderAndDoesNotReviveLocalHistory() = runBlocking {
+        send("read tasks")
+        val thread = requireNotNull(agent.session.ui.value.threadId)
+        val space = SyncSpaceId("tombstone-watch-space"); enrollForTest(space)
+        persistTombstone(space, thread)
+        val count = fixture.commandRequests
+        agent.session.editDraft("read tasks again"); agent.session.submitFromUserAction()
+        assertEquals("THREAD_TOMBSTONED", agent.session.ui.value.redactedCode)
+        assertEquals(count, fixture.commandRequests)
+        assertEquals(1, agent.session.ui.value.messages.count { it.role == AgentMessageRole.USER })
+        assertTrue(RoomMutationJournalRepository(database).timeline().isEmpty())
+    }
+
+    @Test fun tombstoneArrivingDuringProviderCallBlocksFollowingContinuationSend() = runBlocking {
+        agent.session.newConversationFromUserAction()
+        val thread = requireNotNull(agent.session.ui.value.threadId)
+        val space = SyncSpaceId("late-tombstone-watch-space"); enrollForTest(space)
+        val barrier = java.util.concurrent.CountDownLatch(1); fixture.commandBarrier = barrier
+        agent.session.editDraft("read tasks")
+        val flight = scope.launch { agent.session.submitFromUserAction() }
+        try {
+            compose.waitUntil(10000) { fixture.commandRequests == 1 }
+            persistTombstone(space, thread)
+        } finally { barrier.countDown() }
+        withTimeout(15000) { flight.join() }
+        assertEquals(1, fixture.commandRequests)
+        assertEquals("THREAD_TOMBSTONED", agent.session.ui.value.redactedCode)
+        assertTrue(RoomMutationJournalRepository(database).timeline().isEmpty())
+    }
+
+    private suspend fun persistTombstone(space: SyncSpaceId, thread: AgentThreadId) {
+        val replica = AgentReplicaId("01900000-0000-7000-8000-000000000328")
+        val payload = SyncPayloadV3(operation = AgentSyncOperation(MutationId("01900000-0000-7000-8000-000000000329"),
+            AgentDvvSnapshot(emptyList(), AgentDot(replica, 0)), AgentHlcSnapshot(0, 0, replica), ThreadDeleted(AgentThreadSyncId(thread.value))))
+        val persistence = RoomAgentSyncPersistence(database)
+        persistence.provisionLocalReplica(space, AgentReplicaId("01900000-0000-7000-8000-000000000330"))
+        persistence.acceptInbound(space, payload)
+        persistence.markHandled(space, payload.operation.operationId.value)
+        assertTrue(RoomAgentSyncPersistence(database).threadHistoryProjection(space, AgentThreadSyncId(thread.value)).tombstoned)
+    }
+
     @Test fun offlineConfirmationRetainsSuccessfulBusinessTruthAndNeverReplays() = runBlocking {
         send("create task")
         agent.readiness.network.close()
@@ -352,7 +398,7 @@ class WearAgentRuntimeInstrumentedTest {
         provisioning.installApproved(source, envelope)
         val installedRef = requireNotNull(agent.state.providerConfig(configId)?.credentialReference)
         agent.close()
-        agent = WearAgentRuntimeComposition.createActive(context, database, scope, d8, { it(false) }, "en-US")
+        agent = WearAgentRuntimeComposition.createActive(context, database, scope, d8, { it(false) }, "en-US", testIds, testClock)
         withContext(Dispatchers.Main.immediate) { agent.readiness.start() }
         agent.refreshSelectedBinding(); agent.foregroundChanged(true)
         assertTrue(agent.readiness.readiness.value.providerReady)

@@ -41,6 +41,7 @@ class WearAgentRuntimeComposition private constructor(
     private val revisions: RoomProviderCredentialProvisioningRepository,
     private val target: DeviceId?,
     private val client: HttpClient,
+    private val stateDatabase: AgenticSchedulerDatabase,
 ) {
     @Volatile private var foreground = false
     fun stopForegroundFromLifecycle() {
@@ -72,6 +73,14 @@ class WearAgentRuntimeComposition private constructor(
         selectFromUserAction(config)
     }
     suspend fun close() { readiness.close(); client.close() }
+    private suspend fun continuationBlock(thread: AgentThreadId): String? {
+        // Only conflict/tombstone facts are consumed, never projected remote conversation context.
+        val sync = RoomAgentSyncPersistence(stateDatabase)
+        return RoomLocalEnrollmentRepository(stateDatabase).states().filterIsInstance<LocalEnrollmentState.Active>().firstNotNullOfOrNull { active ->
+            val projection = sync.threadHistoryProjection(active.syncSpaceId, AgentThreadSyncId(thread.value))
+            if (projection.tombstoned) "THREAD_TOMBSTONED" else if (!projection.providerContinuationAllowed) "AGENT_HISTORY_CONFLICT" else null
+        }
+    }
 
     companion object {
         suspend fun createActive(context: Context, database: AgenticSchedulerDatabase, scope: CoroutineScope, d8: RoomD8RuntimeComposition,
@@ -99,18 +108,20 @@ class WearAgentRuntimeComposition private constructor(
                 val bytes = secrets.readProviderSecret(ref) ?: return@ProviderCredentialResolver null
                 try { if (readiness.authorizes(expected, expected.config)) bytes.decodeToString() else null } finally { bytes.fill(0) }
             }, ProviderRequestGuard { config ->
-                val expected = coroutineContext[WearCommandLease]?.snapshot
+                val lease = coroutineContext[WearCommandLease]
+                val expected = lease?.snapshot
                 when {
                     !composition.foreground -> "FOREGROUND_REQUIRED"
                     expected == null -> readiness.readiness.value.runtimeState.name.takeUnless { it == "READY" } ?: "READINESS_CHANGED"
                     local.selectedProviderConfigId() != expected.config.id -> "BINDING_CHANGED"
                     !readiness.authorizes(expected, config) -> readiness.readiness.value.runtimeState.name.takeUnless { it == "READY" } ?: "READINESS_CHANGED"
-                    else -> null
+                    else -> composition.continuationBlock(requireNotNull(lease).threadId)
                 }
             })
             val state = WatchAgentState(local) {
                 val lease = coroutineContext[WearCommandLease]
-                lease?.newCommand != true || composition.foreground && lease.snapshot?.let { readiness.authorizes(it, it.config) } == true
+                lease?.newCommand != true || composition.foreground && lease.snapshot?.let { readiness.authorizes(it, it.config) } == true &&
+                    composition.continuationBlock(lease.threadId) == null
             }
             val journal = RoomMutationJournalRepository(database)
             val mutations = MutationCoordinator(RoomApplicationTransactionRunner(database), journal, ids,
@@ -135,15 +146,9 @@ class WearAgentRuntimeComposition private constructor(
                     if (expected == null || expected.config != config) ProviderProbeResult.Unavailable("READINESS_CHANGED")
                     else readiness.structuredCapability(expected)
                 })
-            val session = WearAgentSessionController(state, runtime, { if (composition.foreground) readiness.requestSnapshot() else null }, { readiness.readiness.value.runtimeState }, continuationBlock = { thread ->
-                // Only block on existing conflict/tombstone facts; no remote content enters Provider context.
-                val sync = RoomAgentSyncPersistence(database)
-                enrollments.states().filterIsInstance<LocalEnrollmentState.Active>().firstNotNullOfOrNull { active ->
-                    val projection = sync.threadHistoryProjection(active.syncSpaceId, AgentThreadSyncId(thread.value))
-                    if (projection.tombstoned) "THREAD_TOMBSTONED" else if (!projection.providerContinuationAllowed) "AGENT_HISTORY_CONFLICT" else null
-                }
-            }, foreground = { composition.foreground })
-            composition = WearAgentRuntimeComposition(local, readiness, session, revisions, target, client)
+            val session = WearAgentSessionController(state, runtime, { if (composition.foreground) readiness.requestSnapshot() else null }, { readiness.readiness.value.runtimeState },
+                continuationBlock = { composition.continuationBlock(it) }, foreground = { composition.foreground })
+            composition = WearAgentRuntimeComposition(local, readiness, session, revisions, target, client, database)
             return composition
         }
     }

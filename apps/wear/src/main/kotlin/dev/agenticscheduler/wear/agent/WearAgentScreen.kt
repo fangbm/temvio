@@ -3,11 +3,16 @@ package dev.agenticscheduler.wear.agent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.border
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.graphics.SolidColor
+import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.Text
 import dev.agenticscheduler.agent.history.*
@@ -50,10 +55,16 @@ fun WearAgentScreen(
         Button(onClick = onRetry) { Text("Retry readiness") }
         Text("Conversation ${session.threadId?.value ?: "new"}")
         Button(onClick = onNew, enabled = !session.busy && session.pending == null, modifier = Modifier.testTag("new-conversation")) { Text("New conversation") }
-        BasicTextField(session.draft, onDraft, modifier = Modifier.fillMaxWidth().testTag("agent-input"))
+        Text("Command draft")
+        BasicTextField(session.draft, onDraft, textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).border(1.dp, MaterialTheme.colorScheme.onSurface).padding(8.dp).testTag("agent-input"))
         Button(onClick = onSend, enabled = readiness.requestReady && !session.busy && session.pending == null && session.draft.isNotBlank(), modifier = Modifier.testTag("agent-send")) { Text("Send") }
         Text("Optional on-device speech: ${readiness.capability.onDeviceSttAvailability} · ${readiness.capability.speechPermission}")
-        BasicTextField(language, { language = it }, modifier = Modifier.fillMaxWidth().testTag("speech-language"))
+        Text("Speech language tag${if (readiness.capability.selectedLanguageTag == "und") " · not selected" else ""}")
+        BasicTextField(language, { language = it }, textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).border(1.dp, MaterialTheme.colorScheme.onSurface).padding(8.dp).testTag("speech-language"))
         Button(onClick = { onLanguage(language) }, enabled = language.isNotBlank() && language != "und") { Text("Select speech language") }
         Button(onClick = onSpeech, enabled = !session.busy && language.isNotBlank() && language != "und" && readiness.capability.onDeviceSttAvailability !in setOf(OnDeviceSttAvailability.UNSUPPORTED, OnDeviceSttAvailability.TEMPORARILY_UNAVAILABLE), modifier = Modifier.testTag("speech-start")) { Text("Speech draft only") }
         Button(onClick = onCancelSpeech) { Text("Cancel speech") }

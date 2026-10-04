@@ -10,7 +10,7 @@ import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 
 /** One explicit action's immutable authorization. It is neither persisted nor transmitted. */
-class WearCommandLease(val snapshot: WearRequestSnapshot?, val newCommand: Boolean) : AbstractCoroutineContextElement(Key) {
+class WearCommandLease(val snapshot: WearRequestSnapshot?, val newCommand: Boolean, val threadId: AgentThreadId) : AbstractCoroutineContextElement(Key) {
     companion object Key : CoroutineContext.Key<WearCommandLease>
 }
 
@@ -78,7 +78,7 @@ class WearAgentSessionController(
             val authorization = snapshot() ?: run { fail(blocker().name, WearAgentUiPhase.PROVIDER_UNAVAILABLE); return }
             mutableState.update { it.copy(busy = true, draft = "", phase = WearAgentUiPhase.THINKING, redactedCode = null) }
             foregroundRequest = currentCoroutineContext()[Job]
-            val result = withContext(WearCommandLease(authorization, true)) { runtime.run(thread, before.draft) }
+            val result = withContext(WearCommandLease(authorization, true, thread)) { runtime.run(thread, before.draft) }
             finish(result)
         } catch (cancelled: CancellationException) { throw cancelled
         } catch (_: Exception) { fail("LOCAL_AGENT_UNAVAILABLE", WearAgentUiPhase.TOOL_FAILED); reload()
@@ -96,7 +96,7 @@ class WearAgentSessionController(
             mutableState.update { it.copy(busy = true, phase = WearAgentUiPhase.TOOL_RUNNING, redactedCode = null) }
             foregroundRequest = currentCoroutineContext()[Job]
             val current = snapshot() // Can be null after wipe/offline: local confirmation still uses shared gates.
-            val result = withContext(WearCommandLease(current, false)) { runtime.confirm(thread, callId, approved) }
+            val result = withContext(WearCommandLease(current, false, thread)) { runtime.confirm(thread, callId, approved) }
             finish(result)
         } catch (cancelled: CancellationException) { throw cancelled
         } catch (_: Exception) { fail("LOCAL_AGENT_UNAVAILABLE", WearAgentUiPhase.TOOL_FAILED); reload()
