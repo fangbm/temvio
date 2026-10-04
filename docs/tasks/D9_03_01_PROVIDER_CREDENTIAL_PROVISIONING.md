@@ -2,9 +2,32 @@
 
 Implementation evidence: [acceptance record](../D9_03_01_PROVISIONING_ACCEPTANCE_RECORD.md).
 Review: [Draft PR #26](https://github.com/fangbm/temvio/pull/26).
-Status: implementation submitted for review; C2 post-expiry marker retention
-**BLOCKED_BY_DECISION (OD-059)**. The original approved Task Spec follows unchanged.
+Status: implementation submitted for review; **OD-059 RESOLVED FOR D9-03-01**.
+The approved retention follow-up below amends the original Task Spec's C2 boundary.
 OD-012 remains OPEN. Do not merge or start the next slice.
+
+## Approved PR #26 retention follow-up — OD-059
+
+At the exact seven-day cutoff, retain only account/target/config/revision and
+`DELIVERY_EXPIRED` as an indefinite anti-replay tombstone. Purge source assignment,
+canonical envelope/ciphertext, envelope digest, ACK and creation/expiry timestamps.
+No credential/plaintext hash, binding/digest, baseUrl/model, SecretRef or ProviderConfig
+payload enters this record. The full frozen amendment is in D9-03-00 section 4.4.
+
+The marker is replaced only by an eligible strictly higher target-owned revision
+(exact target, both devices ACTIVE, same account, valid request), or removed by a
+future explicit permanent identity lifecycle operation. Wipe/binding removal,
+revocation and maintenance never reset it. Same expired revision always reports
+DELIVERY_EXPIRED to an authorized target; lower revision rejects UNRESERVED_REVISION.
+Arbitrary wall-clock time/restart cannot recreate source, ciphertext or deadline.
+Higher revision gets one fresh seven-day window; local counter authority is unchanged.
+
+Amend V10 in place (no V11/new table); SQL CHECKs enforce the exact minimal expired
+row and valid active states. Test every purge field, exact cutoff, maintenance
+idempotence, immediate/far-later/restarted replay, lower/higher revision behavior,
+revocation, V9→V10/fresh schema parity and real PostgreSQL E2E/public-table scans.
+C1–C5 were otherwise accepted by maintainer review. Wire/HPKE/SAS, Room v16,
+D7/V3, workspace Envelope/AAD and SyncTransportWorker remain unchanged.
 
 ---
 

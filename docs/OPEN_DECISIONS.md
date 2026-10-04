@@ -573,26 +573,34 @@ OD-012 remains independently OPEN; no production-sensitive V3 composition is ena
 ## OD-059 — Provider mailbox post-expiry replay marker
 
 ```text
-Status: PENDING / BLOCKED_BY_DECISION
+Status: RESOLVED FOR D9-03-01
 Impact: SECURITY / PERSISTENCE / MAILBOX RETENTION
-Source: D9_03_00_WEAR_AGENT_PROVIDER_FREEZE.md §4.4; current D9-03-01 task §8
+Source: PR #26 maintainer review; D9_03_00_WEAR_AGENT_PROVIDER_FREEZE.md §4.4
 ```
 
-Frozen C2 deletes ciphertext and permits bounded delivery/ACK metadata only
-through the seven-day expiry; an expired delivery reports DELIVERY_EXPIRED and
-the target must reserve a fresh higher revision. The lifetime of a minimum
-identity/revision replay marker after that deadline is not explicitly specified.
-Deleting the entire row loses the server's ability to recognize an authenticated
-retry of the exact old request; retaining routing identity/revision indefinitely
-needs explicit permission under the bounded-retention rule.
+Maintainer approved a minimal indefinite server anti-replay tombstone after the
+hard seven-day cutoff. Exactly `accountId`, `targetDeviceId`, `providerConfigId`,
+`credentialRevision` and `DELIVERY_EXPIRED` remain. Account identifies authorization
+ownership only; target-local state remains the sole revision allocator/authority.
 
-PR #26's current candidate clears ciphertext, source assignment, envelope digest
-and ACK at expiry but retains latest target/config/revision/account/state/deadline
-fields. This is **not** an approved extension of C2; its retention/minimization
-acceptance is blocked. Maintainer must choose whether to allow a minimal replay
-marker (and its exact retained metadata/lifetime), or delete the complete row and
-rely on target-owned local revision state for post-expiry request replay handling.
-Do not change frozen wire/HPKE/revision ownership or claim full C2 completion.
+Purge source assignment, ciphertext, encrypted-envelope digest, ACK result,
+delivery created/expiry timestamps and all other delivery-specific data. Retain
+no credential plaintext/hash, binding contents/digest, baseUrl/model, SecretRef or
+ProviderConfig payload. This is the explicit C2 exception for a separate security
+marker, not permission to retain ordinary delivery metadata indefinitely.
+
+There is no time-based expiry or compaction policy for the marker. It remains
+until a strictly higher target-owned reservation passes every existing exact-target,
+ACTIVE source/target, same-account and valid-identity check, or a future explicit
+permanent account/device identity deletion. Maintenance, credential wipe, binding
+removal and source/target revocation must not reset the high-watermark.
+
+Same expired revision always reports DELIVERY_EXPIRED to an authorized target,
+including after arbitrary elapsed time/restart; lower revision rejects as
+UNRESERVED_REVISION. Neither recreates source assignment, ciphertext or timestamps.
+Only an eligible higher revision creates one new seven-day delivery window. Amend
+the unmerged Server V10 in place with SQL CHECK-enforced minimal expired state;
+do not introduce V11 or change C1–C8, wire/HPKE/SAS or local revision semantics.
 
 ---
 

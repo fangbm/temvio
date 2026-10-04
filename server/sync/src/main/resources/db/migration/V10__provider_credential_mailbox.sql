@@ -1,5 +1,5 @@
 -- Independent opaque provisioning mailbox. No workspace envelope/cursor/key semantics change.
--- One current request per target/config bounds retention and supersedes cancelled reservations.
+-- One current request or OD-059 anti-replay tombstone per target/config.
 CREATE TABLE provider_credential_mailbox (
     target_device_id TEXT NOT NULL REFERENCES device(device_id),
     provider_config_id TEXT NOT NULL,
@@ -10,13 +10,22 @@ CREATE TABLE provider_credential_mailbox (
     canonical_envelope BYTEA,
     envelope_digest BYTEA,
     acknowledgement_result TEXT CHECK (acknowledgement_result IN ('INSTALLED','DUPLICATE')),
-    created_at TIMESTAMPTZ NOT NULL,
-    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ,
+    expires_at TIMESTAMPTZ,
     PRIMARY KEY (target_device_id, provider_config_id),
     CHECK (octet_length(canonical_envelope) <= 16384),
     CHECK (envelope_digest IS NULL OR octet_length(envelope_digest) = 32),
-    CHECK ((delivery_state = 'DELIVERED' AND canonical_envelope IS NOT NULL AND envelope_digest IS NOT NULL)
-        OR (delivery_state <> 'DELIVERED' AND canonical_envelope IS NULL)),
-    CHECK (delivery_state <> 'DELIVERY_EXPIRED' OR (provisioner_device_id IS NULL AND envelope_digest IS NULL AND acknowledgement_result IS NULL))
+    CONSTRAINT provider_credential_delivery_fields CHECK (
+        (delivery_state = 'DELIVERY_EXPIRED'
+            AND provisioner_device_id IS NULL AND canonical_envelope IS NULL
+            AND envelope_digest IS NULL AND acknowledgement_result IS NULL
+            AND created_at IS NULL AND expires_at IS NULL)
+        OR (delivery_state <> 'DELIVERY_EXPIRED'
+            AND provisioner_device_id IS NOT NULL AND created_at IS NOT NULL AND expires_at IS NOT NULL
+            AND expires_at = created_at + INTERVAL '604800 seconds'
+            AND ((delivery_state = 'REQUESTED' AND canonical_envelope IS NULL AND envelope_digest IS NULL AND acknowledgement_result IS NULL)
+                OR (delivery_state = 'DELIVERED' AND canonical_envelope IS NOT NULL AND envelope_digest IS NOT NULL AND acknowledgement_result IS NULL)
+                OR (delivery_state = 'ACKNOWLEDGED' AND canonical_envelope IS NULL AND envelope_digest IS NOT NULL AND acknowledgement_result IS NOT NULL)))
+    )
 );
 CREATE INDEX provider_credential_assigned_idx ON provider_credential_mailbox(account_id, provisioner_device_id, delivery_state, target_device_id, provider_config_id);

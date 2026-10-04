@@ -5,10 +5,10 @@ Branch: `codex/d9-03-01-provider-credential-provisioning`.
 Review: [Draft PR #26](https://github.com/fangbm/temvio/pull/26), targeting
 `feature/d9-02-agent-sync`. Do not merge or start D9-03-02/03 or D10.
 
-Status: implementation and tests submitted for review; **C2 post-expiry marker
-retention is BLOCKED_BY_DECISION (OD-059)**. This record does not declare the
-entire slice complete or authorize production deployment. OD-058 remains resolved
-for C1–C8; OD-059 asks only about the uncovered post-expiry persistence boundary.
+Status: **OD-059 RESOLVED FOR D9-03-01**; maintainer accepted C1–C5 otherwise.
+The minimal-tombstone follow-up is implemented; real PostgreSQL/full-CI verification
+is pending before declaring implementation acceptance complete for review.
+OD-058 remains resolved for C1–C8. This record authorizes no production deployment.
 **OD-012 remains OPEN.**
 
 ## Implemented boundaries
@@ -23,8 +23,12 @@ for C1–C8; OD-059 asks only about the uncovered post-expiry persistence bounda
   exact canonical ciphertext retry/conflict; target-only informational ACK and
   ciphertext removal. Exact seven-day clock cutoff is enforced at every request.
   Production `main` also schedules retention cleanup without requiring active
-  clients. The post-expiry identity marker is a review candidate, not a frozen
-  retention decision (see OD-059).
+  clients. At expiry OD-059's indefinite anti-replay tombstone retains only
+  account/target/config/revision + DELIVERY_EXPIRED. Source/ciphertext/digest/ACK
+  and created/expiry timestamps are purged, enforced by SQL CHECK constraints.
+  Same expired revision never resets its deadline, even after restart/arbitrary
+  elapsed time/source revocation. Lower revisions reject; only an eligible higher
+  target-owned reservation replaces the marker with a fresh seven-day window.
 - C3: per-target/config Room CAS counters, first reservation 1, one live selected
   source, max(counters)+1, durable floor and explicit approval tied to envelope
   and locally reconstructed binding. No time/server-cursor revision authority.
@@ -85,9 +89,14 @@ The mailbox has routing/identity/state/deadline, opaque ciphertext and encrypted
 envelope digest/informational ACK fields. No binding metadata/hash, SecretRef,
 credential plaintext/plaintext digest or ProviderConfig payload is stored.
 Existing workspace/enrollment/rotation/recovery tables and cursors are unchanged.
-The expiry implementation currently retains latest target/config/revision/account
-and expiry-state/deadline fields to reject deadline-reset retries; **approval and
-final minimization of that marker are blocked by OD-059**.
+V10 is amended in place before merge/shipping: timestamps are nullable only for
+expired rows, which retain exactly the five OD-059 logical fields. Active states
+require source/timestamps and their appropriate ciphertext/digest/ACK fields;
+SQL requires a 604800-second delivery window. Maintenance is traffic-independent,
+idempotent and restart safe. Marker lifetime has no time-based expiry/compaction;
+only an eligible higher target reservation or a future explicit permanent account/
+device identity lifecycle operation can replace/remove it. Wipe, binding removal
+and revocation do not reset the server high-watermark or allocate local revisions.
 
 ## Verification actually executed
 
@@ -111,7 +120,7 @@ worktree, `GRADLE_USER_HOME=D:\gradle-home-agent`):
 | `ProviderCredentialMigrationTest` | 2/2 passed; populated v15→16 + fresh parity, altered catalog rejection |
 | `AgentSyncPersistenceTest` | 20/20 passed; latest-version migration updated to include v16 |
 | `DesktopPlatformSecureStoreTest` | 5/5 passed; includes actual Windows DPAPI recreation/isolation |
-| `ProviderCredentialPostgresTest` | 14 skipped locally: no PostgreSQL test URL; not local PostgreSQL acceptance |
+| `ProviderCredentialPostgresTest` | 17 skipped locally: no PostgreSQL test URL; not local PostgreSQL acceptance |
 | `ProviderCredentialPostgresE2ETest` | 1 skipped locally: no PostgreSQL test URL; not local E2E acceptance |
 
 Crash matrix covers before import, after import, actual Room rollback, committed
@@ -144,9 +153,12 @@ exhaustion/wipe), HTTP transport 3/3, migration 2/2 and native Linux secure stor
 5/5 also have zero failures/skips. The public-table canary scan includes raw,
 JSON-escaped, base64 and UTF-8 hex representations; local metadata/SQLite scans
 include both the credential and its forbidden plaintext digest.
-The final evidence-only documentation commit changes no implementation. Its full
-CI is tracked in [PR #26 checks](https://github.com/fangbm/temvio/pull/26/checks);
-the final delivery identifies that exact documentation head/run.
+The prior final documentation head `4b6df6767ee9e92704246fde366d7354ba614839`
+also passed all five jobs in [run 37182421694](https://github.com/fangbm/temvio/actions/runs/37182421694).
+Those results predate the OD-059 retention amendment. Follow-up real PostgreSQL
+17-test repository acceptance and extended E2E/full CI are pending; exact new
+head/run and XML counts will be recorded after execution in
+[PR #26 checks](https://github.com/fangbm/temvio/pull/26/checks).
 
 Provisioning PostgreSQL E2E is real SQL/Room/native Linux secure-store/Tink plus
 Ktor's in-process HTTP application engine, not external TLS networking or final
@@ -168,8 +180,9 @@ Compilation success and PostgreSQL skips are not represented as test acceptance.
 - `LOCAL_REVERSIBLE`: explicit SQL catalog, CAS/journal implementation and native
   capability tags; minute-scale maintenance cadence is not the exact expiry cutoff
   or credential/revision authority. Test-only synthetic canaries/fault hooks.
-- `BLOCKED_BY_DECISION`: OD-059 post-expiry routing/replay marker retention.
-  Do not infer protocol approval from passing tests of the current candidate.
+- OD-059 is RESOLVED FOR D9-03-01 by maintainer review, with the exact five-field
+  indefinite security marker frozen in D9-03-00 section 4.4. No remaining decision
+  blocker in this follow-up; implementation acceptance awaits real PostgreSQL/CI.
 - OD-012 local SQLite encryption remains OPEN; no production-sensitive V3
   enablement is claimed. No changes to D2, D7 semantics, V3 DTOs/consent/frontier,
   workspace Envelope/AAD, SyncTransportWorker, or cryptographic primitives.

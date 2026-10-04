@@ -41,8 +41,15 @@ class JdbcProviderCredentialMailbox(private val dataSource: DataSource, private 
         }
     }
     override fun publishCredentialRequest(actor: AuthenticatedDevice, request: ProviderCredentialReservationRequestV1) = transaction(actor) { c, now ->
-        if (request.targetDeviceId.value != actor.deviceId || !active(c, actor.accountId, request.provisionerDeviceId.value)) fail(CredentialMailboxFailure.UNAUTHORIZED)
+        if (request.targetDeviceId.value != actor.deviceId) fail(CredentialMailboxFailure.UNAUTHORIZED)
         val old = row(c, request.targetDeviceId.value, request.providerConfigId)
+        if (old != null && old.account != actor.accountId) fail(CredentialMailboxFailure.UNAUTHORIZED)
+        // An expired revision has no source assignment. Its replay rejection survives source revocation.
+        if (old?.state == ProviderCredentialMailboxState.DELIVERY_EXPIRED) {
+            if (request.credentialRevision < old.revision) fail(CredentialMailboxFailure.UNRESERVED_REVISION)
+            if (request.credentialRevision == old.revision) fail(CredentialMailboxFailure.DELIVERY_EXPIRED)
+        }
+        if (!active(c, actor.accountId, request.provisionerDeviceId.value)) fail(CredentialMailboxFailure.UNAUTHORIZED)
         if (old != null) {
             if (request.credentialRevision < old.revision) fail(CredentialMailboxFailure.UNRESERVED_REVISION)
             if (request.credentialRevision == old.revision) {
@@ -115,8 +122,8 @@ class JdbcProviderCredentialMailbox(private val dataSource: DataSource, private 
             }
             if (!active(c, actor.accountId, actor.deviceId)) fail(CredentialMailboxFailure.UNAUTHORIZED)
             val now = clock.instant()
-            // Retain only the latest routing revision/expiry marker to reject deadline-reset retries.
-            // Ciphertext, source assignment, digest and ACK metadata are purged at the frozen deadline.
+            // OD-059 keeps only account/target/config/revision + DELIVERY_EXPIRED, without a TTL.
+            // All delivery metadata, including timestamps, is purged at the frozen deadline.
             expire(c, actor.accountId, now)
             // Expiry is committed even if the requested operation reports DELIVERY_EXPIRED.
             val result = try { block(c, now) } catch (e: CredentialMailboxException) { c.commit(); throw e }
@@ -124,19 +131,22 @@ class JdbcProviderCredentialMailbox(private val dataSource: DataSource, private 
         } catch (e: Throwable) { c.rollback(); throw e } finally { c.autoCommit = true }
     }
     private fun expire(c: Connection, account: String, now: Instant) {
-        c.prepareStatement("UPDATE provider_credential_mailbox SET delivery_state = 'DELIVERY_EXPIRED', canonical_envelope = NULL, envelope_digest = NULL, acknowledgement_result = NULL, provisioner_device_id = NULL WHERE account_id = ? AND expires_at <= ? AND delivery_state <> 'DELIVERY_EXPIRED'").use { s ->
+        c.prepareStatement("UPDATE provider_credential_mailbox SET delivery_state = 'DELIVERY_EXPIRED', canonical_envelope = NULL, envelope_digest = NULL, acknowledgement_result = NULL, provisioner_device_id = NULL, created_at = NULL, expires_at = NULL WHERE account_id = ? AND expires_at <= ? AND delivery_state <> 'DELIVERY_EXPIRED'").use { s ->
             s.setString(1, account); s.setTimestamp(2, Timestamp.from(now)); s.executeUpdate()
         }
     }
     private fun active(c: Connection, account: String, device: String): Boolean = c.prepareStatement("SELECT 1 FROM device WHERE account_id = ? AND device_id = ? AND revoked_at IS NULL").use { s ->
         s.setString(1, account); s.setString(2, device); s.executeQuery().use { it.next() }
     }
-    private data class Row(val target: String, val config: String, val revision: Long, val account: String, val source: String?, val state: ProviderCredentialMailboxState, val bytes: ByteArray?, val digest: ByteArray?, val expires: Long) {
-        fun delivery() = ProviderCredentialMailboxDeliveryV1(ProviderCredentialReservationRequestV1(DeviceId(target), config, revision, DeviceId(requireNotNull(source))), state, expires,
-            bytes?.let { (ProviderCredentialWireCodec.decodeEnvelope(it) as ProviderCredentialDecodeResult.Accepted).value })
+    private data class Row(val target: String, val config: String, val revision: Long, val account: String, val source: String?, val state: ProviderCredentialMailboxState, val bytes: ByteArray?, val digest: ByteArray?, val expires: Long?) {
+        fun delivery(): ProviderCredentialMailboxDeliveryV1 {
+            check(state != ProviderCredentialMailboxState.DELIVERY_EXPIRED) // A tombstone is not a delivery DTO.
+            return ProviderCredentialMailboxDeliveryV1(ProviderCredentialReservationRequestV1(DeviceId(target), config, revision, DeviceId(requireNotNull(source))), state, requireNotNull(expires),
+                bytes?.let { (ProviderCredentialWireCodec.decodeEnvelope(it) as ProviderCredentialDecodeResult.Accepted).value })
+        }
     }
     private fun row(c: Connection, target: String, config: String): Row? = c.prepareStatement("SELECT * FROM provider_credential_mailbox WHERE target_device_id = ? AND provider_config_id = ? FOR UPDATE").use { s ->
-        s.setString(1, target); s.setString(2, config); s.executeQuery().use { r -> if (!r.next()) null else Row(target, config, r.getLong("credential_revision"), r.getString("account_id"), r.getString("provisioner_device_id"), ProviderCredentialMailboxState.valueOf(r.getString("delivery_state")), r.getBytes("canonical_envelope"), r.getBytes("envelope_digest"), r.getTimestamp("expires_at").toInstant().epochSecond) }
+        s.setString(1, target); s.setString(2, config); s.executeQuery().use { r -> if (!r.next()) null else Row(target, config, r.getLong("credential_revision"), r.getString("account_id"), r.getString("provisioner_device_id"), ProviderCredentialMailboxState.valueOf(r.getString("delivery_state")), r.getBytes("canonical_envelope"), r.getBytes("envelope_digest"), r.getTimestamp("expires_at")?.toInstant()?.epochSecond) }
     }
     private fun fail(reason: CredentialMailboxFailure): Nothing = throw CredentialMailboxException(reason)
 }

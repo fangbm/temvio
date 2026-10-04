@@ -5,6 +5,8 @@ import dev.agenticscheduler.sync.*
 import org.junit.Before
 import org.junit.After
 import org.junit.Assume
+import kotlinx.serialization.json.*
+import java.sql.SQLException
 import java.security.MessageDigest
 import java.time.*
 import java.util.UUID
@@ -16,6 +18,9 @@ class ProviderCredentialPostgresTest {
     private lateinit var ds: HikariDataSource
     private lateinit var repo: JdbcProviderCredentialMailbox
     private val suffix = UUID.randomUUID().toString().replace("-", "")
+    // Global expiry with a far-future clock must not retire another Gradle test worker's deliveries.
+    private val schema = "credential_case_$suffix"
+    private var schemaCreated = false
     private val account = "credential-$suffix"
     private val otherAccount = "credential-other-$suffix"
     private val target = "WearTarget:opaque-A_01-$suffix"
@@ -29,7 +34,9 @@ class ProviderCredentialPostgresTest {
     private val clock = MutableClock(Instant.parse("2026-10-04T00:00:00Z"))
     @Before fun setup() {
         Assume.assumeTrue("Real PostgreSQL required", System.getenv("SYNC_TEST_DATABASE_URL") != null)
-        ds = dataSource()
+        dataSource().use { admin -> admin.connection.use { c -> c.createStatement().use { it.execute("CREATE SCHEMA $schema") } } }
+        schemaCreated = true
+        ds = dataSource(schema)
         ServerSchemaMigrator(ds).migrate()
         ds.connection.use { c ->
             c.prepareStatement("INSERT INTO account(account_id) VALUES (?), (?)").use { s -> s.setString(1, account); s.setString(2, otherAccount); s.executeUpdate() }
@@ -42,12 +49,8 @@ class ProviderCredentialPostgresTest {
         repo = JdbcProviderCredentialMailbox(ds, clock)
     }
     @After fun cleanup() {
-        if (!::ds.isInitialized) return
-        ds.connection.use { c ->
-            for (sql in listOf("DELETE FROM provider_credential_mailbox WHERE account_id IN (?, ?)", "DELETE FROM device WHERE account_id IN (?, ?)", "DELETE FROM account WHERE account_id IN (?, ?)"))
-                c.prepareStatement(sql).use { s -> s.setString(1, account); s.setString(2, otherAccount); s.executeUpdate() }
-        }
-        ds.close()
+        if (::ds.isInitialized) ds.close()
+        if (schemaCreated) dataSource().use { admin -> admin.connection.use { c -> c.createStatement().use { it.execute("DROP SCHEMA $schema CASCADE") } } }
     }
     private fun dataSource(schema: String? = null) = HikariDataSource(HikariConfig().apply {
         jdbcUrl = System.getenv("SYNC_TEST_DATABASE_URL"); username = System.getenv("SYNC_TEST_DATABASE_USER") ?: "agentic"
@@ -62,6 +65,15 @@ class ProviderCredentialPostgresTest {
     private fun digest(value: ByteArray) = encodeCanonicalBase64Url(MessageDigest.getInstance("SHA-256").digest(value))
     private fun ack(value: ByteArray = bytes()) = ProviderCredentialAcknowledgementV1(targetDeviceId = DeviceId(target), providerConfigId = config, credentialRevision = 1,
         envelopeDigestBase64Url = digest(value), result = ProviderCredentialAcknowledgementResult.INSTALLED)
+    private fun snapshot(): String = ds.connection.use { c -> c.prepareStatement("SELECT row_to_json(m)::text FROM provider_credential_mailbox m WHERE target_device_id = ? AND provider_config_id = ?").use { s ->
+        s.setString(1, target); s.setString(2, config); s.executeQuery().use { r -> assertTrue(r.next()); r.getString(1).also { assertFalse(r.next()) } }
+    } }
+    private fun assertTombstone(revision: Long): String = snapshot().also { value ->
+        val retained = Json.parseToJsonElement(value).jsonObject.filterValues { it != JsonNull }
+        assertEquals(mapOf("account_id" to JsonPrimitive(account), "target_device_id" to JsonPrimitive(target),
+            "provider_config_id" to JsonPrimitive(config), "credential_revision" to JsonPrimitive(revision),
+            "delivery_state" to JsonPrimitive("DELIVERY_EXPIRED")), retained)
+    }
 
     @Test fun `active same account request repeats without extending deadline and changing source conflicts`() {
         repo.publishCredentialRequest(targetActor, request)
@@ -76,14 +88,13 @@ class ProviderCredentialPostgresTest {
         revoke(source); revoke(target)
         clock.now = clock.now.plusSeconds(7 * 86400L)
         repo.expireCredentialDeliveries(); repo.expireCredentialDeliveries()
-        ds.connection.use { c ->
-            c.prepareStatement("SELECT delivery_state, canonical_envelope, envelope_digest, provisioner_device_id, acknowledgement_result FROM provider_credential_mailbox WHERE target_device_id = ?").use { s ->
-                s.setString(1, target); s.executeQuery().use { r ->
-                    assertTrue(r.next()); assertEquals("DELIVERY_EXPIRED", r.getString(1))
-                    for (column in 2..5) assertNull(r.getObject(column))
-                }
-            }
-        }
+        val expired = assertTombstone(1)
+        fail(CredentialMailboxFailure.UNAUTHORIZED) { repo.publishCredentialRequest(targetActor, request.copy(credentialRevision = 2)) }
+        fail(CredentialMailboxFailure.UNAUTHORIZED) { repo.fetchCredentialMailbox(targetActor, config) }
+        fail(CredentialMailboxFailure.UNAUTHORIZED) { repo.uploadCredentialEnvelope(sourceActor, bytes()) }
+        clock.now = clock.now.plusSeconds(100L * 365 * 86400)
+        repo = JdbcProviderCredentialMailbox(ds, clock); repo.expireCredentialDeliveries()
+        assertEquals(expired, assertTombstone(1))
     }
     @Test fun `cross account source and non target request publication reject`() {
         fail(CredentialMailboxFailure.UNAUTHORIZED) { repo.publishCredentialRequest(targetActor, request.copy(provisionerDeviceId = DeviceId(foreign))) }
@@ -137,9 +148,82 @@ class ProviderCredentialPostgresTest {
         fail(CredentialMailboxFailure.DELIVERY_EXPIRED) { repo.fetchCredentialMailbox(targetActor, config) }
         fail(CredentialMailboxFailure.DELIVERY_EXPIRED) { repo.publishCredentialRequest(targetActor, request) }
         fail(CredentialMailboxFailure.DELIVERY_EXPIRED) { repo.uploadCredentialEnvelope(sourceActor, bytes()) }
-        ds.connection.use { c -> c.prepareStatement("SELECT canonical_envelope, envelope_digest, provisioner_device_id, acknowledgement_result FROM provider_credential_mailbox WHERE target_device_id = ?").use { s -> s.setString(1, target); s.executeQuery().use { assertTrue(it.next()); (1..4).forEach { column -> assertNull(it.getObject(column)) } } } }
-        repo.publishCredentialRequest(targetActor, request.copy(credentialRevision = 2))
-        assertEquals(2L, repo.assignedCredentialRequest(sourceActor)!!.request.credentialRevision)
+        val expired = assertTombstone(1)
+        repo.expireCredentialDeliveries(); assertEquals(expired, snapshot())
+        clock.now = clock.now.plusSeconds(100L * 365 * 86400)
+        repo = JdbcProviderCredentialMailbox(ds, clock)
+        fail(CredentialMailboxFailure.DELIVERY_EXPIRED) { repo.publishCredentialRequest(targetActor, request) }
+        fail(CredentialMailboxFailure.DELIVERY_EXPIRED) { repo.fetchCredentialMailbox(targetActor, config) }
+        fail(CredentialMailboxFailure.DELIVERY_EXPIRED) { repo.acknowledgeCredential(targetActor, ack()) }
+        assertEquals(expired, snapshot())
+        val higherCreated = clock.now
+        repo.publishCredentialRequest(targetActor, request.copy(credentialRevision = 3))
+        val higher = repo.assignedCredentialRequest(sourceActor)!!
+        assertEquals(3L, higher.request.credentialRevision)
+        assertEquals(higherCreated.plusSeconds(7 * 86400L).epochSecond, higher.expiresAtEpochSeconds)
+        ds.connection.use { c -> c.prepareStatement("SELECT created_at, expires_at FROM provider_credential_mailbox WHERE target_device_id = ?").use { s ->
+            s.setString(1, target); s.executeQuery().use { r -> assertTrue(r.next()); assertEquals(higherCreated, r.getTimestamp(1).toInstant()); assertEquals(higherCreated.plusSeconds(7 * 86400L), r.getTimestamp(2).toInstant()) }
+        } }
+        clock.now = higherCreated.plusSeconds(7 * 86400L)
+        repo.expireCredentialDeliveries()
+        val advanced = assertTombstone(3)
+        fail(CredentialMailboxFailure.UNRESERVED_REVISION) { repo.publishCredentialRequest(targetActor, request.copy(credentialRevision = 2)) }
+        fail(CredentialMailboxFailure.DELIVERY_EXPIRED) { repo.publishCredentialRequest(targetActor, request.copy(credentialRevision = 3)) }
+        repo.expireCredentialDeliveries(); assertEquals(advanced, snapshot())
+    }
+    @Test fun `requested and acknowledged delivery states both expire to the same minimal tombstone`() {
+        repo.publishCredentialRequest(targetActor, request)
+        clock.now = clock.now.plusSeconds(7 * 86400L); repo.expireCredentialDeliveries()
+        assertTombstone(1)
+        val higher = request.copy(credentialRevision = 2)
+        repo.publishCredentialRequest(targetActor, higher)
+        val cipher = ProviderCredentialWireCodec.encodeEnvelope(envelope(2))
+        repo.uploadCredentialEnvelope(sourceActor, cipher)
+        repo.acknowledgeCredential(targetActor, ack(cipher).copy(credentialRevision = 2))
+        assertEquals(ProviderCredentialMailboxState.ACKNOWLEDGED, repo.fetchCredentialMailbox(targetActor, config)!!.state)
+        clock.now = clock.now.plusSeconds(7 * 86400L); repo.expireCredentialDeliveries()
+        val expired = assertTombstone(2)
+        repo.expireCredentialDeliveries(); assertEquals(expired, snapshot())
+    }
+    @Test fun `expired marker survives source revocation and only eligible higher target reservations replace it`() {
+        repo.publishCredentialRequest(targetActor, request)
+        clock.now = clock.now.plusSeconds(7 * 86400L); repo.expireCredentialDeliveries()
+        val expired = assertTombstone(1)
+        revoke(source)
+        fail(CredentialMailboxFailure.DELIVERY_EXPIRED) { repo.publishCredentialRequest(targetActor, request) }
+        fail(CredentialMailboxFailure.DELIVERY_EXPIRED) { repo.publishCredentialRequest(targetActor, request.copy(provisionerDeviceId = DeviceId(other))) }
+        fail(CredentialMailboxFailure.UNAUTHORIZED) { repo.publishCredentialRequest(targetActor, request.copy(credentialRevision = 2)) }
+        fail(CredentialMailboxFailure.UNAUTHORIZED) { repo.publishCredentialRequest(targetActor, request.copy(credentialRevision = 2, provisionerDeviceId = DeviceId(foreign))) }
+        fail(CredentialMailboxFailure.UNAUTHORIZED) { repo.publishCredentialRequest(AuthenticatedDevice(account, other), request.copy(credentialRevision = 2)) }
+        assertEquals(expired, snapshot())
+        repo.publishCredentialRequest(targetActor, request.copy(credentialRevision = 2, provisionerDeviceId = DeviceId(other)))
+        val replacement = repo.assignedCredentialRequest(AuthenticatedDevice(account, other))!!
+        assertEquals(2L, replacement.request.credentialRevision)
+        assertEquals(clock.now.plusSeconds(7 * 86400L).epochSecond, replacement.expiresAtEpochSeconds)
+    }
+    @Test fun `V10 CHECK constraints prohibit expired remnants and incomplete active delivery states`() {
+        repo.publishCredentialRequest(targetActor, request)
+        val original = snapshot()
+        fun rejects(change: String) {
+            val failure = assertFailsWith<SQLException> { ds.connection.use { c ->
+                c.prepareStatement("UPDATE provider_credential_mailbox SET $change WHERE target_device_id = ? AND provider_config_id = ?").use { s ->
+                    s.setString(1, target); s.setString(2, config); s.executeUpdate()
+                }
+            } }
+            assertEquals("23514", failure.sqlState)
+        }
+        for (change in listOf("created_at = NULL", "expires_at = NULL", "provisioner_device_id = NULL", "expires_at = expires_at + INTERVAL '1 second'",
+            "envelope_digest = decode(repeat('00', 32), 'hex')", "acknowledgement_result = 'INSTALLED'",
+            "delivery_state = 'DELIVERED'", "delivery_state = 'ACKNOWLEDGED'", "delivery_state = 'DELIVERY_EXPIRED'")) {
+            rejects(change); assertEquals(original, snapshot())
+        }
+        clock.now = clock.now.plusSeconds(7 * 86400L); repo.expireCredentialDeliveries()
+        val expired = assertTombstone(1)
+        for (change in listOf("created_at = CURRENT_TIMESTAMP", "expires_at = CURRENT_TIMESTAMP", "provisioner_device_id = '$source'",
+            "canonical_envelope = decode('00', 'hex')", "envelope_digest = decode(repeat('00', 32), 'hex')", "acknowledgement_result = 'INSTALLED'",
+            "delivery_state = 'REQUESTED'")) {
+            rejects(change); assertEquals(expired, snapshot())
+        }
     }
     @Test fun `new target reservation cancels old source without causal clock or server allocator`() {
         repo.publishCredentialRequest(targetActor, request)
@@ -174,10 +258,10 @@ class ProviderCredentialPostgresTest {
             assertNull(repo.assignedCredentialRequest(AuthenticatedDevice(account, other)))
         } finally { executor.shutdownNow() }
     }
-    @Test fun `public mailbox table contains only allowlisted routing and opaque fields`() {
+    @Test fun `mailbox table contains only allowlisted routing and opaque fields`() {
         repo.publishCredentialRequest(targetActor, request); repo.uploadCredentialEnvelope(sourceActor, bytes())
         ds.connection.use { c ->
-            c.createStatement().use { s -> s.executeQuery("SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'provider_credential_mailbox'").use { r ->
+            c.createStatement().use { s -> s.executeQuery("SELECT column_name FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'provider_credential_mailbox'").use { r ->
                 val names = buildSet { while (r.next()) add(r.getString(1)) }
                 assertEquals(setOf("target_device_id", "provider_config_id", "credential_revision", "account_id", "provisioner_device_id", "delivery_state", "canonical_envelope", "envelope_digest", "acknowledgement_result", "created_at", "expires_at"), names)
             } }
@@ -210,6 +294,14 @@ class ProviderCredentialPostgresTest {
                     val result = mutableMapOf<String, MutableList<String>>()
                     while (r.next()) result.getOrPut(r.getString(1)) { mutableListOf() }.add((2..4).joinToString(":") { r.getString(it) })
                     assertEquals(result[schemas[0]], result[schemas[1]])
+                }
+            } }
+            ds.connection.use { c -> c.prepareStatement("SELECT n.nspname, pg_get_constraintdef(k.oid) FROM pg_constraint k JOIN pg_class t ON t.oid = k.conrelid JOIN pg_namespace n ON n.oid = t.relnamespace WHERE t.relname = 'provider_credential_mailbox' AND n.nspname IN (?, ?) AND k.contype = 'c' ORDER BY n.nspname, pg_get_constraintdef(k.oid)").use { s ->
+                s.setString(1, schemas[0]); s.setString(2, schemas[1]); s.executeQuery().use { r ->
+                    val checks = mutableMapOf<String, MutableList<String>>()
+                    while (r.next()) checks.getOrPut(r.getString(1)) { mutableListOf() }.add(r.getString(2))
+                    assertEquals(checks[schemas[0]], checks[schemas[1]])
+                    assertTrue(checks[schemas[0]]!!.any { "created_at IS NULL" in it && "expires_at IS NULL" in it })
                 }
             } }
         } finally { ds.connection.use { c -> c.createStatement().use { s -> schemas.forEach { s.execute("DROP SCHEMA IF EXISTS $it CASCADE") } } } }

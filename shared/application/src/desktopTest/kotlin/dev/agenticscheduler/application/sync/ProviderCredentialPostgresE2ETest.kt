@@ -11,8 +11,11 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assume
 import java.nio.file.Files
 import java.util.UUID
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneOffset
 import kotlin.test.*
-import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.*
 
 /** HTTP application engine + actual PostgreSQL + Room + production secure store + existing Tink.
  * No real network/TLS or Wear UI claim. Platform secure-store CI runs with its actual native backend.
@@ -111,15 +114,45 @@ class ProviderCredentialPostgresE2ETest {
                 assertNull(sourceRepo.delivery(source, target, targetConfigId.value, 1))
                 assertEquals(ProviderCredentialMailboxState.ACKNOWLEDGED, targetTransport.fetch(targetConfigId.value)!!.state)
                 assertNull(targetTransport.fetch(targetConfigId.value)!!.envelope)
+                val acceptedBeforeExpiry = targetRepo.state(target, targetConfigId.value)!!
+                val deliveryTimestampCanaries = ds.connection.use { c -> c.prepareStatement("SELECT json_build_array(created_at, expires_at)::text FROM provider_credential_mailbox WHERE target_device_id = ? AND provider_config_id = ?").use { s ->
+                    s.setString(1, target.value); s.setString(2, targetConfigId.value); s.executeQuery().use { r ->
+                        assertTrue(r.next()); Json.parseToJsonElement(r.getString(1)).jsonArray.map { it.jsonPrimitive.content }
+                    }
+                } }
+                // Exercise the exact deadline with real SQL after informational ACK, without waiting seven days.
+                val maintenance = JdbcProviderCredentialMailbox(ds, Clock.fixed(Instant.ofEpochSecond(assigned.expiresAtEpochSeconds), ZoneOffset.UTC))
+                maintenance.expireCredentialDeliveries()
+                val expiredFetch = assertFailsWith<ProviderCredentialTransportException> { targetTransport.fetch(targetConfigId.value) }
+                assertEquals(410, expiredFetch.status); assertEquals("DELIVERY_EXPIRED", expiredFetch.code)
+                val expiredRetry = assertFailsWith<ProviderCredentialTransportException> { targetTransport.publish(request) }
+                assertEquals(410, expiredRetry.status); assertEquals("DELIVERY_EXPIRED", expiredRetry.code)
+                fun tombstone(): String = ds.connection.use { c -> c.prepareStatement("SELECT row_to_json(m)::text FROM provider_credential_mailbox m WHERE target_device_id = ? AND provider_config_id = ?").use { s ->
+                    s.setString(1, target.value); s.setString(2, targetConfigId.value); s.executeQuery().use { r -> assertTrue(r.next()); r.getString(1) }
+                } }
+                val expiredRow = tombstone()
+                assertEquals(mapOf("account_id" to JsonPrimitive(account), "target_device_id" to JsonPrimitive(target.value),
+                    "provider_config_id" to JsonPrimitive(targetConfigId.value), "credential_revision" to JsonPrimitive(1),
+                    "delivery_state" to JsonPrimitive("DELIVERY_EXPIRED")), Json.parseToJsonElement(expiredRow).jsonObject.filterValues { it != JsonNull })
+                maintenance.expireCredentialDeliveries(); assertEquals(expiredRow, tombstone())
+                // Delivery retirement never changes local accepted counters, binding or installed credentials.
+                assertEquals(acceptedBeforeExpiry, targetRepo.state(target, targetConfigId.value))
+                assertEquals(rawCredential, store.readProviderSecret(SecretReference(state.activeReference))!!.decodeToString())
                 // Every public table is scanned; secret/plaintext hash/binding JSON/digest/ref stay client-only.
                 val bindingText = ProviderCredentialWireCodec.encodeBinding(targetBinding).decodeToString()
                 val privateValues = listOf(rawCredential, baseUrlCanary, modelCanary, bindingText, providerBindingDigest(targetBinding), state.activeReference,
                     decodeCanonicalBase64Url(providerBindingDigest(targetBinding), 32, "local binding digest").joinToString("") { "%02x".format(it) },
-                    encodeCanonicalBase64Url(pairingSha256(rawCredential.encodeToByteArray())), pairingSha256(rawCredential.encodeToByteArray()).joinToString("") { "%02x".format(it) })
+                    encodeCanonicalBase64Url(pairingSha256(rawCredential.encodeToByteArray())), pairingSha256(rawCredential.encodeToByteArray()).joinToString("") { "%02x".format(it) },
+                    original.canonicalEnvelopeJson, original.canonicalEnvelopeJson.encodeToByteArray().joinToString("") { "%02x".format(it) },
+                    original.envelopeDigest, decodeCanonicalBase64Url(original.envelopeDigest, 32, "envelope digest").joinToString("") { "%02x".format(it) }) + deliveryTimestampCanaries
                 // row_to_json represents BYTEA as hex and embedded JSON as escaped strings.
                 val forbidden = privateValues.flatMap { value -> listOf(value, JsonPrimitive(value).toString(),
                     encodeCanonicalBase64Url(value.encodeToByteArray()), value.encodeToByteArray().joinToString("") { "%02x".format(it) }) }.distinct()
                 ds.connection.use { c ->
+                    // The D8 device directory legitimately retains source identity; the tombstone does not.
+                    assertFalse(source.value in expiredRow)
+                    for (field in listOf("provisioner_device_id", "canonical_envelope", "envelope_digest", "acknowledgement_result", "created_at", "expires_at"))
+                        assertEquals(JsonNull, Json.parseToJsonElement(expiredRow).jsonObject[field])
                     val tables = c.createStatement().use { s -> s.executeQuery("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'").use { r -> buildList { while (r.next()) add(r.getString(1)) } } }
                     for (table in tables) {
                         require(Regex("[A-Za-z0-9_]+").matches(table))
