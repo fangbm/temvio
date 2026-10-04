@@ -5,6 +5,7 @@ import dev.agenticscheduler.agent.provider.ProviderProbeResult
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -12,7 +13,8 @@ enum class WearProbeFailure(val retryable: Boolean) {
     TIMEOUT(true), NETWORK(true), TRANSIENT_PROVIDER(true), AUTHENTICATION(false),
     INVALID_CONFIG(false), UNSUPPORTED_TOOLS(false), INVALID_RESPONSE(false), CREDENTIAL(false),
 }
-data class WearProbeState(val failure: WearProbeFailure? = null, val probing: Boolean = false, val nextRefreshAtMillis: Long? = null)
+data class WearProbeState(val failure: WearProbeFailure? = null, val probing: Boolean = false, val nextRefreshAtMillis: Long? = null,
+    val result: ProviderProbeResult? = null)
 data class WearProbeInput(val config: ProviderConfig, val bindingGeneration: String, val network: WearNetworkFacts, val eligible: Boolean)
 
 /** Owns readiness refresh only. It has no Agent command, Tool or business-write entry point. */
@@ -52,7 +54,7 @@ class WearProviderProbe(
     suspend fun refresh(explicitRetry: Boolean = false) = mutex.withLock {
         if (explicitRetry) {
             attempt = 0
-            mutableState.value = mutableState.value.copy(failure = null, nextRefreshAtMillis = null)
+            mutableState.value = mutableState.value.copy(failure = null, nextRefreshAtMillis = null, result = null)
         }
         val snapshot = input?.takeIf { it.eligible } ?: return@withLock
         if (flight?.isCompleted == false) return@withLock
@@ -73,6 +75,19 @@ class WearProviderProbe(
         val old = mutex.withLock { generation++; input = null; flight.also { it?.cancel(); flight = null } }
         old?.join()
     }
+    /** Reuses only this binding/config's proof. Joins one bounded readiness attempt, not its retry loop. */
+    suspend fun capability(config: ProviderConfig, bindingGeneration: String): ProviderProbeResult {
+        fun matches() = input?.let { it.config == config && it.bindingGeneration == bindingGeneration && it.eligible } == true
+        val existing = mutex.withLock {
+            if (!matches()) return ProviderProbeResult.Unavailable("READINESS_CHANGED")
+            mutableState.value.result
+        }
+        if (existing != null) return existing
+        refresh()
+        val result = withTimeoutOrNull(DEADLINE_MILLIS) { state.first { it.result != null }.result }
+            ?: ProviderProbeResult.Unavailable("PROBE_TIMEOUT")
+        return mutex.withLock { if (matches()) result else ProviderProbeResult.Unavailable("READINESS_CHANGED") }
+    }
     private suspend fun runProbe(snapshot: WearProbeInput, token: Long) {
         while (true) {
             mutex.withLock {
@@ -84,7 +99,8 @@ class WearProviderProbe(
             val wait = mutex.withLock {
                 if (token != generation) return
                 val backoff = if (failure?.retryable == true) BACKOFF_MILLIS[minOf(attempt++, BACKOFF_MILLIS.lastIndex)] else null
-                mutableState.value = WearProbeState(failure, false, backoff?.let { monotonicMillis() + it })
+                mutableState.value = WearProbeState(failure, false, backoff?.let { monotonicMillis() + it },
+                    result ?: ProviderProbeResult.Unavailable("PROBE_TIMEOUT"))
                 if (failure == null) attempt = 0
                 if (!foreground || backoff == null) return
                 backoff

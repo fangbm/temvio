@@ -210,7 +210,9 @@ jobs:
           target: google_apis
           arch: x86_64
           script: |
-            ./gradlew :apps:android:connectedDebugAndroidTest :apps:wear:connectedDebugAndroidTest --no-daemon
+            ./gradlew :apps:android:connectedDebugAndroidTest --no-daemon
+            # Core Watch runtime/UI acceptance is required on the Wear job, never phone/fake platform.
+            ./gradlew :apps:wear:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.agenticscheduler.wear.WearKeystoreSecureStoreInstrumentedTest,dev.agenticscheduler.wear.ProviderCredentialSlotInstrumentedTest,dev.agenticscheduler.wear.WearCapabilityInstrumentedTest --no-daemon
             adb logcat -d -s D90302Evidence:I > apps/wear/build/d90302-platform-evidence.txt
       - name: Upload Android provisioning reports
         if: always()

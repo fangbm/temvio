@@ -42,7 +42,7 @@ class WearCapabilityService(private val platform: WearSpeechPlatform, languageTa
         val token = ++inspection
         supportQuery?.close(); supportQuery = null
         mutableFacts.value = baseFacts()
-        if (platform.apiLevel < 31 || !platform.onDeviceServiceAvailable() ||
+        if (language == "und" || platform.apiLevel < 31 || !platform.onDeviceServiceAvailable() ||
             platform.apiLevel < 33 || platform.permission() != SpeechPermission.GRANTED) return
         supportQuery = platform.checkLanguage(language) { availability ->
             if (token == inspection && !closed) {
@@ -60,6 +60,7 @@ class WearCapabilityService(private val platform: WearSpeechPlatform, languageTa
     /** The caller must be handling a user speech action. Result is a candidate, never a command. */
     fun useSpeechFromExplicitUserAction(result: (SpeechCandidateResult) -> Unit) {
         check(!closed)
+        if (language == "und") { result(SpeechCandidateResult.ServiceUnavailable); return }
         if (speechPending) { result(SpeechCandidateResult.Busy); return }
         inspectCapability()
         if (mutableFacts.value.onDeviceSttAvailability in setOf(OnDeviceSttAvailability.UNSUPPORTED, OnDeviceSttAvailability.TEMPORARILY_UNAVAILABLE)) {

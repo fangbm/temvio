@@ -73,6 +73,7 @@ class AgentRunService(
     private val historyUndo: HistoryUndoTool? = null,
     private val planningProfileUpdate: PlanningProfileUpdateTool? = null,
     private val plannerApplyBranch: PlannerApplyBranchTool? = null,
+    private val capabilityProbe: suspend (ProviderConfig) -> ProviderProbeResult = provider::probe,
 ) {
     private val json = Json { encodeDefaults = true; explicitNulls = true }
     private val threadOperationLocks = ThreadOperationLocks()
@@ -117,7 +118,7 @@ class AgentRunService(
         val ordinal = state.messages(threadId).maxOfOrNull { it.ordinal }?.plus(1) ?: 0
         state.appendMessage(AgentMessage(AgentMessageId(ids.next()), threadId, ordinal, AgentMessageRole.USER, command, clock.nowEpochMillis()))
         val config = selectedConfig() ?: return AgentRunResult.Failed("PROVIDER_NOT_CONFIGURED")
-        val tools = when (val probe = provider.probe(config)) {
+        val tools = when (val probe = capabilityProbe(config)) {
             ProviderProbeResult.Supported -> supportedTools()
             ProviderProbeResult.Unsupported -> emptyList()
             is ProviderProbeResult.Unavailable -> return AgentRunResult.Failed(probe.redactedCode)

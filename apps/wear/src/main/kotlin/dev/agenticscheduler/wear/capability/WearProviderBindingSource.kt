@@ -18,6 +18,11 @@ class WearLocalSettings(context: Context) {
     private val preferences = context.getSharedPreferences("wear_ai_entry_v1", Context.MODE_PRIVATE)
     private val mutableEnabled = MutableStateFlow(preferences.getBoolean("userEnabledAiEntry", false))
     val userEnabledAiEntry = mutableEnabled.asStateFlow()
+    val selectedSpeechLanguageTag: String get() = preferences.getString("selectedSpeechLanguageTag", null) ?: "und"
+    fun selectSpeechLanguageFromExplicitUserAction(tag: String) {
+        require(tag.isNotBlank() && tag != "und")
+        check(preferences.edit().putString("selectedSpeechLanguageTag", tag).commit())
+    }
     fun setAiEntryFromExplicitUserAction(enabled: Boolean) {
         check(preferences.edit().putBoolean("userEnabledAiEntry", enabled).commit())
         mutableEnabled.value = enabled

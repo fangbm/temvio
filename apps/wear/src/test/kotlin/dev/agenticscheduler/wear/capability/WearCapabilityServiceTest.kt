@@ -3,6 +3,19 @@ package dev.agenticscheduler.wear.capability
 import kotlin.test.*
 
 class WearCapabilityServiceTest {
+    @Test fun unspecifiedLanguageKeepsTextWithoutSpeechQueryPermissionOrRecognition() {
+        val p = Platform().apply { permissionValue = SpeechPermission.GRANTED }
+        val s = WearCapabilityService(p, "und")
+        s.inspectCapability(); assertTrue(s.facts.value.aiEntrySupported)
+        assertEquals("und", s.facts.value.selectedLanguageTag)
+        assertEquals(0, p.queries)
+        var result: SpeechCandidateResult? = null
+        s.useSpeechFromExplicitUserAction { result = it }
+        assertEquals(SpeechCandidateResult.ServiceUnavailable, result)
+        assertEquals(0, p.starts); assertEquals(0, p.permissions)
+        s.selectLanguageFromUserAction("en-US"); assertEquals(1, p.queries)
+        s.close()
+    }
     private class Platform : WearSpeechPlatform {
         override var apiLevel = 33
         override val platformSupported = true
