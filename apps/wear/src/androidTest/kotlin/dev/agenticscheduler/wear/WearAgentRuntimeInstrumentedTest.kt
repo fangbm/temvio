@@ -185,6 +185,22 @@ class WearAgentRuntimeInstrumentedTest {
         assertEquals(1, RoomMutationJournalRepository(database).timeline().size)
     }
 
+    @Test fun foregroundLossBlocksQueuedConfirmAndSendUntilAnotherExplicitAction() = runBlocking {
+        send("create task"); val pending = requireNotNull(agent.session.ui.value.pending)
+        val before = fixture.commandRequests
+        withContext(Dispatchers.Main.immediate) { agent.stopForegroundFromLifecycle() }
+        agent.session.confirmFromUserAction(pending.id, requireNotNull(pending.previewJson), true)
+        agent.session.editDraft("another create task"); agent.session.submitFromUserAction()
+        assertEquals("FOREGROUND_REQUIRED", agent.session.ui.value.redactedCode)
+        assertEquals(pending, agent.session.ui.value.pending)
+        assertTrue(RoomMutationJournalRepository(database).timeline().isEmpty())
+        assertEquals(before, fixture.commandRequests)
+        agent.foregroundChanged(true); delay(200)
+        assertEquals(before, fixture.commandRequests)
+        assertTrue(RoomMutationJournalRepository(database).timeline().isEmpty())
+        confirm(false)
+    }
+
     @Test fun deniedLocalPolicyDoesNotBecomeConfirmationOrWrite() = runBlocking {
         agent.state.savePermissionPolicy(AgentPermissionPolicy.default().withMode(AgentToolCapability.LOW_RISK_CREATE, AgentPermissionMode.DENY))
         send("create task")

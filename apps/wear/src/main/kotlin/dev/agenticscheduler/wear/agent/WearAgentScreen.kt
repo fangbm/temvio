@@ -54,7 +54,7 @@ fun WearAgentScreen(
         Button(onClick = onSend, enabled = readiness.requestReady && !session.busy && session.pending == null && session.draft.isNotBlank(), modifier = Modifier.testTag("agent-send")) { Text("Send") }
         Text("Optional on-device speech: ${readiness.capability.onDeviceSttAvailability} · ${readiness.capability.speechPermission}")
         BasicTextField(language, { language = it }, modifier = Modifier.fillMaxWidth().testTag("speech-language"))
-        Button(onClick = { onLanguage(language) }, enabled = language.isNotBlank()) { Text("Select speech language") }
+        Button(onClick = { onLanguage(language) }, enabled = language.isNotBlank() && language != "und") { Text("Select speech language") }
         Button(onClick = onSpeech, enabled = !session.busy && language.isNotBlank() && language != "und" && readiness.capability.onDeviceSttAvailability !in setOf(OnDeviceSttAvailability.UNSUPPORTED, OnDeviceSttAvailability.TEMPORARILY_UNAVAILABLE), modifier = Modifier.testTag("speech-start")) { Text("Speech draft only") }
         Button(onClick = onCancelSpeech) { Text("Cancel speech") }
         Text("${session.phase}${session.redactedCode?.let { " · $it" }.orEmpty()}", Modifier.testTag("agent-status"))

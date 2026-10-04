@@ -29,7 +29,7 @@ Windows JDK 17, ASCII worktree `D:\codex\ASP-d9-03-03`, `GRADLE_USER_HOME=D:\gra
 | `:apps:wear:testDebugUnitTest` | 57/57; C8 ceiling, C6 proof reuse/generation/single-flight/backoff, language initialization and existing capability/privacy tests |
 | `:shared:agent:desktopTest` | 48/48; guarded normal/streaming actual-send boundary, pre-secret rejection/races, unchanged shared adapter and typed Tools/Planner semantics |
 | `:shared:database:desktopTest --tests '*AgentRunIntegrationTest' --tests '*AgentHistoryExplicitExportTest'` | 17/17 (14 shared runtime, 3 export/privacy); real desktop Room, shared stale/Planner/Undo/context/audit regressions |
-| `ANDROID_SERIAL=emulator-5556 :apps:wear:connectedDebugAndroidTest` | 28/28 (15 runtime E2E + 2 UI + 11 predecessor platform/security), 0 skipped; required core tests assert FEATURE_WATCH |
+| `ANDROID_SERIAL=emulator-5556 :apps:wear:connectedDebugAndroidTest` | 29/29 (16 runtime E2E + 2 UI + 11 predecessor platform/security), 0 skipped; required core tests assert FEATURE_WATCH |
 
 The Watch job runs the entire native suite; the phone job keeps the three predecessor Wear platform suites and does not mislabel phone execution as Watch runtime acceptance. Native core uses the production Android Ktor engine, file-backed Room, actual AgentRunService/Tools/application transaction paths and production composable Confirm/Deny. Only the local HTTP Provider responses are deterministic fixture responses with real structured calls; no fake AgentRunService, ToolResult or HTTP engine.
 
@@ -37,7 +37,7 @@ Native coverage: structured read/final response/zero mutation and history restar
 
 ## Evidence limits and CI
 
-No live external commercial Provider or physical Watch acceptance is claimed. The deterministic local structured fixture satisfies the task's real-engine/runtime Watch E2E requirement. Actual on-device recognizer availability is reported by the existing platform instrumentation; no physical recognition success is inferred from a fake or absent service.
+No live external commercial Provider or physical Watch acceptance is claimed. The deterministic local structured fixture satisfies the task's real-engine/runtime Watch E2E requirement. On the actual local Wear API35/ext15 AVD, FEATURE_WATCH and text input support were true, default route had INTERNET + VALIDATED, on-device recognizer service was absent, language support returned UNSUPPORTED, and an explicit speech attempt returned ServiceUnavailable. No physical recognition success is inferred from a fake or absent service.
 
 Full CI is pending on the Draft PR head. Required jobs remain build, desktop-windows, android-keystore, wear-keystore, agent-history-platform-e2e. Final run/head and native counts will be recorded after execution.
 

@@ -37,6 +37,7 @@ class WearAgentSessionController(
     private val snapshot: suspend () -> WearRequestSnapshot?,
     private val blocker: () -> WearProviderRuntimeState,
     private val continuationBlock: suspend (AgentThreadId) -> String? = { null },
+    private val foreground: () -> Boolean = { true },
 ) {
     private val operation = Mutex()
     private var foregroundRequest: Job? = null
@@ -58,6 +59,7 @@ class WearAgentSessionController(
     suspend fun newConversationFromUserAction() {
         if (!operation.tryLock()) return
         try {
+            if (!foreground()) return
             if (mutableState.value.pending != null) return
             mutableState.value = WearAgentSessionState(threadId = runtime.createThread())
         } finally { operation.unlock() }
@@ -65,6 +67,7 @@ class WearAgentSessionController(
     suspend fun submitFromUserAction() {
         if (!operation.tryLock()) return // Rapid double tap is not a queued second command.
         try {
+            if (!foreground()) { fail("FOREGROUND_REQUIRED", WearAgentUiPhase.PROVIDER_UNAVAILABLE); return }
             val before = mutableState.value
             if (before.busy || before.draft.isBlank()) return
             val thread = before.threadId ?: runtime.createThread().also { mutableState.update { s -> s.copy(threadId = it) } }
@@ -85,6 +88,7 @@ class WearAgentSessionController(
     suspend fun confirmFromUserAction(callId: AgentToolCallId, shownPreview: String, approved: Boolean) {
         if (!operation.tryLock()) return
         try {
+            if (!foreground()) { fail("FOREGROUND_REQUIRED", WearAgentUiPhase.PROVIDER_UNAVAILABLE); return }
             val thread = mutableState.value.threadId ?: return
             val pending = state.toolCalls(thread).singleOrNull { it.state == AgentToolCallState.WAITING_CONFIRMATION }
             if (pending?.id != callId || pending.previewJson != shownPreview) { reload(); fail("STALE_PREVIEW", WearAgentUiPhase.STALE); return }

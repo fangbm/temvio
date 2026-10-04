@@ -135,14 +135,14 @@ class WearAgentRuntimeComposition private constructor(
                     if (expected == null || expected.config != config) ProviderProbeResult.Unavailable("READINESS_CHANGED")
                     else readiness.structuredCapability(expected)
                 })
-            val session = WearAgentSessionController(state, runtime, { if (composition.foreground) readiness.requestSnapshot() else null }, { readiness.readiness.value.runtimeState }) { thread ->
+            val session = WearAgentSessionController(state, runtime, { if (composition.foreground) readiness.requestSnapshot() else null }, { readiness.readiness.value.runtimeState }, continuationBlock = { thread ->
                 // Only block on existing conflict/tombstone facts; no remote content enters Provider context.
                 val sync = RoomAgentSyncPersistence(database)
                 enrollments.states().filterIsInstance<LocalEnrollmentState.Active>().firstNotNullOfOrNull { active ->
                     val projection = sync.threadHistoryProjection(active.syncSpaceId, AgentThreadSyncId(thread.value))
                     if (projection.tombstoned) "THREAD_TOMBSTONED" else if (!projection.providerContinuationAllowed) "AGENT_HISTORY_CONFLICT" else null
                 }
-            }
+            }, foreground = { composition.foreground })
             composition = WearAgentRuntimeComposition(local, readiness, session, revisions, target, client)
             return composition
         }
