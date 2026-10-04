@@ -54,7 +54,7 @@ class WearProviderBindingSource(
         val journals = target?.let { revisions.journals(it).filter { journal -> journal.providerConfigId == id.value } }.orEmpty()
         val exact = try { local.provisioningBinding(id, metadata.credentialRequired) == metadata }
             catch (_: IllegalArgumentException) { false }
-        val adapter = metadata.adapterProfile == "OPENAI_COMPATIBLE_CHAT_TOOLS" && metadata.toolCallingSupported && validEndpoint(binding)
+        val adapter = metadata.adapterProfile == "OPENAI_COMPATIBLE_CHAT_TOOLS" && validEndpoint(binding)
         val ownJournal = journals.singleOrNull { it.installIdentity == state?.activeInstallIdentity }
         val journalValid = ownJournal != null && ownJournal.targetDeviceId == target && ownJournal.preparedReference == state?.activeReference &&
             ownJournal.revision == state?.highestAcceptedRevision && ownJournal.phase == ProviderInstallPhase.METADATA_COMMITTED

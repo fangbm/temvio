@@ -25,7 +25,7 @@ gradlew.bat :apps:wear:lintDebug :apps:wear:connectedDebugAndroidTest
   --no-configuration-cache --console=plain
 ```
 
-JVM: 52/52, zero failures/errors/skips: readiness 14, binding/secure-store 9,
+JVM: 53/53, zero failures/errors/skips: readiness 14, binding/secure-store 10,
 probe 12, STT adapter 13, network projection 2, synthetic body privacy 2.
 Debug compile/APK/instrumentation APK and lint passed. Lint warnings concern
 existing backup/icon/Wear activity configuration; no new error/baseline suppression.

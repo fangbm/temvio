@@ -106,4 +106,11 @@ class WearProviderBindingSourceTest {
         f.repository.current = f.repository.current!!.copy(generation = ProviderLocalCounter.of(1))
         assertNotEquals(available.generation, f.source.observe(f.binding).generation)
     }
+    @Test fun toolSupportFlagIsProbeCapabilityNotAnExtraReadinessBoolean() = runTest {
+        val f = Fixture(); f.local = config.copy(toolCallingSupported = false)
+        val binding = f.binding.copy(metadata = f.local!!.provisioningBinding(config.id, true))
+        f.repository.current = f.repository.current!!.copy(activeBinding = binding.metadata, approvedBinding = binding.metadata)
+        assertTrue(f.source.observe(binding).facts.providerReady)
+        // The existing adapter then reports Unsupported and the probe stops; no prose/write fallback.
+    }
 }
