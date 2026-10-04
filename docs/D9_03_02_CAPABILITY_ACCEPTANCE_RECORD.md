@@ -54,7 +54,29 @@ unchanged. Actual AVD route remained INTERNET + VALIDATED; deterministic route
 facts cover the local exception without public validation. No physical LAN/no-
 public-Internet or spoken transcript success is claimed.
 
-Full CI and Wear API35-ext15 evidence will be linked after the Draft PR run.
+### Full CI / native platform evidence
+
+Implementation head `86744ee1d9d568d578a6302aeb3cc44f6a981acb`:
+[CI run 37202711903](https://github.com/fangbm/temvio/actions/runs/37202711903),
+all five jobs passed: build, desktop-windows, android-keystore, wear-keystore,
+agent-history-platform-e2e. Downloaded result XML confirms the six Wear JVM
+suites total 53/53 with zero failures/errors/skips.
+
+| Platform / artifact | New capability tests | Actual STT evidence |
+| --- | --- | --- |
+| Android API35 `google_apis` phone AVD; `provider-credential-android-reports` | 7/7, zero failures/errors/skips; full Wear-app instrumentation 11/11 | On-device service exists; this run's real `en-US` query returned LANGUAGE_UNVERIFIED. Explicit native start/cancel returned Cancelled. FEATURE_WATCH=false, so this is adapter evidence on Android, not Watch capability acceptance. |
+| Wear API35, system image API35-ext15 `android-wear`; `provider-credential-wear-reports` | 7/7, zero failures/errors/skips; full Wear instrumentation 11/11 | FEATURE_WATCH=true, text supported, on-device service absent: UNSUPPORTED and explicit ServiceUnavailable. Permission grant does not fabricate language/service support. |
+
+Both AVDs report actual INTERNET + VALIDATED default route and complete the native
+credential-free loopback HTTP synthetic probe. Their non-secret capability logs
+are included as `d90302-platform-evidence.txt`. Native recognizer absence is an
+unavailable-platform observation; deterministic adapter tests cover the remaining
+mapping/lifecycle matrix. No physical Watch/spoken-transcript success is claimed.
+The existing enrolled Desktop/Android/PostgreSQL relay-restart acceptance job also
+passed; this slice does not change or reclassify D9-02/OD-012 semantics.
+
+The final acceptance-document commit retains this tested implementation evidence;
+the PR checks show the resulting documentation head's separate full CI run.
 
 ## Decisions and remaining gates
 
@@ -62,3 +84,34 @@ C6/C7 are frozen and used unchanged. Local implementation choices: display-only
 reason precedence, SharedPreferences for durable Watch-only preference/exact
 credential-free approval, explicit lifecycle composition and generation guards.
 No new wire/Provider model, OS fallback or schema semantics. OD-012 remains OPEN.
+No new BLOCKED_BY_DECISION item in this slice. Missing on-device service or
+unproven language is an observed capability limitation, not permission to fall
+back to remote speech. D9-03-03 and physical spoken-transcript acceptance remain
+outside this slice.
+
+## Changed files
+
+```text
+.github/workflows/ci.yml
+apps/wear/build.gradle.kts
+apps/wear/src/main/AndroidManifest.xml
+apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/AndroidWearSpeechPlatform.kt
+apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearCapabilityService.kt
+apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearDefaultNetworkState.kt
+apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearNetworkObserver.kt
+apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearProviderBindingSource.kt
+apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearProviderProbe.kt
+apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearReadiness.kt
+apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearReadinessComposition.kt
+apps/wear/src/test/kotlin/dev/agenticscheduler/wear/capability/WearCapabilityServiceTest.kt
+apps/wear/src/test/kotlin/dev/agenticscheduler/wear/capability/WearDefaultNetworkStateTest.kt
+apps/wear/src/test/kotlin/dev/agenticscheduler/wear/capability/WearProbePrivacyTest.kt
+apps/wear/src/test/kotlin/dev/agenticscheduler/wear/capability/WearProviderBindingSourceTest.kt
+apps/wear/src/test/kotlin/dev/agenticscheduler/wear/capability/WearProviderProbeTest.kt
+apps/wear/src/test/kotlin/dev/agenticscheduler/wear/capability/WearReadinessTest.kt
+apps/wear/src/androidTest/kotlin/dev/agenticscheduler/wear/WearCapabilityInstrumentedTest.kt
+docs/tasks/D9_03_02_WEAR_CAPABILITY_NETWORK_STT.md
+docs/D9_03_02_CAPABILITY_ACCEPTANCE_RECORD.md
+docs/ROADMAP_D5_D9.md
+gradle/libs.versions.toml
+```
