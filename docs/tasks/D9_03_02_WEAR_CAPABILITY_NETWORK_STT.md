@@ -111,8 +111,8 @@ richer passive inspection defers until a grant; passive probes never request it.
 
 User speech action owns permission request/start. Adapter supports candidate,
 failure/unavailable/denial, busy, cancellation, destruction, permission revocation,
-and discards callbacks after cancel/language change. Known unsupported language
-cannot start. No cloud recognizer, Phone microphone, audio upload or automatic
+and discards callbacks after cancel/language change. Known unsupported or
+download-pending language cannot start. No cloud recognizer, Phone microphone, audio upload or automatic
 model download; model download UI/action implementation is outside this slice.
 Unverified language can be tried only by explicit user speech action; it is never
 reported AVAILABLE without support evidence. Candidate never invokes Agent/Tool.

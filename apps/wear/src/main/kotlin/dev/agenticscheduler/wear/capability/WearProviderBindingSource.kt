@@ -82,7 +82,10 @@ class WearProviderBindingSource(
             revisions.journals(target).filter { it.providerConfigId == id.value } == journals) &&
             (!metadata.credentialRequired || targetActive())
         val facts = WearProviderFacts(true, approved, adapter, blocked || !unchanged, metadata.credentialRequired, readable && unchanged)
-        return WearBindingObservation(local, facts, "${state?.generation?.decimal}:${state?.highestAcceptedRevision}:${state?.activeInstallIdentity}:${facts}")
+        // Temporary store/route/permission availability is not a credential/config change.
+        // It must not reset an authentication/unsupported terminal probe stop.
+        return WearBindingObservation(local, facts,
+            "${binding.route}:${metadata.credentialRequired}:${state?.generation?.decimal}:${state?.highestAcceptedRevision}:${state?.activeInstallIdentity}:$approved")
     }
     private fun validEndpoint(binding: WearProviderBinding): Boolean = try {
         val uri = URI(binding.metadata.baseUrl)

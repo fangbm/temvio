@@ -61,6 +61,12 @@ class WearCapabilityServiceTest {
         var result: SpeechCandidateResult? = null; s.useSpeechFromExplicitUserAction { result = it }
         assertEquals(SpeechCandidateResult.ServiceUnavailable, result); assertEquals(0, p.starts); s.close()
     }
+    @Test fun knownDownloadPendingLanguageDoesNotStartOrDownload() {
+        val p = Platform().apply { permissionValue = SpeechPermission.GRANTED }; val s = WearCapabilityService(p, "en-US")
+        s.inspectCapability(); p.support!!(OnDeviceSttAvailability.TEMPORARILY_UNAVAILABLE)
+        var result: SpeechCandidateResult? = null; s.useSpeechFromExplicitUserAction { result = it }
+        assertEquals(SpeechCandidateResult.ServiceUnavailable, result); assertEquals(0, p.starts); assertTrue(s.facts.value.textInputSupported); s.close()
+    }
     @Test fun explicitGrantStartsOnlyLocalRecognition() {
         val p = Platform(); val s = WearCapabilityService(p, "en-US"); var result: SpeechCandidateResult? = null
         s.useSpeechFromExplicitUserAction { result = it }; p.permissionValue = SpeechPermission.GRANTED; p.requested!!(true)

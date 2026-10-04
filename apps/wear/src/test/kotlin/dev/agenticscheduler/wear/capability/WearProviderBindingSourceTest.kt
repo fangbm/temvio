@@ -98,4 +98,12 @@ class WearProviderBindingSourceTest {
         f.repository.current = ProviderCredentialRevisionState(target, config.id.value); f.repository.installs = emptyList()
         val facts = f.source.observe(f.binding).facts; assertFalse(facts.providerReady); assertFalse(facts.installBlocked); assertFalse(facts.exactBindingApproved)
     }
+    @Test fun temporarySecureStoreAvailabilityDoesNotMasqueradeAsCredentialChange() = runTest {
+        val f = Fixture(); val available = f.source.observe(f.binding)
+        f.secrets.unavailable = true; val unavailable = f.source.observe(f.binding)
+        assertFalse(unavailable.facts.providerReady); assertEquals(available.generation, unavailable.generation)
+        f.secrets.unavailable = false; assertEquals(available.generation, f.source.observe(f.binding).generation)
+        f.repository.current = f.repository.current!!.copy(generation = ProviderLocalCounter.of(1))
+        assertNotEquals(available.generation, f.source.observe(f.binding).generation)
+    }
 }

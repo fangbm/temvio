@@ -62,7 +62,7 @@ class WearCapabilityService(private val platform: WearSpeechPlatform, languageTa
         check(!closed)
         if (speechPending) { result(SpeechCandidateResult.Busy); return }
         inspectCapability()
-        if (mutableFacts.value.onDeviceSttAvailability == OnDeviceSttAvailability.UNSUPPORTED) {
+        if (mutableFacts.value.onDeviceSttAvailability in setOf(OnDeviceSttAvailability.UNSUPPORTED, OnDeviceSttAvailability.TEMPORARILY_UNAVAILABLE)) {
             result(SpeechCandidateResult.ServiceUnavailable); return
         }
         speechPending = true
@@ -79,7 +79,7 @@ class WearCapabilityService(private val platform: WearSpeechPlatform, languageTa
     }
     private fun start(token: Long) {
         if (platform.permission() != SpeechPermission.GRANTED) { finish(token, SpeechCandidateResult.PermissionDenied); return }
-        if (mutableFacts.value.onDeviceSttAvailability == OnDeviceSttAvailability.UNSUPPORTED) {
+        if (mutableFacts.value.onDeviceSttAvailability in setOf(OnDeviceSttAvailability.UNSUPPORTED, OnDeviceSttAvailability.TEMPORARILY_UNAVAILABLE)) {
             finish(token, SpeechCandidateResult.ServiceUnavailable); return
         }
         val handle = platform.recognizeOnDevice(language) { value ->
