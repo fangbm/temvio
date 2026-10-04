@@ -12,7 +12,6 @@ import org.junit.Assume
 import java.nio.file.Files
 import java.util.UUID
 import java.time.Clock
-import java.time.Instant
 import java.time.ZoneOffset
 import kotlin.test.*
 import kotlinx.serialization.json.*
@@ -115,13 +114,18 @@ class ProviderCredentialPostgresE2ETest {
                 assertEquals(ProviderCredentialMailboxState.ACKNOWLEDGED, targetTransport.fetch(targetConfigId.value)!!.state)
                 assertNull(targetTransport.fetch(targetConfigId.value)!!.envelope)
                 val acceptedBeforeExpiry = targetRepo.state(target, targetConfigId.value)!!
-                val deliveryTimestampCanaries = ds.connection.use { c -> c.prepareStatement("SELECT json_build_array(created_at, expires_at)::text FROM provider_credential_mailbox WHERE target_device_id = ? AND provider_config_id = ?").use { s ->
+                val deliveryTiming = ds.connection.use { c -> c.prepareStatement("SELECT json_build_array(created_at, expires_at)::text, expires_at FROM provider_credential_mailbox WHERE target_device_id = ? AND provider_config_id = ?").use { s ->
                     s.setString(1, target.value); s.setString(2, targetConfigId.value); s.executeQuery().use { r ->
-                        assertTrue(r.next()); Json.parseToJsonElement(r.getString(1)).jsonArray.map { it.jsonPrimitive.content }
+                        assertTrue(r.next()); Json.parseToJsonElement(r.getString(1)).jsonArray.map { it.jsonPrimitive.content } to r.getTimestamp(2).toInstant()
                     }
                 } }
+                val deliveryTimestampCanaries = deliveryTiming.first
                 // Exercise the exact deadline with real SQL after informational ACK, without waiting seven days.
-                val maintenance = JdbcProviderCredentialMailbox(ds, Clock.fixed(Instant.ofEpochSecond(assigned.expiresAtEpochSeconds), ZoneOffset.UTC))
+                // The wire uses whole seconds; SQL preserves microseconds. Inject the actual persisted cutoff.
+                val deadline = deliveryTiming.second
+                JdbcProviderCredentialMailbox(ds, Clock.fixed(deadline.minusNanos(1000), ZoneOffset.UTC)).expireCredentialDeliveries()
+                assertEquals(ProviderCredentialMailboxState.ACKNOWLEDGED, targetTransport.fetch(targetConfigId.value)!!.state)
+                val maintenance = JdbcProviderCredentialMailbox(ds, Clock.fixed(deadline, ZoneOffset.UTC))
                 maintenance.expireCredentialDeliveries()
                 val expiredFetch = assertFailsWith<ProviderCredentialTransportException> { targetTransport.fetch(targetConfigId.value) }
                 assertEquals(410, expiredFetch.status); assertEquals("DELIVERY_EXPIRED", expiredFetch.code)
@@ -134,6 +138,8 @@ class ProviderCredentialPostgresE2ETest {
                 assertEquals(mapOf("account_id" to JsonPrimitive(account), "target_device_id" to JsonPrimitive(target.value),
                     "provider_config_id" to JsonPrimitive(targetConfigId.value), "credential_revision" to JsonPrimitive(1),
                     "delivery_state" to JsonPrimitive("DELIVERY_EXPIRED")), Json.parseToJsonElement(expiredRow).jsonObject.filterValues { it != JsonNull })
+                JdbcProviderCredentialMailbox(ds, Clock.fixed(deadline.plusNanos(1000), ZoneOffset.UTC)).expireCredentialDeliveries()
+                assertEquals(expiredRow, tombstone())
                 maintenance.expireCredentialDeliveries(); assertEquals(expiredRow, tombstone())
                 // Delivery retirement never changes local accepted counters, binding or installed credentials.
                 assertEquals(acceptedBeforeExpiry, targetRepo.state(target, targetConfigId.value))
