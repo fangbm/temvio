@@ -40,10 +40,37 @@ Native coverage: structured read/final response/zero mutation and history restar
 
 No live external commercial Provider or physical Watch acceptance is claimed. The deterministic local structured fixture satisfies the task's real-engine/runtime Watch E2E requirement. On the actual local Wear API35/ext15 AVD, FEATURE_WATCH and text input support were true, default route had INTERNET + VALIDATED, on-device recognizer service was absent, language support returned UNSUPPORTED, and an explicit speech attempt returned ServiceUnavailable. No physical recognition success is inferred from a fake or absent service.
 
-Full CI is pending on the Draft PR head. Required jobs remain build, desktop-windows, android-keystore, wear-keystore, agent-history-platform-e2e. Final run/head and native counts will be recorded after execution.
+Implementation head `118a5ecc690808711c437fa76ae24072749d626d`: full CI [37214217488](https://github.com/fangbm/temvio/actions/runs/37214217488) passed all five jobs: build, desktop-windows, android-keystore, wear-keystore, agent-history-platform-e2e. Downloaded Wear XML confirms 31/31, zero failures/errors/skips. Actual Wear platform logs confirm absent on-device service and ServiceUnavailable rather than speech success. The earlier run 37212624712 failed Compose lint on StateFlow.value in composition; the subscription fix passed local lint and this full run.
+
+The generic Android job's relay test explicitly skips without the enrolled fixture (its assumption is represented as a failure in exported XML); the required actual relay round trip passed the independent agent-history-platform-e2e job. The phone job's comma-separated Wear class filter executed only the first class on this runner. Finalization changes only CI selection to three individual class invocations with separate preserved reports; the Watch job already executed all three classes plus the real Watch runtime/UI tests. Full CI is rerun on the finalization head; its final head/run is reported in the Draft PR delivery. No physical Watch, external Provider or actual speech-recognition acceptance is claimed.
 
 ## Scope / remaining decisions
 
 No new Tool/module, Domain rule, Room schema/migration, D7/V3 DTO or causal semantics, provisioning wire, Envelope/AAD/crypto/server implementation was changed. No D9-02 production receive/storage/upload composition, remote context ingestion, PhoneContextBridge, nearby delivery, remote approval, background Agent/notification or D10 UI redesign.
 
 No new BLOCKED_BY_DECISION for this slice. OD-012 remains an independent OPEN release gate; D9-03 implementation does not resolve or bypass it. Draft PR must not be merged automatically.
+
+## Changed files (22)
+
+- `.github/workflows/ci.yml`
+- `apps/wear/build.gradle.kts`
+- `apps/wear/src/androidTest/kotlin/dev/agenticscheduler/wear/WearAgentRuntimeInstrumentedTest.kt`
+- `apps/wear/src/androidTest/kotlin/dev/agenticscheduler/wear/WearAgentUiInstrumentedTest.kt`
+- `apps/wear/src/main/kotlin/dev/agenticscheduler/wear/WearMainActivity.kt`
+- `apps/wear/src/main/kotlin/dev/agenticscheduler/wear/agent/WatchPermissionPolicy.kt`
+- `apps/wear/src/main/kotlin/dev/agenticscheduler/wear/agent/WearAgentRuntimeComposition.kt`
+- `apps/wear/src/main/kotlin/dev/agenticscheduler/wear/agent/WearAgentScreen.kt`
+- `apps/wear/src/main/kotlin/dev/agenticscheduler/wear/agent/WearAgentSessionController.kt`
+- `apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearCapabilityService.kt`
+- `apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearProviderBindingSource.kt`
+- `apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearProviderProbe.kt`
+- `apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearReadinessComposition.kt`
+- `apps/wear/src/test/kotlin/dev/agenticscheduler/wear/agent/WatchPermissionPolicyTest.kt`
+- `apps/wear/src/test/kotlin/dev/agenticscheduler/wear/capability/WearCapabilityServiceTest.kt`
+- `apps/wear/src/test/kotlin/dev/agenticscheduler/wear/capability/WearProviderProbeTest.kt`
+- `docs/D9_03_03_WEAR_AGENT_ACCEPTANCE_RECORD.md`
+- `docs/ROADMAP_D5_D9.md`
+- `docs/tasks/D9_03_03_WEAR_AGENT_RUNTIME.md`
+- `shared/agent/src/commonMain/kotlin/dev/agenticscheduler/agent/provider/OpenAiCompatibleProvider.kt`
+- `shared/agent/src/commonMain/kotlin/dev/agenticscheduler/agent/runtime/AgentRunService.kt`
+- `shared/agent/src/commonTest/kotlin/dev/agenticscheduler/agent/provider/OpenAiCompatibleProviderTest.kt`
