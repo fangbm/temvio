@@ -1,7 +1,7 @@
 # Agentic Scheduler — Open Decisions Register
 
 > Status: **Mandatory Decision Register**  
-> Updated: 2026-09-12  
+> Updated: 2026-10-04
 > Purpose: ensure an undecided architecture choice is never mistaken for permission to guess.
 
 A `PENDING` item means contributors MUST NOT choose that architecture/security behavior on their own. `RESOLVED` decisions are frozen by the cited source. `DEFERRED` features are intentionally outside the current implementation gate.
@@ -518,6 +518,55 @@ Decision: v14→v15 local provenance is prospective only; every legacy thread is
           descendant export eligibility. Existing V3 wire stays unchanged.
 Source: docs/AGENT_DECISIONS.md AGT-018; maintainer approval 2026-10-03
 ```
+
+---
+
+# D9-03 / Wear provider provisioning
+
+## OD-058 — D9-03-00 implementation-contract sign-off
+
+```text
+Status: RESOLVED FOR D9-03
+Resolved by: maintainer approved C1–C8 with amendments, 2026-10-04
+Impact: SECURITY / DEVICE INTEROPERABILITY / PERSISTENCE / TOOL PERMISSIONS
+Source: docs/tasks/D9_03_00_WEAR_AGENT_PROVIDER_FREEZE.md
+```
+
+AGT-006/007/014, SYN-009/017/018 and OD-042 remain frozen. This item does not
+reopen the target-device D8 HPKE suite or allow credential workspace sync.
+
+Approved contracts are explicit per C1–C8 in the frozen packet:
+
+- C1 exact DTO/encoding/context/bounds/fixtures, corrected to exact opaque D8
+  target/provisioner DeviceId values (no UUID/case/trim/normalization changes);
+  ProviderConfigId remains UUIDv7.
+- C2 Option A only: dedicated authenticated opaque mailbox, transactionally ACTIVE
+  same-account source/target, independent 8-digit user comparison, exact ciphertext
+  retry/idempotency/conflict, informational ACK, 7-day expiry. Nearby is DEFERRED.
+  Watch/source independently construct target binding metadata locally; relay/
+  request/ACK carry no plaintext binding contents, canonical JSON or binding digest.
+- C3 target-owned per-(target,config) revisions, initial counters 0/first reservation
+  1, one live selected-source reservation, max(counters)+1, durable wipe floor and
+  fail-closed state-loss/replay checks; a skipped barrier revision is acceptable.
+- C4 platform-issued fresh unique Provider-purpose one-install prepared slots;
+  application cannot select arbitrary existing destinations or overwrite secrets.
+  Durable journal before import, atomic metadata/journal publication, uncertain
+  commit inspected before cleanup, active slot preserved on lost ACK; cleanup
+  only journal-owned prepared/retired Provider slots, no SQLite plaintext fallback.
+- C5 locally approved target-owned canonical WearProviderBinding using existing
+  OpenAI-compatible ProviderConfig; local SecretRef association, HTTPS-before-secret,
+  binding-change invalidation/new endpoint credential reservation.
+- C6 stable capability/readiness separation, AI preference OFF, single-flight
+  10-second synthetic probe and 2/4/8/16/30 s backoff, no Agent write replay.
+- C7 optional on-device STT, separate input/permission/language facts, explicit
+  speech permission/model-download actions, no cloud or Phone microphone fallback.
+- C8 Watch-local permission ceiling/confirmation: writes cannot relax to direct;
+  bulk/destructive/external remain DENY. PhoneContextBridge is DEFERRED.
+
+AGT-014 and SYN-018 record synchronized approved amendments. No server route,
+schema, crypto implementation or D9-03 runtime is implemented in D9-03-00.
+Keep PR #25 Draft and await final human review before D9-03-01. OD-012 remains
+independently OPEN; no production-sensitive V3 composition is enabled.
 
 ---
 

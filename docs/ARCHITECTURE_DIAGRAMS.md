@@ -582,51 +582,49 @@ The AI Provider privacy boundary is separate from the Sync Server privacy bounda
 
 ```mermaid
 flowchart TD
-    VOICE[Watch Microphone]
-    STT{Reliable on-device STT?}
-    OFF[AI Entry hidden / locked OFF]
-    TEXT[Transcript]
+    TEXT[Available Watch text input]
+    VOICE[Explicit Watch speech input]
+    STT{Optional on-device STT + user permission available?}
+    SPEECH[Transcript]
+    UNAVAILABLE[Speech unavailable; text remains available]
     WAG[Watch Agent Runtime]
-    PROVIDER{Provider configured?}
-    NET{Network ready?}
-    LLM[LLM Provider]
-    PLAN[Structured Tool Plan]
-    VALID[Local deterministic validation]
-    WDB[(Watch Local DB)]
-    WOP[Watch SyncOperation]
-    PHONE[Nearby Android Phone]
-    SERVER[Sync Server]
+    READY{AI entry enabled + Provider ready + network reachable?}
+    WAIT[Structured Provider / network unavailable state]
+    LLM[Configured LLM Provider]
+    TOOL[Existing typed Tool]
+    VALID[Shared deterministic validation + Permission Engine]
+    APP[Existing Application / Planner operation]
+    AUDIT[ToolResult + AgentAction + D7 audit]
 
-    VOICE --> STT
-    STT -- no --> OFF
-    STT -- yes --> TEXT
     TEXT --> WAG
-    WAG --> PROVIDER
-    PROVIDER -- no --> WAG
-    PROVIDER -- yes --> NET
-    NET -- no --> WAG
-    NET -- yes --> LLM
-    LLM --> PLAN
-    PLAN --> VALID
-    VALID --> WDB
-    VALID --> WOP
-
-    WOP <--> PHONE
-    WOP --> SERVER
+    VOICE --> STT
+    STT -- no --> UNAVAILABLE
+    STT -- yes --> SPEECH
+    SPEECH --> WAG
+    WAG --> READY
+    READY -- no --> WAIT
+    READY -- yes --> LLM
+    LLM --> TOOL
+    TOOL --> VALID
+    VALID --> APP
+    APP --> AUDIT
 ```
 
-Important state separation:
+AGT-014 supersedes the former STT-only AI entry gate. Canonical state distinctions:
 
 ```text
-aiEntrySupported   = device/STT capability
-aiEntryEnabled     = user preference
-providerConfigured = usable provider profile/credential available
-networkReady       = current request can reach provider
+aiEntrySupported        stable platform + available input capability
+userEnabledAiEntry      local user preference
+effectiveAiEntryEnabled capability + preference
+providerReady           approved binding + required credential availability
+requestReady            entry enabled + provider ready + network reachable
 ```
 
-Network loss does not remove AI capability. It only makes cloud requests temporarily unavailable.
-
-Core watch calendar/task functions remain usable without AI.
+Network loss changes request availability, not stable AI capability. Watch-originated
+Provider requests remain Watch-originated when the OS uses paired-phone networking.
+Core local calendar/task functions remain available without AI. Exact first-alpha
+capability/probe/policy contracts are frozen in D9-03-00 / OD-058 RESOLVED FOR D9-03; no runtime is
+implied by this diagram.
 
 ---
 
@@ -634,23 +632,42 @@ Core watch calendar/task functions remain usable without AI.
 
 ```mermaid
 sequenceDiagram
-    participant Phone
-    participant Trust as Device Trust / Crypto
-    participant DL as Wear Data Layer
+    participant Source as Explicitly chosen provisioner
+    participant Crypto as Existing D8 target HPKE
+    participant Delivery as Authenticated opaque mailbox - Option A
     participant Watch
-    participant KS as Watch Keystore
+    participant KS as Watch PlatformSecretStore
+    participant Metadata as Watch binding / revision metadata
 
-    Phone->>Trust: Read selected Provider profile
-    Phone->>Trust: Create device-targeted encrypted secret envelope
-    Trust->>DL: Ciphertext + profile metadata
-    DL->>Watch: Deliver provisioning payload
-    Watch->>Watch: Verify targetDeviceId / key version
-    Watch->>Trust: Decrypt using device-held key material
-    Watch->>KS: Store provider credential securely
-    Watch-->>Phone: Provisioning acknowledgement
+    Watch->>Metadata: Locally approve binding + reserve selected-source revision
+    Watch->>Delivery: Only routing/reservation identity; no binding contents or digest
+    Delivery->>Source: Authenticated target reservation + existing active directory
+    Source->>Source: Select local ProviderConfig; construct target binding locally
+    Source->>Crypto: Encrypt credential for exact opaque target D8 DeviceId/public key
+    Crypto->>Delivery: ProviderCredentialEnvelope ciphertext
+    Delivery->>Watch: Deliver opaque envelope
+    Source->>Source: Compute credential-domain SAS with local binding hash
+    Watch->>Watch: Validate/decrypt; compute own SAS; user confirms matching codes
+    Watch->>KS: Allocate fresh Provider-purpose one-install prepared slot
+    KS-->>Watch: Platform-issued unique slot/reference
+    Watch->>Metadata: Journal prepared reference before import
+    Watch->>KS: Import credential into its prepared slot
+    Watch->>Metadata: Atomically publish ref/revision/binding/committed journal
+    Metadata-->>Watch: Activate approved WearProviderBinding
+    Watch-->>Delivery: Informational ACK; never installation authority
 ```
 
-Ordinary Data Layer transport is not treated as the sole confidentiality boundary. Secret material remains application-encrypted for the target device.
+SYN-018 and D9-03-00 C1–C8 freeze this contract (maintainer approved 2026-10-04,
+OD-058 RESOLVED FOR D9-03). Both devices must be ACTIVE in the same D8 account,
+checked transactionally on publish/fetch/ACK. Relay stores exact opaque bytes,
+expires ciphertext after 7 days, and sees no binding contents/digest. Source and
+Watch independently canonicalize target binding metadata locally for comparison.
+Nearby credential delivery is deferred. PlatformSecretStore import and SQLite
+publish are not a single transaction: prepared-slot journaling and durable commit
+inspection preserve active slots on lost ACK and clean only uncommitted/retired
+Provider slots. No arbitrary existing import destination is allowed. This diagram
+does not implement provisioning or authorize D9-03-01 before final human review.
+No credential enters workspace sync and no second crypto hierarchy is created.
 
 ---
 
