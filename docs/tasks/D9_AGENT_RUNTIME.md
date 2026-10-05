@@ -2,9 +2,9 @@
 
 > Task ID: **D9-01 / D9-02 / D9-03**  
 > Milestone: **D9 — Agent / Universal Command**  
-> Status: **D9-01 COMPLETE / MERGED — D9-02 COMPLETE / PR #24 MERGED (`6583e61`) — D9-03-00 CONTRACT FROZEN (OD-058 RESOLVED FOR D9-03; FINAL HUMAN REVIEW PENDING) — OD-012 PRODUCTION RELEASE GATE OPEN — D8 COMPLETE**
+> Status: **D9-01 COMPLETE / MERGED — D9-02 COMPLETE / MERGED PR #24 (`6583e61`) — D9-03 COMPLETE / MERGED THROUGH PR #28 (`27092ba`) — D9 COMPLETE — IMPLEMENTATION + ACCEPTANCE PASS — OD-012 PRODUCTION RELEASE GATE OPEN — D8 COMPLETE**
 > Date: 2026-09-12  
-> Acceptance evidence updated: 2026-09-29
+> Acceptance evidence updated: 2026-10-05 (D9 final closure)
 > Decision source: `docs/AGENT_DECISIONS.md`
 
 ---
@@ -26,11 +26,15 @@ AgentAction audit
 Android/Desktop Agent surface / universal command entry
 ```
 
-D9-02 adds synchronized Agent history. D9-03 adds Wear provider provisioning/capability integration.
+D9-02 provides synchronized Agent history semantics and transport integration.
+D9-03 provides Wear Provider provisioning, capability/readiness/STT boundaries
+and the Watch-local Agent runtime/confirmation E2E. Both are complete/merged.
 
 Current implementation inventory records the completed D9-01 baseline.  Its
 code/test review, representative live acceptance, final branch CI, and PR
-merge are complete; D9-02 and D9-03 remain separately scoped work.
+merge are complete. At D9-01 completion, D9-02 and D9-03 remained separately
+scoped work; they are now complete. The D9-01 evidence below is retained as
+historical acceptance evidence, with later slice evidence linked in §13–14.
 
 - Shared Agent state/persistence and bounded provider-run orchestration are
   present, including persisted messages, ToolCalls, ToolResults, AgentActions,
@@ -46,9 +50,10 @@ merge are complete; D9-02 and D9-03 remain separately scoped work.
   authorize synchronized Agent writes by default. Agent-triggered D7 Undo
   keeps its compensating `Undo` origin while using that same trusted gate;
   a missing acknowledgement cannot use Undo as a compatibility bypass.
-- Android and Desktop contain in-progress Universal Command surfaces wired to
-  the persistent Agent run and confirmation flow. Cross-platform
-  usability/acceptance is open. Android restores a durable
+- Android and Desktop contain Universal Command surfaces wired to
+  the persistent Agent run and confirmation flow. Representative cross-platform
+  usability/acceptance passed as recorded below; final D10 UI polish has not
+  started. Android restores a durable
   `WAITING_CONFIRMATION` call when its conversation is selected, rather than
   relying only on in-memory dialog state. Session-local PlanBranch proposals
   are scoped to their AgentThread.
@@ -125,7 +130,8 @@ every Typed Tool was manually exercised against a live Provider. The complete
 AGT-017 deterministic matrix is reviewed below, and the final four required
 live representative paths are now recorded above. Agent-origin synchronized
 writes remain disabled without the D8 all-devices-upgraded acknowledgement;
-D9-02/D9-03 remain out of scope. D9-01 cleared its final repository-wide CI
+D9-02/D9-03 were outside that D9-01 acceptance scope and are now complete.
+D9-01 cleared its final repository-wide CI
 run on rebased head `21f9c6a` in GitHub Actions run
 [`36565045414`](https://github.com/fangbm/temvio/actions/runs/36565045414),
 then PR #9 was reviewed and merged as `1b273b1`.
@@ -355,7 +361,19 @@ Thread delete tombstone is retained; OD-032 still controls physical compaction.
 
 # 14. D9-03 Wear
 
-D9-03-00 has a documentation-only [frozen contract packet](D9_03_00_WEAR_AGENT_PROVIDER_FREEZE.md), maintainer approved 2026-10-04. C1–C8 and opaque D8 identity/relay privacy/platform-issued slot amendments are synchronized in AGT-014, SYN-018 and OD-058 RESOLVED FOR D9-03. Keep PR #25 Draft; D9-03-01/runtime implementation has not started and waits for final human review.
+D9-03-00 has a documentation-only [frozen contract packet](D9_03_00_WEAR_AGENT_PROVIDER_FREEZE.md), maintainer approved 2026-10-04 and merged in PR #25 (`82f4c62`). C1–C8 and opaque D8 identity/relay privacy/platform-issued slot amendments remain synchronized in AGT-014, SYN-018 and OD-058 RESOLVED FOR D9-03; this closure changes none of those decisions.
+
+D9-03-01 provisioning (PR #26 `37b6759`), D9-03-02 capability/readiness/optional
+STT (PR #27 `dcd3e3c`) and D9-03-03 Watch runtime/local confirmation (PR #28
+`27092ba2f88e39ba7601848f65b9312abe0be120`) are complete/merged. Maintainer
+final review passed; final implementation head
+`f511eb42c6f39349f2caab4de6be5403d613ad31` passed all five jobs in
+[CI 37220143338](https://github.com/fangbm/temvio/actions/runs/37220143338).
+The [Wear acceptance record](../D9_03_03_WEAR_AGENT_ACCEPTANCE_RECORD.md) retains
+the actual platform/runtime evidence and its physical STT/Provider limits.
+D9-03 COMPLETE; D9 COMPLETE — IMPLEMENTATION + ACCEPTANCE PASS.
+OD-012 remains OPEN as the independent production-sensitive local database
+at-rest protection/release gate; D9 completion is not production release approval.
 
 Provision provider credentials only through `ProviderCredentialEnvelope`; never ordinary workspace sync.
 
@@ -465,7 +483,7 @@ Local Reflow, PlanningProfile update, and supported Undo) are complete. The
 AGT-017 code/test review and live representative acceptance are therefore
 complete. Final repository CI passed on the rebased PR head and PR #9 merged.
 This does not relax AGT-017, the independent OD-012 production-data gate, or
-the separate D9-02/D9-03 scope gates.
+the separately approved D9-02/D9-03 scope contracts, now completed.
 
 ---
 
@@ -501,4 +519,7 @@ D9-01 PASS requires AGT-017 plus:
 [ ] repository-wide CI green
 ```
 
-D9-02 and D9-03 are separately closable subtasks after D9-01.
+D9-02 and D9-03 were separately closable subtasks after D9-01 and are now
+complete/merged. The D9-01 gate above remains its historical implementation
+contract. D9 is implementation- and acceptance-complete through D9-03;
+OD-012 remains OPEN and does not authorize production-sensitive-data release.

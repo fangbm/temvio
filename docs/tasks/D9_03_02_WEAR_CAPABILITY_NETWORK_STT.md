@@ -1,11 +1,15 @@
 # D9-03-02 — Wear Capability / Network Readiness / Optional STT
 
-Status: IMPLEMENTED / AWAITING REVIEW; acceptance evidence in
+Status: **COMPLETE / MERGED** — [PR #27](https://github.com/fangbm/temvio/pull/27), merge `dcd3e3c04e5eef622f3cef6a5e4d8eda365a5af5`; acceptance evidence in
 [D9_03_02_CAPABILITY_ACCEPTANCE_RECORD.md](../D9_03_02_CAPABILITY_ACCEPTANCE_RECORD.md).
 Baseline: PR #26 merged, `37b6759b1df88a3c6c4d2f55c2a7f6d4f8c717de`.
 Authority: [D9-03-00](D9_03_00_WEAR_AGENT_PROVIDER_FREEZE.md) §8 C6 / §9 C7,
 [AGT-014](../AGENT_DECISIONS.md), [vocabulary](../UBIQUITOUS_LANGUAGE.md),
 merged [D9-03-01](D9_03_01_PROVIDER_CREDENTIAL_PROVISIONING.md).
+
+The original scope and delivery instructions below remain the historical
+D9-03-02 implementation contract. D9-03 subsequently completed through PR #28;
+this slice makes no physical STT acceptance claim.
 
 ## Scope
 

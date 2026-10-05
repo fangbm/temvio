@@ -1,8 +1,24 @@
 # D9-03-03 — Wear Agent acceptance record
 
-Status: IMPLEMENTED / AWAITING REVIEW. Draft only; D9/D9-03 final approval remains with the maintainer. OD-012 remains OPEN. No D10 work or production-sensitive V3 enablement.
+Status: **COMPLETE / ACCEPTED / MERGED**. Maintainer final review passed on 2026-10-05. D9-03 COMPLETE; D9 IMPLEMENTATION + ACCEPTANCE COMPLETE. OD-012 remains OPEN as an independent production-sensitive local database at-rest protection/release gate. No D10 implementation or production-sensitive V3 enablement is authorized by this completion.
 
 Baseline: `feature/d9-02-agent-sync`, D9-03-02 merge `dcd3e3c04e5eef622f3cef6a5e4d8eda365a5af5`.
+
+## Final accepted evidence
+
+- [PR #28](https://github.com/fangbm/temvio/pull/28), accepted and merged.
+- Implementation head: `f511eb42c6f39349f2caab4de6be5403d613ad31`.
+- Merge commit: `27092ba2f88e39ba7601848f65b9312abe0be120`.
+- Final [CI 37220143338](https://github.com/fangbm/temvio/actions/runs/37220143338): 5/5 jobs green (build, desktop-windows, android-keystore, wear-keystore, agent-history-platform-e2e).
+- Downloaded exact-head Wear XML: 34/34, zero failures/errors/skips, including chat-only and blocking-failure regressions. Wear JVM: 60/60; lint passed. Earlier evidence below remains retained.
+
+Maintainer final review accepted C8's Watch write ceiling (supported writes never
+ALLOW_DIRECT), exact Watch-local confirmation and restart recovery, D7
+AgentAction/MutationId/ChangeLog linkage, and the independence of V2 business
+gate, V3 conversation consent and Provider provisioning/readiness. Unsupported
+structured Tools correctly degrade to chat-only with zero Tool schemas and no
+prose-to-write fallback. Offline/wipe/restart/concurrency/tombstone paths passed.
+No new BLOCKED_BY_DECISION remains for this slice; OD-012 remains OPEN.
 
 ## Runtime and authority
 
@@ -40,7 +56,7 @@ Native coverage: structured read/final response/zero mutation and history restar
 
 No live external commercial Provider or physical Watch acceptance is claimed. The deterministic local structured fixture satisfies the task's real-engine/runtime Watch E2E requirement. On the actual local Wear API35/ext15 AVD, FEATURE_WATCH and text input support were true, default route had INTERNET + VALIDATED, on-device recognizer service was absent, language support returned UNSUPPORTED, and an explicit speech attempt returned ServiceUnavailable. No physical recognition success is inferred from a fake or absent service.
 
-Implementation head `118a5ecc690808711c437fa76ae24072749d626d`: full CI [37214217488](https://github.com/fangbm/temvio/actions/runs/37214217488) passed all five jobs: build, desktop-windows, android-keystore, wear-keystore, agent-history-platform-e2e. Downloaded Wear XML confirms 31/31, zero failures/errors/skips. Actual Wear platform logs confirm absent on-device service and ServiceUnavailable rather than speech success. The earlier run 37212624712 failed Compose lint on StateFlow.value in composition; the subscription fix passed local lint and this full run.
+Earlier implementation head `118a5ecc690808711c437fa76ae24072749d626d`: full CI [37214217488](https://github.com/fangbm/temvio/actions/runs/37214217488) passed all five jobs: build, desktop-windows, android-keystore, wear-keystore, agent-history-platform-e2e. Downloaded Wear XML confirms 31/31, zero failures/errors/skips. Actual Wear platform logs confirm absent on-device service and ServiceUnavailable rather than speech success. The earlier run 37212624712 failed Compose lint on StateFlow.value in composition; the subscription fix passed local lint and this full run.
 
 The generic Android job's relay test explicitly skips without the enrolled fixture (its assumption is represented as a failure in exported XML); the required actual relay round trip passed the independent agent-history-platform-e2e job. The phone job's comma-separated Wear class filter executed only the first class on this runner. Finalization changes only CI selection to three individual class invocations with separate preserved reports; the Watch job already executed all three classes plus the real Watch runtime/UI tests. Finalization head `59d29ec9c14780a1f67917cb734ca58e3b4a1db9` passed full CI [37215176238](https://github.com/fangbm/temvio/actions/runs/37215176238); downloaded reports confirm phone Keystore 1/1, Provider slot 3/3 and capability 7/7. No physical Watch, external Provider or actual speech-recognition acceptance is claimed.
 
@@ -50,11 +66,11 @@ The generic Android job's relay test explicitly skips without the enrolled fixtu
 
 AGT-006 chat-only degradation is preserved. `UNSUPPORTED_TOOLS` stays terminal for automatic probe refresh, with no backoff or hidden retry; explicit retry or config/binding change resets the proof. It is a capability limitation rather than whole-Provider unavailability. Ordinary C6 facts and runtime blockers remain independent: a valid approved/current binding with readable required credential and usable route can authorize an explicit chat-only lease. `structuredCapability` passes the cached `ProviderProbeResult.Unsupported` to the unchanged shared `AgentRunService`, which supplies an empty Tool set. The existing Adapter omits `tools` for that empty set. No prose parsing or write fallback is added.
 
-The UI displays `Chat-only · structured Tools unavailable` and permits Send only with ordinary readiness and no blocking runtime reason. Authentication, invalid configuration, missing credential, install/wipe, network and Provider failures still block. Regression evidence: Wear JVM 60/60; actual Wear instrumentation 34/34 (20 runtime, 3 UI, 11 predecessor), zero skipped; lint and AndroidTest compilation passed. New real-engine/Room tests prove ordinary chat and create/update prompts persist final assistant text with zero Tool schemas, ToolCall, AgentAction or D7 mutation, and HTTP 401/config rejection/network loss still produce zero command request. The full native suite preserves existing supported structured read/write/confirmation behavior. Full CI is rerun on this follow-up's exact head; its final head/run is recorded in the Draft PR delivery.
+The UI displays `Chat-only · structured Tools unavailable` and permits Send only with ordinary readiness and no blocking runtime reason. Authentication, invalid configuration, missing credential, install/wipe, network and Provider failures still block. Regression evidence: Wear JVM 60/60; actual Wear instrumentation 34/34 (20 runtime, 3 UI, 11 predecessor), zero skipped; lint and AndroidTest compilation passed. New real-engine/Room tests prove ordinary chat and create/update prompts persist final assistant text with zero Tool schemas, ToolCall, AgentAction or D7 mutation, and HTTP 401/config rejection/network loss still produce zero command request. The full native suite preserves existing supported structured read/write/confirmation behavior. Full CI 37220143338 passed on exact final implementation head `f511eb42c6f39349f2caab4de6be5403d613ad31`; maintainer final review passed and PR #28 merged as `27092ba2f88e39ba7601848f65b9312abe0be120`.
 
 No new Tool/module, Domain rule, Room schema/migration, D7/V3 DTO or causal semantics, provisioning wire, Envelope/AAD/crypto/server implementation was changed. No D9-02 production receive/storage/upload composition, remote context ingestion, PhoneContextBridge, nearby delivery, remote approval, background Agent/notification or D10 UI redesign.
 
-No new BLOCKED_BY_DECISION for this slice. OD-012 remains an independent OPEN release gate; D9-03 implementation does not resolve or bypass it. Draft PR must not be merged automatically.
+No new BLOCKED_BY_DECISION for this slice. OD-012 remains an independent OPEN release gate; accepted D9-03 implementation does not resolve or bypass it. D9 completion does not approve production-sensitive-data release.
 
 ## Changed files (24)
 

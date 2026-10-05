@@ -1,6 +1,6 @@
 # D9-03-02 capability acceptance record
 
-Status: IMPLEMENTED / AWAITING REVIEW; not full D9-03 or physical STT acceptance.
+Status: **COMPLETE / ACCEPTED / MERGED** — [PR #27](https://github.com/fangbm/temvio/pull/27), merge `dcd3e3c04e5eef622f3cef6a5e4d8eda365a5af5`. This slice does not claim physical STT acceptance; full D9-03 subsequently completed through PR #28.
 Task/contract: [D9_03_02_WEAR_CAPABILITY_NETWORK_STT.md](tasks/D9_03_02_WEAR_CAPABILITY_NETWORK_STT.md).
 Baseline `37b6759b1df88a3c6c4d2f55c2a7f6d4f8c717de` (merged PR #26).
 
@@ -12,7 +12,9 @@ bounded existing synthetic structured probe and optional on-device STT candidate
 lifecycle. No DB migration: Room v16 unchanged. No implementation changes to
 Domain, D7, V3, server, crypto, SyncTransportWorker or credential provisioning.
 No command/Tool/confirmation UI or automatic Agent replay. Manual composition
-is ready for the separate D9-03-03 runtime slice, which is not started here.
+was prepared for the separate D9-03-03 runtime slice without implementing it
+in this slice. D9-03-03 subsequently completed; see the
+[Wear acceptance record](D9_03_03_WEAR_AGENT_ACCEPTANCE_RECORD.md).
 
 ## Evidence
 

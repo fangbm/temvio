@@ -1,5 +1,14 @@
-> Implementation/acceptance evidence: `docs/D9_03_03_WEAR_AGENT_ACCEPTANCE_RECORD.md`.
+> Status: **COMPLETE / MERGED** — [PR #28](https://github.com/fangbm/temvio/pull/28). Maintainer final review passed on 2026-10-05; D9-03 is complete.
+> Implementation head: `f511eb42c6f39349f2caab4de6be5403d613ad31`.
+> Merge commit: `27092ba2f88e39ba7601848f65b9312abe0be120`.
+> Final CI: [37220143338](https://github.com/fangbm/temvio/actions/runs/37220143338), 5/5 jobs green.
+> OD-012 remains OPEN, outside this slice as an independent production-sensitive local database at-rest protection/release gate.
+> Implementation/acceptance evidence: [Wear acceptance record](../D9_03_03_WEAR_AGENT_ACCEPTANCE_RECORD.md).
 > Maintainer-approved initialization: `und` means no selected speech language; text remains usable. No STT language query, permission request or recognition until explicit language selection. This is neither a supported-language assertion nor a system-language fallback.
+
+The original implementation task below is retained as a historical contract.
+Its branch/Draft/review workflow and interim status instructions refer to the
+implementation phase; the completion header above records the current status.
 
 D9-03-02 已完成最终复审并合并。
 

@@ -1,8 +1,8 @@
 # Agentic Scheduler — Reviewed Roadmap D5–D10 + Post-project Hackathon
 
 > Status: **Roadmap Baseline — individual Task Specs remain authoritative**  
-> Baseline: D5-01 complete; D5-02 implemented/build-verified; D6 complete; D6.5 build/Desktop-verified/Android-surface-and-dialog-touch-verified (full input pending); D7 complete; D8 complete through production runtime closure; D9-01 complete/merged; D9-02 implementation and E2E acceptance complete/merged (PR #24 `6583e61`; OD-012 release gate open); D9-03-00 frozen/merged `82f4c62`; D9-03-01 merged `37b6759`; D9-03-02 MERGED `dcd3e3c`; D9-03-03 IMPLEMENTED / AWAITING REVIEW; D9-03 IMPLEMENTATION COMPLETE / AWAITING FINAL REVIEW; OD-059 resolved; D10 planned; post-project DGX Spark hackathon fork planned
-> Date: 2026-09-20
+> Baseline: D5-01 complete; D5-02 implemented/build-verified; D6 complete; D6.5 build/Desktop-verified/Android-surface-and-dialog-touch-verified (full input pending); D7 complete; D8 complete through production runtime closure; D9-01 complete/merged; D9-02 complete/merged (PR #24 `6583e61`); D9-03-00 frozen/merged `82f4c62`; D9-03-01 merged `37b6759`; D9-03-02 merged `dcd3e3c`; D9-03-03 COMPLETE / MERGED PR #28 `27092ba`; D9-03 COMPLETE; D9 COMPLETE — IMPLEMENTATION + ACCEPTANCE PASS; OD-012 OPEN — independent production release gate; OD-059 resolved; D10 READY TO START (implementation not started); post-project DGX Spark hackathon fork planned
+> Date: 2026-10-05 (D9 final closure)
 
 ---
 
@@ -22,9 +22,11 @@ D8     E2EE Multi-device Sync + Thin Server    COMPLETE — FINAL PASS
  ↓
 D9-01  Agent Runtime + Typed Tools             COMPLETE / MERGED
 D9-02  Agent history sync amendment            COMPLETE — IMPLEMENTATION/E2E PASS; PR #24 MERGED `6583e61`; OD-012 OPEN
-D9-03  Wear Agent/provider provisioning        D9-03-00 FROZEN / MERGED; D9-03-01 MERGED `37b6759`; D9-03-02 MERGED `dcd3e3c`; D9-03-03 IMPLEMENTED / AWAITING REVIEW; D9-03 IMPLEMENTATION COMPLETE / AWAITING FINAL REVIEW; OD-012 OPEN
+D9-03  Wear Agent/provider provisioning        COMPLETE / MERGED THROUGH PR #28 `27092ba`
+D9-03-03 Watch runtime / local confirmation    COMPLETE / MERGED PR #28 `27092ba`
+D9     Agent / Universal Command              COMPLETE — IMPLEMENTATION + ACCEPTANCE PASS; OD-012 OPEN — independent production release gate
  ↓
-D10    Final Product UI / UX                   PLANNED — AFTER D9
+D10    Final Product UI / UX                   READY TO START — D9 predecessor complete; implementation not started
  ↓
 DGX-H   DGX Spark Server-Agent Hackathon Fork   OPTIONAL — ONLY AFTER MAIN PRODUCT COMPLETION
 ```
@@ -210,7 +212,7 @@ The completion gate migrated and verified the D8 implementation against the curr
 `main` API, including production platform secret storage, AMK/recovery/pairing/content-key
 staging, and the frozen SYN-019 multi-device, offline, recovery, revocation, Wear,
 PostgreSQL, migration and adversarial acceptance suite. It did not alter frozen protocol
-semantics. D9 may now begin; OD-012 local SQLite encryption remains a separate release gate.
+semantics. At D8 completion, D9 could begin; D9 is now complete. OD-012 local SQLite encryption remains a separate release gate.
 
 OD-032 tombstone physical compaction remains pending because compaction is disabled.
 
@@ -229,7 +231,10 @@ Status:
 D9-00 decisions                        FROZEN
 D9-01 Android/Desktop Agent core       COMPLETE / PR #9 MERGED
 D9-02 synchronized Agent history       IMPLEMENTATION + E2E ACCEPTANCE COMPLETE / PR #24 MERGED 2026-10-04 `6583e61` / OD-012 PRODUCTION RELEASE GATE OPEN
-D9-03 Wear Agent/provider provisioning D9-03-00 FROZEN / MERGED `82f4c62`; D9-03-01 MERGED `37b6759`; D9-03-02 MERGED `dcd3e3c`; D9-03-03 IMPLEMENTED / AWAITING REVIEW; D9-03 IMPLEMENTATION COMPLETE / AWAITING FINAL REVIEW; OD-012 OPEN
+D9-03 Wear Agent/provider provisioning COMPLETE / MERGED THROUGH PR #28 `27092ba`
+D9-03-03 Watch runtime / confirmation  COMPLETE / MERGED PR #28 `27092ba`
+D9                                    COMPLETE — IMPLEMENTATION + ACCEPTANCE PASS
+OD-012                                OPEN — independent production-sensitive local database at-rest protection / release gate
 ```
 
 D9-01 finished Android/Desktop local Agent runtime, persistent local
@@ -250,26 +255,36 @@ tombstone/delete and retained audit; per-space user opt-in and
 backfill; held business V2/dependent writes without blocking inbound;
 and one event/envelope with 256 KiB encoded plaintext limit.
 
-**Implementation remains in progress:** freeze exact canonical V3
-wire/deletion-resolution fixtures and migration contract, then add
-Agent V3 codec, separate causal state, Room staging/projection,
-conflict/tombstone resolution, existing D8 transport integration
-and adversarial Android/Desktop old/new client tests. No production
-V3 emission is authorized by the architecture freeze alone.
+**D9-02 implementation and acceptance are complete/merged:** canonical V3
+wire/deletion-resolution fixtures, migration, Agent V3 codec, separate causal
+state, Room staging/projection, conflict/tombstone resolution, existing D8
+transport integration and adversarial Android/Desktop old/new client tests.
+Evidence is retained in `docs/D9_02_COMPLETION_ACCEPTANCE_RECORD.md`.
+OD-012 remains OPEN; completion does not authorize production-sensitive V3 use.
 
 Existing D9-01 `SyncPayloadV2` covers Agent-origin **business**
 mutations only and still requires the owner-controlled all-devices-
 upgraded gate. Conversation V3 has separate per-SyncSpace consent,
 OFF by default. Provider credentials, ContextSummary and local
 permission policy never enter ordinary sync; server stays opaque.
-D9-03 Wear Agent/provider provisioning remains separate.
+D9-03 was delivered as a separate completed slice with the same independent gates.
 
 D9-03-01 provisioning evidence and the approved minimal post-expiry anti-replay
 decision are recorded in `docs/D9_03_01_PROVISIONING_ACCEPTANCE_RECORD.md`.
-PR #26 merged as `37b6759`. D9-03-02 capability/readiness/optional STT evidence is recorded in `docs/D9_03_02_CAPABILITY_ACCEPTANCE_RECORD.md`; D9-03-02 merged as `dcd3e3c`. D9-03-03 shared Watch command runtime / local confirmation / native E2E is IMPLEMENTED / AWAITING REVIEW in Draft PR #28; evidence is recorded in `docs/D9_03_03_WEAR_AGENT_ACCEPTANCE_RECORD.md`. D9-03 is IMPLEMENTATION COMPLETE / AWAITING FINAL REVIEW. Final D9 closure remains pending maintainer acceptance. OD-012 remains OPEN.
+PR #26 merged as `37b6759`. D9-03-02 capability/readiness/optional STT evidence is recorded in `docs/D9_03_02_CAPABILITY_ACCEPTANCE_RECORD.md`; D9-03-02 merged as `dcd3e3c`. D9-03-03 shared Watch command runtime / local confirmation / native E2E is COMPLETE / MERGED PR #28 `27092ba`; final implementation head `f511eb42c6f39349f2caab4de6be5403d613ad31` passed all five jobs in [CI 37220143338](https://github.com/fangbm/temvio/actions/runs/37220143338). Evidence is retained in `docs/D9_03_03_WEAR_AGENT_ACCEPTANCE_RECORD.md`. Maintainer final review passed: D9-03 COMPLETE; D9 COMPLETE — IMPLEMENTATION + ACCEPTANCE PASS.
+
+D9 is implementation- and acceptance-complete through D9-03. D9-01 provides
+the shared Agent runtime and Android/Desktop surfaces; D9-02 provides Agent
+history sync semantics and transport integration; D9-03 provides Wear Provider
+provisioning, capability/readiness/STT boundaries and Watch-local Agent
+runtime/confirmation E2E. OD-012 remains OPEN as an independent
+production-sensitive local-data at-rest protection/release gate. D9 completion
+does not approve production-sensitive-data release or implicitly resolve OD-012.
 
 ---
 # D10 — Final Product UI / UX
+
+Status: **READY TO START — D9 predecessor complete; implementation not started**.
 
 D10 turns the completed product capabilities from D5-D9 into the final coherent cross-platform product experience. It is the first milestone whose acceptance explicitly includes final visual language and complete product-level interaction polish.
 
@@ -324,10 +339,18 @@ complete settings, History/Undo, Sync/pairing and provider surfaces
 fast Today / upcoming schedule
 next-item and heads-up surfaces
 compact local actions appropriate to the watch
-Agent voice entry only when local STT capability is available and enabled
+text Agent entry through the supported text-input path
+optional voice control subject to accepted on-device STT capability, language and permission conditions
 ```
 
-When Wear local STT is unsupported, the Agent entry remains hidden and its setting remains unavailable with an explanatory reason. When STT is supported, the entry may be shown and the user may disable it. Wear remains an offline-capable node rather than a remote-display-only client.
+Wear text Agent entry remains available whenever ordinary `aiEntrySupported` /
+`effectiveAiEntryEnabled` conditions are satisfied through the supported text-input
+path. On-device STT is optional input assistance only. Show/enable the voice or mic
+control only when the accepted on-device STT capability, language and permission
+conditions allow it. If STT is unsupported or the selected language remains `und`,
+disable/hide only the voice control; do not hide or disable the text Agent entry.
+There is no cloud or phone speech fallback. Wear remains an offline-capable node
+rather than a remote-display-only client.
 
 ## D10 MUST
 
