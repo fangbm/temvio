@@ -220,4 +220,6 @@ Compilation success and PostgreSQL skips are not represented as test acceptance.
   enablement is claimed. No changes to D2, D7 semantics, V3 DTOs/consent/frontier,
   workspace Envelope/AAD, SyncTransportWorker, or cryptographic primitives.
 - D9-03-02 capability/network/STT, D9-03-03 Wear Agent/runtime/UI, nearby delivery,
-  Phone proxy/context bridge, and D10 remain out of scope. Full D9-03 is not complete.
+  Phone proxy/context bridge, and D10 were outside the scope of D9-03-01.
+  Full D9-03 was not complete at D9-03-01 acceptance time; D9-03 subsequently
+  completed through PR #28.
