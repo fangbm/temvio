@@ -1,15 +1,16 @@
 # D10-00 — Product / Information Architecture / UI Architecture Freeze
 
-Status: **FROZEN / awaiting maintainer review**.
-Task: **D10-00 ARCHITECTURE FREEZE IN REVIEW**; not COMPLETE.
+Status: **FROZEN / MAINTAINER APPROVED / AWAITING MERGE**.
+Task: **D10-00 architecture review passed**; PR remains Draft.
 Date: 2026-10-06.
 Baseline: `feature/d9-02-agent-sync`, `378630cb63447443b02cae4599845b06c9353b5b`
 ([D9 final closure PR #29](https://github.com/fangbm/temvio/pull/29)).
 Delivery branch: `docs/d10-00-product-ui-architecture-freeze`.
 
-This packet freezes a reviewable presentation target under the maintainer's
-D10-00 task instruction. It implements no UI. Human review of this packet gates
-D10-01; OD-062 separately gates academic authoring. Passing CI is documentation
+This packet records the maintainer-approved presentation target and final
+D10-00 review decisions. It implements no UI. Execution order is
+**D10-00 -> D10-00A -> D10-01 -> D10-02...**; D10-00A and D10-01 remain unstarted.
+Passing CI is documentation
 validation and predecessor regression evidence, not final product/visual acceptance.
 
 ## 1. Goal, authority and scope
@@ -62,8 +63,8 @@ acceptance and the real STT-service-absence limitation remain preserved.
 
 ## 3. OD-060 — approved target architecture
 
-**RESOLVED FOR D10** by the current maintainer instruction; record synchronized in
-[OPEN_DECISIONS](../OPEN_DECISIONS.md). Packet review remains pending.
+**ACCEPTED / RESOLVED FOR D10** by maintainer review; record synchronized in
+[OPEN_DECISIONS](../OPEN_DECISIONS.md).
 
 CD-007's `PENDING` wording records the D5 acceptance-time OD-060 baseline;
 this later D10 resolution supersedes that status for D10 without rewriting
@@ -107,8 +108,9 @@ cannot be bypassed for a cleaner list.
 
 ## 4. Canonical design-system ownership and module review
 
-**Proposed later location: thin `:shared:ui`**, created only after packet/module
-review in D10-01. No module, Gradle or dependency change in D10-00.
+**Approved canonical design-system target: thin `:shared:ui`**. Creation,
+dependency and target details remain D10-01 implementation work. No module,
+Gradle or dependency change in D10-00.
 
 Inspection justifies one location: Android/Desktop duplicate feature presentation,
 both use Compose Material3, all three platforms need a single semantic token
@@ -130,10 +132,10 @@ coordinator. Common formatting preserves Zoned/AllDay/Floating/DateOnly distinct
 Wear maps the same semantic tokens onto Wear Material3 components; it is not forced
 to render Android/Desktop primitives.
 
-If module review rejects this thin module, the amendment must name a single
-canonical shared source location before D10-01; duplicating token registries is
-not an implicit fallback. Dependency additions, targets and exact pinned versions
-remain subject to the existing policy. No new library is selected in this packet.
+Duplicating token registries or replacing the approved ownership target requires
+a separately reviewed amendment. Dependency additions, targets and exact pinned
+versions remain subject to the existing policy in D10-01. No new library is
+selected in this packet.
 
 ## 5. Presentation state and lifetime
 
@@ -247,7 +249,7 @@ The following is the target screen matrix; it does not claim those screens exist
 | Today | Schedule/upcoming, open or deadline-relevant Tasks, next FocusBlock, Planner/Agent entry and material conflict/sync notice | Compose existing read projections with explicit date/zone/status. No invented urgency score, background suggestions or duplicate Today database |
 | Calendar Day/Week/Month | Mode/viewport selection, distinct source kinds, selected-item detail/context | Calendar application projection; no UI recurrence expansion, timezone coercion or new overlap policy |
 | Tasks / Task detail-edit / Event detail-edit | Clear semantic fields, validation, explicit Save/Cancel and stale/conflict results | Existing Event/Task editing commands. No newly invented priority/effort/deadline/reminder defaults or delete support |
-| Courses / Course detail / Exams / Exam detail | Final-quality list/detail READ_ONLY until OD-062; authoring controls are REQUIRES_FOUNDATION | Academic source facts, read projection, structured issues; all Exam schedule states visible in detail/list |
+| Courses / Course detail / Exams / Exam detail | Final-quality list/detail; authoring controls are REQUIRES_FOUNDATION until separately reviewed D10-00A is accepted, per resolved OD-062 Option B | Academic source facts, read projection, structured issues; all Exam schedule states visible in detail/list |
 | Planner / PlanBranch preview | Full Replan and Local Reflow distinct; changes, reasons/issues, Apply/Cancel, Stale/Infeasible and fresh preview | D6 session-local branch, atomic Apply, exact base-state revalidation; no UI-generated schedule |
 | History / Mutation detail | Typed origin, before/after changes, linked AgentAction where available, supported/unsupported/conflicting Undo | HistoryQueryService/UndoService. Undo availability derives from existing semantics; compensation keeps original evidence |
 | Sync / Devices / recovery/setup | Actual offline/active/enrollment/epoch/catch-up/stopped reason and explicit retry/setup | Existing D8 lifecycle/security services; server reachability, upload acknowledgement or a held queue alone is not “synced” |
@@ -266,10 +268,10 @@ typed application/Tool/Planner path supports them. Selection can prepare a draft
 or ContextAnchor; it does not automatically run a Tool, move an item or claim a
 Domain relationship that does not exist. Proposals remain visibly uncommitted.
 
-### Calendar rendering review extension (OD-061)
+### Accepted D10 Calendar rendering extension (OD-061)
 
 D5 Agenda/Day remains authoritative and implemented; Week/Month are absent.
-For D10 propose: a finite explicit date/zone viewport; Week at most seven visible
+For D10 use explicit finite `CalendarViewport`s with date/zone; Week at most seven visible
 dates with lazy visible time rows; a separate AllDay/DateOnly band and explicitly
 Floating labels; Month at most 42 visible date cells, bounded per-cell summaries
 with an overflow detail route. Range intersections and source ordering consume
@@ -278,11 +280,10 @@ Only visible rows/cells/details compose; no infinite calendar canvas or lifetime
 history query. Each mode has a list/semantic accessible alternative and tests for
 large fixture counts, long titles, cross-midnight/DST and explicit type labels.
 
-This is a presentation rendering proposal for maintainer review. OD-061 currently
-remains resolved for **D5 Agenda/Day**; before production Week/Month in D10-02,
-review must explicitly accept this extension and synchronize its register/source.
-If not accepted, that renderer is **BLOCKED_BY_DECISION (OD-061 extension)**;
-independent shell/Day/Task work may proceed only after its own task is authorized.
+Maintainer review accepted this presentation-only extension. OD-061 is
+**RESOLVED FOR D5 AGENDA/DAY + D10 WEEK/MONTH RENDERING** in the register.
+The D5 decision remains intact; no Calendar Domain/Application semantic change
+is authorized. Production rendering remains D10-02 work, not this docs-only slice.
 
 ## 9. Design system and entity visual language
 
@@ -318,6 +319,22 @@ Each also has explicit selected/focused state and textual/icon conflict indicati
 Color is supplementary. Danger/destruction, conflict and uncommitted Agent/Planner
 proposal all require labels/icons/state text; an Assistant narrative cannot restyle
 a failed Tool as a successful committed entity.
+
+### External visual-design handoff
+
+After D10-00 freeze, concrete visual design may be produced externally, including
+with Gemini. External artifacts are **non-authoritative presentation proposals**.
+They must consume the frozen platform IA, screen/capability matrix, semantic
+entity vocabulary, Light/Dark requirement, responsive classes, accessibility
+requirements and Agent/Planner/Sync state vocabulary.
+
+External design must not invent or redefine Domain capabilities, Course/Exam
+authoring before D10-00A, Planner legality/results, Sync/conflict truth, Agent
+Tool schemas/results, permissions/confirmation or Provider/security semantics.
+Use synthetic fixtures in design prompts; no real user data, credentials,
+secrets, SAS/envelopes or private transcripts are required. Accepted visual
+boards become D10-01+ implementation input, never a replacement for these
+contracts. This PR does not commission or implement external designs.
 
 ## 10. Typed display/error vocabulary
 
@@ -380,7 +397,8 @@ Minimum owned baseline set:
 
 - Today populated/empty/offline; Calendar Day/Week/Month with every supported time
   kind, overlap/conflict/issue and selected detail; Task list/detail/edit validation.
-- Courses/Exams read-only + unavailable authoring under the selected OD-062 option;
+- Courses/Exams read-only + unavailable authoring before D10-00A, then validated
+  authoring presentation under resolved OD-062 Option B;
   Planner feasible preview/Stale/Infeasible; History diff/unsupported Undo/conflict;
   Sync stopped/held/offline and security setup; Provider configured/unavailable.
 - Agent transcript with true ToolResult, exact confirmation, denied/conflict/stale,
@@ -400,24 +418,34 @@ with no masking of warnings, confirmations or failed results. Keep semantic-tree
 interaction and accessibility assertions alongside images. Business validity stays
 in existing unit/integration/E2E suites; visual diffs cannot approve D2–D9 changes.
 
-## 13. OD-062 — academic authoring decision required
+## 13. OD-062 — accepted academic authoring foundation
 
-Status: **PENDING / BLOCKED_BY_DECISION for Course/Exam authoring**.
+Status: **RESOLVED FOR D10 / OPTION B** by maintainer review.
 Audit evidence is in [inventory section 3](../D10_CAPABILITY_INVENTORY.md).
 
-| Option | Decision / effect |
-| --- | --- |
-| A | D10 Courses/Exams have final-quality list/detail/read UX only. No authoring buttons, no repository-upsert shortcut; no D10-00A. Explicitly record read-only scope in final acceptance |
-| B — recommended | Before D10-01 UI work, authorize separate **D10-00A Academic Authoring Foundation**. Deliver validated Course/Exam create/edit and required academic scheduling authoring application commands, canonical IDs, cross-entity/time validation, atomic MutationCoordinator + D7 audit and existing D8 conflict/write semantics, tests and explicit compatibility review. Later UI calls those services only |
+Option B selects a separately reviewed **D10-00A Academic Authoring Foundation**
+before D10-01 and before product Academic UI authoring. Option A was the
+read-only alternative and was not selected. UI may only call legitimate
+application authoring services; no AcademicRepository upsert shortcut.
 
-Recommendation B makes academic pages useful for authoring without bypassing the
-transaction/audit/conflict boundary. It does not authorize new Domain defaults,
-academic deletion/Undo support, a new merge policy, Tool schema or wire encoding.
-If foundation design requires those, escalate separately. Option A is viable and
-does not block unrelated presentation once maintainer selects it.
+D10-00A must first audit the minimum prerequisite academic graph required for
+usable Course/Exam authoring, including as applicable AcademicYear/Semester,
+Course, CourseScheduleRule/schedule authoring, Exam and required PeriodTemplate
+relationships, with explicit validation and cross-entity constraints. Never
+silently synthesize Semester, AcademicYear or default timetable facts to make
+a form work; require legitimate explicit authoring/input where prerequisites
+are absent.
 
-**Maintainer action requested on the Draft PR: choose A or B.** No implicit choice,
-no D10-00A implementation, and no promotion of this pending decision to resolved.
+Its commands/services must use production ID generation, deterministic
+validation, atomic MutationCoordinator, typed D7 mutations/ChangeLog and the
+existing D8 write/conflict policy, verified by real persistence/integration
+tests. This establishes an application boundary before UI consumes it.
+
+The decision does not automatically authorize academic deletion, new Undo
+support, new Agent Tools, wire DTOs, merge semantics or Domain semantic changes.
+Escalate those separately if implementation proves they are required.
+**D10-00A remains unstarted in this PR**; its task and implementation receive
+separate review.
 
 ## 14. Planned decomposition and execution dependencies
 
@@ -437,10 +465,10 @@ packet performs no extraction.
 
 | Slice | Scope / dependency gate |
 | --- | --- |
-| D10-00 | This docs-only freeze; FROZEN / awaiting maintainer review |
-| D10-00A | Academic Authoring Foundation, only if maintainer explicitly selects B and approves its task; precedes D10-01 under B |
-| D10-01 | Design System + App Shell; after D10-00 review and OD-062 selection (plus accepted D10-00A under B); review thin module/targets, exact dependency/capture choices |
-| D10-02 | Today / Calendar / Tasks / Academic; after shell, selected academic foundation/read-only boundary and OD-061 Week/Month extension review |
+| D10-00 | This docs-only freeze; FROZEN / MAINTAINER APPROVED / AWAITING MERGE |
+| D10-00A | Separately reviewed Academic Authoring Foundation selected by OD-062 Option B; unstarted, precedes D10-01 |
+| D10-01 | Design System + App Shell; after D10-00 and accepted D10-00A; implement approved thin shared UI target, dependency/target/capture details |
+| D10-02 | Today / Calendar / Tasks / Academic; after shell and academic foundation; follow accepted OD-061 Week/Month rendering extension |
 | D10-03 | Planner / History / Sync / Settings; after shell and relevant projections/navigation, preserving earlier semantic services |
 | D10-04 | Agent Product Surface; after shell and required detail/preview/context surfaces; shared D9 execution unchanged |
 | D10-05 | Wear Final UX; after canonical tokens and reviewed Wear graph; reuse accepted readiness/runtime/confirmation |
@@ -448,18 +476,15 @@ packet performs no extraction.
 
 ```mermaid
 flowchart LR
-    FREEZE[D10-00 review]
-    CHOICE[OD-062 explicit A/B]
-    FOUNDATION[D10-00A if B]
+    FREEZE[D10-00 approved freeze]
+    FOUNDATION[D10-00A separately reviewed]
     SHELL[D10-01]
     CORE[D10-02]
     SERVICES[D10-03]
     AGENT[D10-04]
     WEAR[D10-05]
     ACCEPT[D10-06]
-    FREEZE --> CHOICE
-    CHOICE -->|A read-only| SHELL
-    CHOICE -->|B| FOUNDATION
+    FREEZE --> FOUNDATION
     FOUNDATION --> SHELL
     SHELL --> CORE
     SHELL --> SERVICES
@@ -484,14 +509,16 @@ module/dependency, test, schema/migration, server, crypto or production change.
 If repository CI triggers, wait and report its exact head/run. No additional
 Android/Wear emulator acceptance is required for this packet.
 
-Before D10-00 can be COMPLETE, maintainer review must accept IA, ownership,
-coordinator/navigation architecture, thin shared-UI location, adaptive/a11y/visual
-strategy and academic Option A/B. OD-061 renderer extension requires explicit
-review before Week/Month production work; its existing D5 decision stays intact.
+Maintainer architecture review passed: OD-060 and the thin shared-UI target
+accepted, OD-061 D10 rendering extension accepted, OD-062 resolved Option B.
+D10-00 is **FROZEN / MAINTAINER APPROVED / AWAITING MERGE**. No remaining
+decision blocker was identified for D10-00. D10-00A and D10-01 remain unstarted;
+their separately reviewed tasks own implementation details and acceptance.
 
 Scope fences: no Domain/Planner/D7/D8/D9/provisioning/Tool/policy changes, no
 V3/Envelope/AAD/server/crypto change, no Room migration, no automatic Agent replay,
 no academic upserts from UI, no cloud/Phone speech or new capability promised.
 **OD-012 remains OPEN**, independent of D10 UI development/acceptance. This packet
 does not claim production-sensitive-data readiness, all security gates closed,
-or production release approval. Keep the delivery PR Draft; do not merge; await review.
+or production release approval. Keep the delivery PR Draft; do not merge;
+await final review of this docs-only follow-up.

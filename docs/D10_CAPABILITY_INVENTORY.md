@@ -1,9 +1,10 @@
 # D10 capability inventory — audited D9 closure baseline
 
-Status: **AUDITED / D10-00 REVIEW INPUT**. Date: 2026-10-06.
+Status: **AUDITED / D10-00 MAINTAINER APPROVED**. Date: 2026-10-06.
 Baseline: `feature/d9-02-agent-sync`, `378630cb63447443b02cae4599845b06c9353b5b`
 ([PR #29](https://github.com/fangbm/temvio/pull/29) merged).
-Architecture proposal: [D10-00 freeze packet](tasks/D10_00_PRODUCT_UI_ARCHITECTURE_FREEZE.md).
+Approved architecture: [D10-00 freeze packet](tasks/D10_00_PRODUCT_UI_ARCHITECTURE_FREEZE.md),
+FROZEN / MAINTAINER APPROVED / AWAITING MERGE. No implementation changes.
 
 This is a source audit, not a new running-app, screenshot, accessibility or device
 acceptance claim. Earlier acceptance remains in its original records. A persisted
@@ -38,7 +39,8 @@ a second shared Agent runtime to copy.
   dependency declarations contain no project-wide Redux/MVI/MVVM/navigation/DI
   framework. No such framework is required by the existing service boundaries.
 - Duplicate Android/Desktop editor/profile/Agent/Agenda presentation and future
-  common tokens justify a thin shared design-system location. Wear keeps its own
+  common tokens justify the approved thin `:shared:ui` design-system target.
+  Creation/dependency/target details remain D10-01 work. Wear keeps its own
   components while consuming compatible semantic tokens. See packet section 4.
 
 ## 2. Capability matrix: current UI versus foundation
@@ -54,14 +56,14 @@ not an equivalent standalone form.
 | --- | --- | --- | --- | --- |
 | Today dashboard | NOT_IMPLEMENTED; single-day Agenda | NOT_IMPLEMENTED; single-day Agenda | IMPLEMENTED compact Today/Upcoming | Calendar/Task/FocusBlock reads exist; final Today aggregation is presentation, not a new store. |
 | Calendar Agenda/Day | IMPLEMENTED | IMPLEMENTED | READ_ONLY seven-day viewport, compact titles | `ConflictAwareSourceFactReadService` / calendar projection preserve time/source types, issues and conflict refs. |
-| Calendar Week grid / Month grid | NOT_IMPLEMENTED | NOT_IMPLEMENTED | Outside final Wear scope | Projection can query a bounded viewport; layout renderer absent. OD-061 is currently resolved for D5 Agenda/Day only. |
+| Calendar Week grid / Month grid | NOT_IMPLEMENTED | NOT_IMPLEMENTED | Outside final Wear scope | Projection can query a bounded viewport; renderer absent. OD-061 D10 Week/Month presentation extension is accepted alongside preserved D5 Agenda/Day; implementation is D10-02 work. |
 | Event create/edit | IMPLEMENTED dialogs; also Tool | IMPLEMENTED dialogs; also Tool | Existing Tool + Watch confirmation; no standalone form | `EventEditingService`, MutationCoordinator and D8 write policy. No new Event delete contract. |
 | Task list/create/edit | IMPLEMENTED list/dialogs; also Tools | IMPLEMENTED list/dialogs; also Tools | Agent read/write Tools; no full Task screen | `TaskEditingService`, explicit effort/deadline/status inputs, D7 journal and conflict policy. |
 | FocusBlock | READ_ONLY calendar/Planner presentation | READ_ONLY calendar/Planner presentation | READ_ONLY agenda / existing Planner Tools | D6 preview/Apply is the mutation authority. No general new FocusBlock editor assumed. |
-| Courses list/detail | NOT_IMPLEMENTED standalone; resolved sessions appear in Calendar | Same | READ_ONLY resolved schedule titles | Course repository reads and derived academic/calendar/Planner projection exist. Final list/detail UX is READ_ONLY until OD-062. |
-| Course create/edit / timetable authoring | REQUIRES_FOUNDATION | REQUIRES_FOUNDATION | Outside Wear UI scope; no Course Tool | Repository upsert + D7 vocabulary + D8 receive/resolution are not a local authoring command. OD-062 pending. |
+| Courses list/detail | NOT_IMPLEMENTED standalone; resolved sessions appear in Calendar | Same | READ_ONLY resolved schedule titles | Course reads and derived projections exist. Product authoring waits for separately reviewed D10-00A, selected by resolved OD-062 Option B. |
+| Course create/edit / timetable authoring | REQUIRES_FOUNDATION | REQUIRES_FOUNDATION | Outside Wear UI scope; no Course Tool | Repository upsert + D7 vocabulary + D8 receive/resolution are not a local authoring command. OD-062 resolved Option B; D10-00A unstarted. |
 | Exams list/detail | NOT_IMPLEMENTED standalone; scheduled projection only | Same | READ_ONLY scheduled title when projected | Exam reads exist; Unscheduled is absent from calendar, DateOnly has no invented Instant. |
-| Exam create/edit | REQUIRES_FOUNDATION | REQUIRES_FOUNDATION | Outside Wear UI scope; no Exam Tool | No dedicated create/edit application service. OD-062 pending. |
+| Exam create/edit | REQUIRES_FOUNDATION | REQUIRES_FOUNDATION | Outside Wear UI scope; no Exam Tool | No dedicated create/edit application service. OD-062 resolved Option B; D10-00A unstarted. |
 | Planner Full Replan / Local Reflow | IMPLEMENTED dogfood panel and Tools | Same | Existing Agent preview/Apply Tools | `DogfoodPlannerService`, snapshot assembler, deterministic Planner and session-local PlanBranch. No redesigned Planner algorithm. |
 | PlanBranch preview/Apply/Cancel/Stale | IMPLEMENTED dogfood/Agent paths | Same | Existing exact Tool preview/Watch confirmation | Final screen polish absent. Branch is isolated, session-local; losing it requires a fresh preview, not restoration as active state. |
 | History / Mutation detail / Undo | NOT_IMPLEMENTED standalone; history/Undo Tools | Same | History/Undo Tools | `HistoryQueryService`, `UndoService` and typed results exist. Academic Undo and Event/Task-create Undo remain unsupported. |
@@ -105,9 +107,12 @@ cannot represent academic facts.
 
 Therefore D10 must not call `AcademicRepository.upsertCourse/upsertExam` from UI,
 wrap those calls in a coordinator owned by UI, or mistake receive/resolution for
-authoring. **OD-062 Option B is recommended but not approved**: a separately reviewed
-D10-00A supplies validation and atomic D7/D8-aware commands before authoring UI.
-Option A keeps final-quality academic list/detail/read UX only. See the packet.
+authoring. **OD-062 is RESOLVED FOR D10 / OPTION B**: a separately reviewed
+D10-00A supplies production-ID application commands, deterministic validation and
+atomic D7/D8-aware writes before authoring UI. It first audits required
+AcademicYear/Semester, Course, schedule rules, Exam and PeriodTemplate relationships;
+no silent prerequisite/default timetable synthesis. Option A was not selected.
+D10-00A remains unstarted here. See packet section 13 for tests and scope exclusions.
 
 ## 4. Promo and acceptance evidence limits
 

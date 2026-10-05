@@ -1,8 +1,8 @@
 # Agentic Scheduler — Reviewed Roadmap D5–D10 + Post-project Hackathon
 
 > Status: **Roadmap Baseline — individual Task Specs remain authoritative**  
-> Baseline: D5-01 complete; D5-02 implemented/build-verified; D6 complete; D6.5 build/Desktop-verified/Android-surface-and-dialog-touch-verified (full input pending); D7 complete; D8 complete through production runtime closure; D9-01 complete/merged; D9-02 complete/merged (PR #24 `6583e61`); D9-03-00 frozen/merged `82f4c62`; D9-03-01 merged `37b6759`; D9-03-02 merged `dcd3e3c`; D9-03-03 COMPLETE / MERGED PR #28 `27092ba`; D9-03 COMPLETE; D9 COMPLETE — IMPLEMENTATION + ACCEPTANCE PASS; D9 final closure merged `378630c`; OD-012 OPEN — independent production release gate; OD-059 resolved; D10-00 ARCHITECTURE FREEZE IN REVIEW (D10 production UI implementation not started); post-project DGX Spark hackathon fork planned
-> Date: 2026-10-05 (D9 final closure)
+> Baseline: D5-01 complete; D5-02 implemented/build-verified; D6 complete; D6.5 build/Desktop-verified/Android-surface-and-dialog-touch-verified (full input pending); D7 complete; D8 complete through production runtime closure; D9-01 complete/merged; D9-02 complete/merged (PR #24 `6583e61`); D9-03-00 frozen/merged `82f4c62`; D9-03-01 merged `37b6759`; D9-03-02 merged `dcd3e3c`; D9-03-03 COMPLETE / MERGED PR #28 `27092ba`; D9-03 COMPLETE; D9 COMPLETE — IMPLEMENTATION + ACCEPTANCE PASS; D9 final closure merged `378630c`; OD-012 OPEN — independent production release gate; OD-059 resolved; D10-00 FROZEN / MAINTAINER APPROVED / AWAITING MERGE (D10 production UI implementation not started); post-project DGX Spark hackathon fork planned
+> Date: 2026-10-06 (D10-00 maintainer review)
 
 ---
 
@@ -26,7 +26,11 @@ D9-03  Wear Agent/provider provisioning        COMPLETE / MERGED THROUGH PR #28 
 D9-03-03 Watch runtime / local confirmation    COMPLETE / MERGED PR #28 `27092ba`
 D9     Agent / Universal Command              COMPLETE — IMPLEMENTATION + ACCEPTANCE PASS; OD-012 OPEN — independent production release gate
  ↓
-D10-00 Product / IA / UI architecture          ARCHITECTURE FREEZE IN REVIEW — docs only; production UI implementation not started
+D10-00 Product / IA / UI architecture          FROZEN / MAINTAINER APPROVED / AWAITING MERGE — docs only
+ ↓
+D10-00A Academic Authoring Foundation          SELECTED BY OD-062 OPTION B / UNSTARTED / SEPARATE REVIEW
+ ↓
+D10-01 Design System + App Shell               UNSTARTED — after accepted D10-00A; then D10-02...
  ↓
 DGX-H   DGX Spark Server-Agent Hackathon Fork   OPTIONAL — ONLY AFTER MAIN PRODUCT COMPLETION
 ```
@@ -284,38 +288,46 @@ does not approve production-sensitive-data release or implicitly resolve OD-012.
 ---
 # D10 — Final Product UI / UX
 
-Status: **D10-00 ARCHITECTURE FREEZE IN REVIEW — D9 predecessor complete;
+Status: **D10-00 FROZEN / MAINTAINER APPROVED / AWAITING MERGE — D9 predecessor complete;
 D10 production UI implementation not started**.
 
 D10 turns the completed product capabilities from D5-D9 into the final coherent cross-platform product experience. It is the first milestone whose acceptance explicitly includes final visual language and complete product-level interaction polish.
 
 The [D10-00 freeze packet](tasks/D10_00_PRODUCT_UI_ARCHITECTURE_FREEZE.md) is
-**FROZEN / awaiting maintainer review**, not COMPLETE. It includes the
+**FROZEN / MAINTAINER APPROVED / AWAITING MERGE**. It includes the
 [actual capability inventory](D10_CAPABILITY_INVENTORY.md), OD-060 typed
-presentation/platform-navigation resolution, a thin canonical shared design-system
-proposal, adaptive/accessibility/visual-regression contracts and the OD-062 A/B
-academic-authoring decision. Production UI waits for packet review; no module,
-screen implementation or academic authoring starts here.
+presentation/platform-navigation resolution, the approved thin `:shared:ui`
+canonical design-system target, adaptive/accessibility/visual-regression contracts,
+accepted OD-061 Week/Month rendering extension and resolved OD-062 Option B.
+No module, screen implementation or academic authoring starts here. External
+visual boards (including Gemini-produced proposals) use synthetic fixtures and
+the packet's frozen IA/capability/semantic/accessibility/state contracts; they are
+non-authoritative D10-01+ inputs, never permission to invent business capability.
 
-### Proposed execution split and gates
+### Accepted execution order and separate implementation gates
 
 ```text
-D10-00   Product / IA / UI architecture freeze        IN REVIEW (docs only)
-D10-00A  Academic Authoring Foundation                conditional on maintainer OD-062 Option B
-D10-01   Design System + App Shell                   after D10-00 review and OD-062 selection/foundation
-D10-02   Today / Calendar / Tasks / Academic          after shell; Week/Month OD-061 extension review
+D10-00   Product / IA / UI architecture freeze        MAINTAINER APPROVED / AWAITING MERGE (docs only)
+D10-00A  Academic Authoring Foundation                OD-062 OPTION B; UNSTARTED; separately reviewed
+D10-01   Design System + App Shell                   UNSTARTED; after accepted D10-00A
+D10-02   Today / Calendar / Tasks / Academic          after shell/foundation; accepted OD-061 rendering extension
 D10-03   Planner / History / Sync / Settings          after shell and relevant projections
 D10-04   Agent Product Surface                       after shell and context/preview surfaces
 D10-05   Wear Final UX                               after tokens and reviewed Wear graph
 D10-06   Accessibility / Visual Regression / Final Acceptance
 ```
 
-OD-062 Option A makes Courses/Exams final-quality list/detail/read-only surfaces.
-Option B is recommended but requires separate D10-00A approval before D10-01:
-formal application authoring commands with validation, MutationCoordinator,
-D7 audit and existing D8 write/conflict semantics. Neither option allows UI
-repository-upsert shortcuts. Final acceptance depends on all selected slices;
-OD-012 remains an independent OPEN release gate.
+OD-062 is **RESOLVED FOR D10 / OPTION B**. Execution order is
+**D10-00 -> D10-00A -> D10-01 -> D10-02...**. Separately reviewed D10-00A first
+audits the minimum academic prerequisite graph (AcademicYear/Semester, Course,
+schedule rules, Exam and required PeriodTemplate relationships as applicable).
+No silent prerequisite/default timetable synthesis. It establishes production-ID
+application commands, deterministic validation/cross-entity constraints,
+MutationCoordinator, typed D7 mutations/ChangeLog and existing D8 write/conflict
+policy with real persistence/integration tests. UI repository-upsert shortcuts
+remain prohibited. Academic deletion/new Undo/Tools/wire/merge/Domain changes
+are not automatically authorized. Final acceptance depends on later slices;
+OD-012 remains an independent OPEN release gate. No D10-00 decision blocker remains.
 
 ## Visual/product reference
 

@@ -53,12 +53,14 @@ Future Agent modules remain higher-level consumers of Domain/Application/Planner
 
 [D10-00](tasks/D10_00_PRODUCT_UI_ARCHITECTURE_FREEZE.md) records the current
 maintainer-authorized OD-060 target: platform-owned typed navigation, explicit
-screen coordinators and manual/platform composition. Packet review is pending.
+screen coordinators and manual/platform composition. Maintainer review passed;
+the packet is FROZEN / MAINTAINER APPROVED / AWAITING MERGE.
 The audited repository also contains `:shared:agent`, authorized by AGT-001;
 the older baseline sketch above does not move its ownership into Domain.
 
-The proposed later canonical design-system location is a thin `:shared:ui`,
-subject to D10-00/module review before D10-01 creation. It owns tokens/themes,
+The approved canonical design-system target is a thin `:shared:ui`;
+creation/dependency/target details remain D10-01 implementation work.
+It owns tokens/themes,
 presentation-only immutable display models, explicit formatting/accessibility
 helpers and Android/Desktop Compose primitives. Wear keeps platform components
 while sharing compatible semantic tokens. Apps consume it; existing semantic
