@@ -1,7 +1,7 @@
 # Agentic Scheduler — Open Decisions Register
 
 > Status: **Mandatory Decision Register**  
-> Updated: 2026-10-04
+> Updated: 2026-10-06
 > Purpose: ensure an undecided architecture choice is never mistaken for permission to guess.
 
 A `PENDING` item means contributors MUST NOT choose that architecture/security behavior on their own. `RESOLVED` decisions are frozen by the cited source. `DEFERRED` features are intentionally outside the current implementation gate.
@@ -470,11 +470,21 @@ Source: docs/AGENT_DECISIONS.md AGT-007
 ## OD-060 — Shared UI state/navigation architecture
 
 ```text
-Status: PENDING
-Current default: minimal Compose state + constructor/manual dependency composition;
-                 no project-wide framework introduction.
-Must resolve by: if feature complexity requires a shared framework.
+Status: RESOLVED FOR D10
+Decision: project-owned typed presentation/state architecture with Compose and
+          explicit screen coordinators; platform-owned typed destinations and
+          back-stacks; existing manual/platform composition remains.
+          No project-wide Redux/MVI/MVVM/navigation/DI framework or service locator.
+          A thin shared UI/design-system module may own presentation-only primitives;
+          no repository/network/Provider/runtime/business/lifecycle ownership.
+Source: current maintainer D10-00 task instruction;
+        docs/tasks/D10_00_PRODUCT_UI_ARCHITECTURE_FREEZE.md §§3–6
 ```
+
+The requested target is authorized and the source audit found no unavoidable
+framework conflict. D10-00 remains **FROZEN / awaiting maintainer review**, not
+COMPLETE. Its review gates D10-01 and later module creation. No `:shared:ui` or
+navigation implementation is created by this docs-only resolution.
 
 ## OD-061 — Calendar rendering
 
@@ -484,6 +494,34 @@ Decision: semantic projection in :shared:application; platform Compose rendering
           viewport-bounded lazy Agenda/Day; no shared UI module.
 Source: docs/CALENDAR_DECISIONS.md
 ```
+
+D10-00 proposes bounded Week/Month rendering in its section 8. That extension
+awaits explicit maintainer review/register synchronization before production
+Week/Month in D10-02; the existing D5 Agenda/Day resolution is unchanged.
+
+## OD-062 — D10 Academic Authoring
+
+```text
+Status: PENDING
+Must resolve by: D10-01; before promising Course/Exam authoring in D10 UI
+Impact: APPLICATION BOUNDARY / AUDIT / SYNC / PRODUCT SCOPE
+Source: docs/tasks/D10_00_PRODUCT_UI_ARCHITECTURE_FREEZE.md §13
+        docs/D10_CAPABILITY_INVENTORY.md §3
+```
+
+The audited D9 closure baseline has Course/Exam read/persistence, typed D7
+mutations and D8 receive/conflict-resolution support, but no dedicated local
+Course/Exam create/edit application command. Repository upsert is not authoring.
+
+- **A:** final-quality Courses/Exams list/detail/read UX only; no authoring.
+- **B — recommended, not approved:** insert a separately authorized D10-00A
+  Academic Authoring Foundation before D10-01. It supplies validated application
+  commands and required academic scheduling authoring through MutationCoordinator,
+  D7 audit and existing D8 conflict/write policy, with tests.
+
+Maintainer must choose A/B explicitly. Until then, Course/Exam authoring is
+`BLOCKED_BY_DECISION`; UI cannot call AcademicRepository upsert to bypass it.
+This item does not authorize new academic deletion/Undo, Tool, wire or merge semantics.
 
 ---
 

@@ -49,6 +49,29 @@ Platform Apps
 
 Future Agent modules remain higher-level consumers of Domain/Application/Planner/Sync contracts rather than dependencies of `shared:domain`.
 
+### D10-00 presentation target (no module created)
+
+[D10-00](tasks/D10_00_PRODUCT_UI_ARCHITECTURE_FREEZE.md) records the current
+maintainer-authorized OD-060 target: platform-owned typed navigation, explicit
+screen coordinators and manual/platform composition. Packet review is pending.
+The audited repository also contains `:shared:agent`, authorized by AGT-001;
+the older baseline sketch above does not move its ownership into Domain.
+
+The proposed later canonical design-system location is a thin `:shared:ui`,
+subject to D10-00/module review before D10-01 creation. It owns tokens/themes,
+presentation-only immutable display models, explicit formatting/accessibility
+helpers and Android/Desktop Compose primitives. Wear keeps platform components
+while sharing compatible semantic tokens. Apps consume it; existing semantic
+modules do not depend on it.
+
+It must not own repositories/Room, network/crypto, Provider/AgentRunService,
+Planner execution, business mutations, secret storage, platform lifecycle,
+navigation/back-stack or a competing application store. Platform composition
+roots construct infrastructure/services; feature coordinators project their
+typed results and delegate explicit user intents. No screen gains direct DAO or
+unjournaled academic-upsert authority. No module/dependency/production change
+is authorized in the D10-00 docs-only slice.
+
 `shared:domain` is at the bottom of dependency direction.
 
 It never imports:
