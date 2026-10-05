@@ -299,10 +299,16 @@ The [D10-00 freeze packet](tasks/D10_00_PRODUCT_UI_ARCHITECTURE_FREEZE.md) is
 presentation/platform-navigation resolution, the approved thin `:shared:ui`
 canonical design-system target, adaptive/accessibility/visual-regression contracts,
 accepted OD-061 Week/Month rendering extension and resolved OD-062 Option B.
-No module, screen implementation or academic authoring starts here. External
-visual boards (including Gemini-produced proposals) use synthetic fixtures and
-the packet's frozen IA/capability/semantic/accessibility/state contracts; they are
-non-authoritative D10-01+ inputs, never permission to invent business capability.
+No module, screen implementation or academic authoring starts here. Frontend
+visual design and implementation are delegated to an external frontend
+implementation agent; vendor selection is a delivery choice, not architecture.
+The packet's handoff contract covers presentation modules/components, shells,
+coordinators/navigation, product screens, adaptive/accessibility work, visual
+regression tests and UI entry-file decomposition through reviewed typed services.
+Missing semantic/application foundations stop the affected path; no DAO writes
+or semantic/security bypass. Visual boards use synthetic fixtures and remain
+non-authoritative D10-01+ inputs. External implementation PRs require normal
+repository CI and maintainer review, within the accepted slice order.
 
 ### Accepted execution order and separate implementation gates
 

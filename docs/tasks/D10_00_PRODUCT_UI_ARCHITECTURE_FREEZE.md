@@ -320,21 +320,47 @@ Color is supplementary. Danger/destruction, conflict and uncommitted Agent/Plann
 proposal all require labels/icons/state text; an Assistant narrative cannot restyle
 a failed Tool as a successful committed entity.
 
-### External visual-design handoff
+### External frontend design and implementation handoff
 
-After D10-00 freeze, concrete visual design may be produced externally, including
-with Gemini. External artifacts are **non-authoritative presentation proposals**.
-They must consume the frozen platform IA, screen/capability matrix, semantic
-entity vocabulary, Light/Dark requirement, responsive classes, accessibility
-requirements and Agent/Planner/Sync state vocabulary.
+D10 frontend visual design **and frontend implementation** are delegated to an
+external frontend implementation agent. Agent/vendor selection is a delivery
+choice, not part of product architecture; this contract is implementation-agent
+and vendor neutral. Delegation follows the accepted slice order and does not
+start D10-00A or D10-01 in this docs-only PR.
 
-External design must not invent or redefine Domain capabilities, Course/Exam
-authoring before D10-00A, Planner legality/results, Sync/conflict truth, Agent
-Tool schemas/results, permissions/confirmation or Provider/security semantics.
+Within the separately reviewed D10 implementation slices, the frontend agent may
+implement:
+
+- `:shared:ui`, the design system/Light-Dark themes, Compose presentation
+  components and typed presentation models;
+- Desktop/Android/Wear app shells, explicit screen coordinators, platform-owned
+  typed navigation/back-stacks, adaptive/responsive layouts and all D10 product
+  screens within their frozen capability and foundation boundaries;
+- accessibility presentation work, screenshot/visual regression fixtures and
+  tests, and decomposition of oversized Android/Desktop UI entry files.
+
+It may consume existing Application/Planner/D7/D8/D9 services and invoke them
+through reviewed typed interfaces. It must consume the frozen platform IA,
+screen/capability matrix, semantic entity vocabulary, Light/Dark requirement,
+responsive classes, accessibility requirements and Agent/Planner/Sync state
+vocabulary. Existing composition-root infrastructure wiring does not authorize
+frontend DAO/Room writes.
+
+The frontend agent must not write DAO/Room directly, invent missing application
+commands, alter Domain semantics or Planner legality/scoring, alter D7/D8/D9
+semantics, add/change Agent Tool schemas, bypass permission/confirmation, invent
+Sync/conflict truth, change Provider/security/crypto behavior, or silently add
+Course/Exam authoring before accepted D10-00A. If implementation discovers a
+missing semantic/application capability, **stop that path and report the missing
+foundation**; do not implement around it. Independent approved presentation work
+may continue within its slice.
+
+Visual-design artifacts remain **non-authoritative presentation proposals**.
 Use synthetic fixtures in design prompts; no real user data, credentials,
 secrets, SAS/envelopes or private transcripts are required. Accepted visual
 boards become D10-01+ implementation input, never a replacement for these
-contracts. This PR does not commission or implement external designs.
+contracts. External frontend implementation PRs are subject to normal repository
+CI and maintainer review; delegation does not bypass either acceptance gate.
 
 ## 10. Typed display/error vocabulary
 
