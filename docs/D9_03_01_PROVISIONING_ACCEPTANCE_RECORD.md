@@ -4,6 +4,9 @@ Baseline: D9-03-00 merged as `82f4c62e4ca772e9b1daf192760e2ff835067bcc`.
 Branch: `codex/d9-03-01-provider-credential-provisioning`.
 Review: [PR #26](https://github.com/fangbm/temvio/pull/26), accepted and merged into
 `feature/d9-02-agent-sync` as `37b6759b1df88a3c6c4d2f55c2a7f6d4f8c717de`.
+Final accepted PR #26 head: `4f17bf88c35ccbd5bbf598e97091d080acb10b9d`.
+Final exact-head [CI run 37192313879](https://github.com/fangbm/temvio/actions/runs/37192313879):
+all five jobs passed (5/5 green).
 
 Status: **D9-03-01 COMPLETE / ACCEPTED / MERGED**. OD-059 is **RESOLVED FOR D9-03-01**;
 maintainer accepted C1–C5 and the minimal-tombstone follow-up, which passed real
@@ -143,8 +146,13 @@ is claimed; actual Wear Keystore evidence comes from CI's Wear API 35-ext15 AVD.
 
 ## CI evidence and limits
 
-[Run 37191578433](https://github.com/fangbm/temvio/actions/runs/37191578433),
-accepted follow-up head `a4daebe5ba475daa3c48cd3afa3e24585acd0c21`, all five jobs green:
+Final closure evidence is
+[run 37192313879](https://github.com/fangbm/temvio/actions/runs/37192313879)
+on accepted head `4f17bf88c35ccbd5bbf598e97091d080acb10b9d`, all five jobs green.
+
+Historical OD-059 implementation follow-up evidence:
+[run 37191578433](https://github.com/fangbm/temvio/actions/runs/37191578433)
+on `a4daebe5ba475daa3c48cd3afa3e24585acd0c21`, all five jobs green:
 Linux build/real PostgreSQL/Secret Service, Windows DPAPI, Android Keystore,
 Wear Keystore, and existing enrolled Desktop↔Android history/platform relay E2E.
 Downloaded XML proves PostgreSQL repository **17/17** and provisioning PostgreSQL
@@ -156,9 +164,8 @@ JSON-escaped, base64 and UTF-8 hex representations; local metadata/SQLite scans
 include both the credential and its forbidden plaintext digest.
 The earlier [run 37182421694](https://github.com/fangbm/temvio/actions/runs/37182421694)
 on `4b6df6767ee9e92704246fde366d7354ba614839` passed before the OD-059 amendment.
-The evidence-only finalization commit changes documentation only; its full CI
-is tracked in [PR #26 checks](https://github.com/fangbm/temvio/pull/26/checks),
-and the final delivery reports that exact documentation head/run.
+The evidence-only finalization commit changed documentation only; its exact head
+and completed full CI are recorded above as the final closure evidence.
 
 OD-059 regression evidence:
 

@@ -339,10 +339,18 @@ complete settings, History/Undo, Sync/pairing and provider surfaces
 fast Today / upcoming schedule
 next-item and heads-up surfaces
 compact local actions appropriate to the watch
-Agent voice entry only when local STT capability is available and enabled
+text Agent entry through the supported text-input path
+optional voice control subject to accepted on-device STT capability, language and permission conditions
 ```
 
-When Wear local STT is unsupported, the Agent entry remains hidden and its setting remains unavailable with an explanatory reason. When STT is supported, the entry may be shown and the user may disable it. Wear remains an offline-capable node rather than a remote-display-only client.
+Wear text Agent entry remains available whenever ordinary `aiEntrySupported` /
+`effectiveAiEntryEnabled` conditions are satisfied through the supported text-input
+path. On-device STT is optional input assistance only. Show/enable the voice or mic
+control only when the accepted on-device STT capability, language and permission
+conditions allow it. If STT is unsupported or the selected language remains `und`,
+disable/hide only the voice control; do not hide or disable the text Agent entry.
+There is no cloud or phone speech fallback. Wear remains an offline-capable node
+rather than a remote-display-only client.
 
 ## D10 MUST
 
