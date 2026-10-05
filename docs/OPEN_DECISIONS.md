@@ -484,8 +484,10 @@ Source: maintainer D10-00 review acceptance;
 ```
 
 The target is **ACCEPTED / RESOLVED FOR D10**. D10-00 is **FROZEN / MAINTAINER
-APPROVED / AWAITING MERGE**. No `:shared:ui` or navigation implementation is
-created by this docs-only resolution; D10-00A and D10-01 remain unstarted.
+APPROVED / MERGED** (PR #30, `f8efbde`). No `:shared:ui` or navigation implementation
+was created by this docs-only resolution. D10-00A now has a separate
+[authoring implementation review](tasks/D10_00A_ACADEMIC_AUTHORING_FOUNDATION.md);
+D10-01 remains unstarted.
 
 ## OD-061 — Calendar rendering
 
@@ -534,7 +536,8 @@ cross-entity constraints. No silent Semester/AcademicYear/default timetable synt
 Use production ID generation, application commands/services, MutationCoordinator,
 typed D7 mutations/ChangeLog, existing D8 write/conflict policy and deterministic
 validation, with real persistence/integration tests. UI calls those legitimate
-boundaries only. D10-00A remains unstarted in this PR and needs separate review.
+boundaries only. D10-00A was unstarted in the D10-00 freeze; its separately reviewed
+[task](tasks/D10_00A_ACADEMIC_AUTHORING_FOUNDATION.md) now implements that foundation.
 This decision does not automatically authorize academic deletion, new Undo support,
 new Agent Tools, wire DTOs, merge semantics or Domain changes; escalate separately
 if implementation proves they are required.
