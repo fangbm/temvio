@@ -2,13 +2,13 @@
 
 Baseline: D9-03-00 merged as `82f4c62e4ca772e9b1daf192760e2ff835067bcc`.
 Branch: `codex/d9-03-01-provider-credential-provisioning`.
-Review: [Draft PR #26](https://github.com/fangbm/temvio/pull/26), targeting
-`feature/d9-02-agent-sync`. Do not merge or start D9-03-02/03 or D10.
+Review: [PR #26](https://github.com/fangbm/temvio/pull/26), accepted and merged into
+`feature/d9-02-agent-sync` as `37b6759b1df88a3c6c4d2f55c2a7f6d4f8c717de`.
 
-Status: **D9-03-01 IMPLEMENTED / AWAITING REVIEW — implementation acceptance
-complete for review**. OD-059 is **RESOLVED FOR D9-03-01**; maintainer accepted
-C1–C5 otherwise. The minimal-tombstone follow-up passed real PostgreSQL/E2E and
-full CI. Keep Draft; no merge or next slice is authorized.
+Status: **D9-03-01 COMPLETE / ACCEPTED / MERGED**. OD-059 is **RESOLVED FOR D9-03-01**;
+maintainer accepted C1–C5 and the minimal-tombstone follow-up, which passed real
+PostgreSQL/E2E and full CI. Subsequent D9-03 slices completed through PR #28;
+their evidence is retained in the [Wear acceptance record](D9_03_03_WEAR_AGENT_ACCEPTANCE_RECORD.md).
 OD-058 remains resolved for C1–C8. This record authorizes no production deployment.
 **OD-012 remains OPEN.**
 

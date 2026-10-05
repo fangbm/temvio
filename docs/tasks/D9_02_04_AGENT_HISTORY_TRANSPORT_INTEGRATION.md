@@ -1,6 +1,6 @@
 # D9-02-04 — Agent history transport integration
 
-Status: implementation / Draft PR; production V3 remains disabled by OD-012.
+Status: **COMPLETE / MERGED** — [PR #23](https://github.com/fangbm/temvio/pull/23), merge `4dbe432afee75ed87255f830110815453a2e75a5`; production V3 remains disabled by OD-012. Scope/acceptance below is the retained slice contract.
 
 Authority: AGT-013; protocol draft §8; protocol freeze W1/W4/W5/L1;
 completed D9-02-01/02/03 contracts. Baseline: feature/d9-02-agent-sync,

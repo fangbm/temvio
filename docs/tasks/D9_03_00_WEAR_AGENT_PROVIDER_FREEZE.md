@@ -2,8 +2,11 @@
 
 Status: **FROZEN — maintainer approved 2026-10-04**.
 C1–C8 are approved with the DeviceId, relay privacy and prepared-slot amendments
-recorded below. OD-058 is **RESOLVED FOR D9-03**. Keep PR #25 Draft: D9-03-01
-must not begin until final human review of this synchronized frozen packet.
+recorded below. OD-058 is **RESOLVED FOR D9-03**. Final human review passed;
+[PR #25](https://github.com/fangbm/temvio/pull/25) merged as `82f4c62e4ca772e9b1daf192760e2ff835067bcc`.
+Subsequent D9-03 slices completed through PR #28. Freeze-time review/workflow
+notes below remain historical; this status update changes no frozen decision,
+fixture or protocol language.
 
 Baseline: latest `feature/d9-02-agent-sync`,
 `6583e61fc3101e5373d537f6b90675430a7aec10` (PR #24 merged).

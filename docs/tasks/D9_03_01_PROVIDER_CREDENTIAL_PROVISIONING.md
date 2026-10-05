@@ -1,12 +1,13 @@
 # D9-03-01 — Provider Credential Provisioning
 
 Implementation evidence: [acceptance record](../D9_03_01_PROVISIONING_ACCEPTANCE_RECORD.md).
-Review: [Draft PR #26](https://github.com/fangbm/temvio/pull/26).
-Status: **IMPLEMENTED / AWAITING REVIEW — implementation acceptance complete
-for review**; **OD-059 RESOLVED FOR D9-03-01**. PostgreSQL 17/17 + E2E 1/1 and
+Review: [PR #26](https://github.com/fangbm/temvio/pull/26), accepted and merged as `37b6759b1df88a3c6c4d2f55c2a7f6d4f8c717de`.
+Status: **COMPLETE / MERGED**; **OD-059 RESOLVED FOR D9-03-01**. PostgreSQL 17/17 + E2E 1/1 and
 all five CI jobs passed in run 37191578433 on `a4daebe5ba475daa3c48cd3afa3e24585acd0c21`.
 The approved retention follow-up below amends the original Task Spec's C2 boundary.
-OD-012 remains OPEN. Do not merge or start the next slice.
+OD-012 remains OPEN. Subsequent slices completed through PR #28. Original task
+scope, interim statuses and Draft workflow below are historical implementation
+instructions; the completion header above records the current status.
 
 ## Approved PR #26 retention follow-up — OD-059
 
