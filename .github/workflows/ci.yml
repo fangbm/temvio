@@ -210,7 +210,17 @@ jobs:
           target: google_apis
           arch: x86_64
           script: |
-            ./gradlew :apps:android:connectedDebugAndroidTest :apps:wear:connectedDebugAndroidTest --no-daemon
+            ./gradlew :apps:android:connectedDebugAndroidTest --no-daemon
+            # Core Watch runtime/UI acceptance is required on the Wear job, never phone/fake platform.
+            ./gradlew :apps:wear:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.agenticscheduler.wear.WearKeystoreSecureStoreInstrumentedTest --no-daemon
+            mkdir -p apps/wear/build/phone-platform-reports/keystore
+            cp -R apps/wear/build/outputs/androidTest-results/connected/. apps/wear/build/phone-platform-reports/keystore/
+            ./gradlew :apps:wear:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.agenticscheduler.wear.ProviderCredentialSlotInstrumentedTest --no-daemon
+            mkdir -p apps/wear/build/phone-platform-reports/provider-slot
+            cp -R apps/wear/build/outputs/androidTest-results/connected/. apps/wear/build/phone-platform-reports/provider-slot/
+            ./gradlew :apps:wear:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.agenticscheduler.wear.WearCapabilityInstrumentedTest --no-daemon
+            mkdir -p apps/wear/build/phone-platform-reports/capability
+            cp -R apps/wear/build/outputs/androidTest-results/connected/. apps/wear/build/phone-platform-reports/capability/
             adb logcat -d -s D90302Evidence:I > apps/wear/build/d90302-platform-evidence.txt
       - name: Upload Android provisioning reports
         if: always()
@@ -220,6 +230,7 @@ jobs:
           path: |
             apps/android/build/outputs/androidTest-results/connected/**/TEST-*.xml
             apps/wear/build/outputs/androidTest-results/connected/**/TEST-*.xml
+            apps/wear/build/phone-platform-reports/**/TEST-*.xml
             apps/wear/build/d90302-platform-evidence.txt
           if-no-files-found: warn
           retention-days: 14

@@ -55,6 +55,8 @@ data class WearReadiness(
     val effectiveAiEntryEnabled: Boolean get() = aiEntrySupported && userEnabledAiEntry
     val providerReady: Boolean get() = provider.providerReady
     val requestReady: Boolean get() = effectiveAiEntryEnabled && providerReady && networkReachable
+    /** AGT-006: a terminal capability limitation permits chat with no Tool schemas. */
+    val structuredToolsUnavailable: Boolean get() = providerProbeFailure == WearProbeFailure.UNSUPPORTED_TOOLS
     /** Display-only order. No displayed reason writes back into facts or binding. */
     val blockers: Set<WearProviderRuntimeState> get() = buildSet {
         if (!aiEntrySupported) add(WearProviderRuntimeState.ENTRY_UNSUPPORTED)
@@ -64,7 +66,7 @@ data class WearReadiness(
         if (provider.installBlocked) add(WearProviderRuntimeState.INSTALL_BLOCKED)
         if (provider.bindingExists && provider.credentialRequired && !provider.matchingSecretAvailable) add(WearProviderRuntimeState.CREDENTIAL_UNAVAILABLE)
         if (!networkReachable) add(WearProviderRuntimeState.OFFLINE)
-        if (!provider.adapterSupported || providerProbeFailure != null) add(WearProviderRuntimeState.PROVIDER_UNAVAILABLE)
+        if (!provider.adapterSupported || (providerProbeFailure != null && !structuredToolsUnavailable)) add(WearProviderRuntimeState.PROVIDER_UNAVAILABLE)
     }
     val runtimeState: WearProviderRuntimeState get() = listOf(
         WearProviderRuntimeState.ENTRY_UNSUPPORTED, WearProviderRuntimeState.ENTRY_DISABLED,

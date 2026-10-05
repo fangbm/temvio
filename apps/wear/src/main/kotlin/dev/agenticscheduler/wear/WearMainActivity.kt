@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import android.net.Network
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.MaterialTheme
@@ -13,6 +14,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import dev.agenticscheduler.wear.agent.*
+import dev.agenticscheduler.wear.capability.WearLocalSettings
+import dev.agenticscheduler.database.repository.RoomAgentStateRepository
+import dev.agenticscheduler.database.repository.RoomLocalEnrollmentRepository
 import dev.agenticscheduler.application.calendar.CalendarItem
 import dev.agenticscheduler.application.calendar.CalendarConflict
 import dev.agenticscheduler.application.calendar.CalendarProjectionIssue
@@ -60,11 +66,37 @@ class WearMainActivity : ComponentActivity() {
             TinkPairingHpke(),
             productionUuidV7Generator(),
             MutationWallClock { Clock.System.now().toEpochMilliseconds() },
+            agentOutboundGate = WearV2BusinessWriteGate(RoomLocalEnrollmentRepository(database), RoomAgentStateRepository(database)),
         )
     }
     private val d8Runtime by d8RuntimeLazy
     private val d8Scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val d8ShutdownScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val agentScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private val agentRuntime = mutableStateOf<WearAgentRuntimeComposition?>(null)
+    private val agentInitialization = mutableStateOf(false)
+    private val agentFailure = mutableStateOf<String?>(null)
+    private var microphoneResult: ((Boolean) -> Unit)? = null
+    private val microphonePermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        val callback = microphoneResult; microphoneResult = null; callback?.invoke(granted)
+    }
+    private fun openAgent() {
+        if (agentRuntime.value != null || agentInitialization.value) return
+        agentInitialization.value = true
+        agentScope.launch {
+            try {
+                val settings = WearLocalSettings(this@WearMainActivity)
+                val runtime = WearAgentRuntimeComposition.createActive(this@WearMainActivity, database, agentScope, d8Runtime,
+                    { callback -> microphoneResult = callback; microphonePermission.launch(android.Manifest.permission.RECORD_AUDIO) }, settings.selectedSpeechLanguageTag)
+                runtime.readiness.start()
+                runtime.refreshSelectedBinding()
+                runtime.foregroundChanged(d8IsForeground)
+                agentRuntime.value = runtime
+            } catch (cancelled: CancellationException) { throw cancelled
+            } catch (_: Exception) { agentFailure.value = "LOCAL_AGENT_UNAVAILABLE"
+            } finally { agentInitialization.value = false }
+        }
+    }
     @Volatile private var d8SyncTrigger: ActiveSyncCatchUpTrigger? = null
     @Volatile private var d8IsForeground = false
     private var d8NetworkCallback: ConnectivityManager.NetworkCallback? = null
@@ -126,15 +158,30 @@ class WearMainActivity : ComponentActivity() {
         }
         setContent {
             val startupState by d8StartupState
+            val localEnabled by remember { WearLocalSettings(this@WearMainActivity) }.userEnabledAiEntry.collectAsState()
+            val entryEnabled = agentRuntime.value?.readiness?.readiness?.collectAsState()?.value?.effectiveAiEntryEnabled ?: localEnabled
+            var showAgent by remember { mutableStateOf(false) }
             MaterialTheme {
                 when (startupState) {
-                    D8StartupState.Ready -> WearAgenda(
+                    D8StartupState.Ready -> if (showAgent) {
+                        val runtime by agentRuntime
+                        Column {
+                            Button(onClick = { runtime?.session?.cancelForegroundRequest(); showAgent = false }) { Text("Back to agenda") }
+                            if (runtime != null) WearAgentRoute(requireNotNull(runtime))
+                            else {
+                                Text(agentFailure.value ?: "Opening local Agent…")
+                                if (!agentInitialization.value) Button(onClick = { agentFailure.value = null; openAgent() }) { Text("Retry setup") }
+                            }
+                        }
+                    } else WearAgenda(
                         calendarQueryService,
                         d8SyncFailure.value,
                         onRetrySync = {
                             d8SyncFailure.value = null
                             d8SyncTrigger?.retryNow()
                         },
+                        onAgent = { showAgent = true; openAgent() },
+                        agentEntryEnabled = entryEnabled,
                     )
                     D8StartupState.Activating -> Text("Connecting to your secure sync space…")
                     D8StartupState.Blocked -> Text("Sync setup is unavailable. Restore the device credential or check the configured account and server.")
@@ -147,11 +194,16 @@ class WearMainActivity : ComponentActivity() {
         super.onStart()
         d8IsForeground = true
         d8SyncTrigger?.setForeground(true)
+        agentRuntime.value?.let { runtime -> agentScope.launch { runtime.refreshSelectedBinding(); runtime.foregroundChanged(true) } }
     }
 
     override fun onStop() {
         d8IsForeground = false
         d8SyncTrigger?.setForeground(false)
+        agentRuntime.value?.let { runtime ->
+            runtime.stopForegroundFromLifecycle()
+            agentScope.launch { runtime.foregroundChanged(false) }
+        }
         super.onStop()
     }
 
@@ -163,9 +215,11 @@ class WearMainActivity : ComponentActivity() {
         d8SyncTrigger?.close()
         d8SyncTrigger = null
         d8Scope.cancel()
+        agentScope.cancel()
         if (d8RuntimeLazy.isInitialized()) {
             d8ShutdownScope.launch {
                 try {
+                    agentRuntime.value?.close()
                     d8Runtime.deactivate()
                 } finally {
                     d8ShutdownScope.cancel()
@@ -208,6 +262,8 @@ private fun WearAgenda(
     service: ConflictAwareSourceFactReadService,
     syncFailureReason: String?,
     onRetrySync: () -> Unit,
+    onAgent: () -> Unit,
+    agentEntryEnabled: Boolean,
 ) {
     val displayTimeZone = remember { TimeZone.currentSystemDefault() }
     val today = Clock.System.now().toLocalDateTime(displayTimeZone).date
@@ -231,6 +287,7 @@ private fun WearAgenda(
     val calendarOverlap = if (result.conflicts.isNotEmpty()) "\nCalendar overlaps: ${result.conflicts.size}" else ""
     val syncConflicts = if (syncConflictCount > 0) "\nSync conflicts: $syncConflictCount" else ""
     Column {
+        Button(onClick = onAgent) { Text(if (agentEntryEnabled) "Agent" else "Agent setup · entry disabled") }
         Text("Today\n$todayText\nUpcoming\n$upcomingText$calendarOverlap$syncConflicts")
         if (syncFailureReason != null) {
             Text("Sync stopped ($syncFailureReason). Check the account or sync data, then retry.")

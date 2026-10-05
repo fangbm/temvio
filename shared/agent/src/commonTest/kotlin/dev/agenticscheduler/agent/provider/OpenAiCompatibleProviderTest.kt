@@ -24,6 +24,39 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class OpenAiCompatibleProviderTest {
+    @Test fun `actual HttpSend boundary rejects both streaming and normal before engine executes`() = runBlocking {
+        for (stream in listOf(false, true)) {
+            var checks = 0; var requests = 0
+            val client = HttpClient(MockEngine) { engine { addHandler { requests++; respond("{}") } } }
+            val provider = OpenAiCompatibleProvider(client, ProviderCredentialResolver { "secret" }, ProviderRequestGuard { if (++checks == 3) "READINESS_CHANGED" else null })
+            val result = provider.complete(config().copy(streamingSupported = stream), listOf(ProviderChatMessage("user", "private")), emptyList())
+            assertEquals(ProviderCallResult.Failure("READINESS_CHANGED"), result)
+            assertEquals(3, checks); assertEquals(0, requests); client.close()
+        }
+    }
+    @Test fun `host rejection occurs before credential read and HTTP request`() = runBlocking {
+        var reads = 0; var requests = 0
+        val client = HttpClient(MockEngine) { engine { addHandler { requests++; respond("{}") } } }
+        val provider = OpenAiCompatibleProvider(client, ProviderCredentialResolver { reads++; "secret" }, ProviderRequestGuard { "INSTALL_BLOCKED" })
+        assertEquals(ProviderCallResult.Failure("INSTALL_BLOCKED"), provider.complete(config(), listOf(ProviderChatMessage("user", "private")), emptyList()))
+        assertEquals(0, reads); assertEquals(0, requests); client.close()
+    }
+
+    @Test fun `binding change during secret resolution prevents actual send`() = runBlocking {
+        var current = true; var requests = 0; var reads = 0
+        val client = HttpClient(MockEngine) { engine { addHandler { requests++; respond("{}") } } }
+        val provider = OpenAiCompatibleProvider(client, ProviderCredentialResolver { reads++; current = false; "secret" }, ProviderRequestGuard { if (current) null else "BINDING_CHANGED" })
+        assertEquals(ProviderCallResult.Failure("BINDING_CHANGED"), provider.complete(config(), listOf(ProviderChatMessage("user", "private")), emptyList()))
+        assertEquals(1, reads); assertEquals(0, requests); client.close()
+    }
+
+    @Test fun `credentialed HTTP remains rejected before guard or secret`() = runBlocking {
+        var checks = 0; var reads = 0; var requests = 0
+        val client = HttpClient(MockEngine) { engine { addHandler { requests++; respond("{}") } } }
+        val provider = OpenAiCompatibleProvider(client, ProviderCredentialResolver { reads++; "secret" }, ProviderRequestGuard { checks++; null })
+        assertEquals(ProviderCallResult.Failure("INSECURE_CREDENTIAL_TRANSPORT"), provider.complete(config().copy(baseUrl = "http://local.example/v1"), listOf(ProviderChatMessage("user", "private")), emptyList()))
+        assertEquals(0, checks); assertEquals(0, reads); assertEquals(0, requests); client.close()
+    }
     @Test fun `capability probe requires an actual structured call`() = runBlocking {
         val requests = mutableListOf<HttpRequestData>()
         val client = HttpClient(MockEngine) { engine { addHandler { request ->

@@ -8,6 +8,51 @@ import kotlin.test.*
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class WearProviderProbeTest {
+    @Test fun currentStructuredProofIsReusedWithoutAnotherProbe() = runTest {
+        var calls = 0
+        val p = WearProviderProbe(backgroundScope, { testScheduler.currentTime }) { calls++; ProviderProbeResult.Supported }
+        p.updateInput(input); p.refresh(); runCurrent()
+        repeat(5) { assertEquals(ProviderProbeResult.Supported, p.capability(config, "1")) }
+        assertEquals(1, calls)
+        assertEquals(ProviderProbeResult.Unavailable("READINESS_CHANGED"), p.capability(config, "2"))
+        p.updateInput(input.copy(bindingGeneration = "2")); p.refresh(); runCurrent()
+        assertEquals(ProviderProbeResult.Supported, p.capability(config, "2")); assertEquals(2, calls)
+        p.close()
+    }
+
+    @Test fun explicitRetryDiscardsOldTerminalResultWhileJoiningSingleFlight() = runTest {
+        var calls = 0
+        val p = WearProviderProbe(backgroundScope, { testScheduler.currentTime }) {
+            calls++; if (calls == 1) ProviderProbeResult.Unsupported else { delay(100); ProviderProbeResult.Supported }
+        }
+        p.updateInput(input); p.refresh(); runCurrent()
+        assertEquals(ProviderProbeResult.Unsupported, p.capability(config, "1"))
+        p.refresh(true); runCurrent()
+        val joined = async { p.capability(config, "1") }; runCurrent()
+        assertFalse(joined.isCompleted)
+        advanceTimeBy(100); runCurrent()
+        assertEquals(ProviderProbeResult.Supported, joined.await()); assertEquals(2, calls)
+        p.close()
+    }
+    @Test fun chatOnlyCommandsReuseUnsupportedProofWithoutAutomaticProbeRetry() = runTest {
+        var calls = 0
+        val p = WearProviderProbe(backgroundScope, { testScheduler.currentTime }) { calls++; ProviderProbeResult.Unsupported }
+        p.updateInput(input); p.setForeground(true); runCurrent()
+        repeat(5) {
+            assertEquals(ProviderProbeResult.Unsupported, p.capability(config, "1"))
+            p.refresh(); p.setForeground(true)
+            advanceTimeBy(60000); runCurrent()
+        }
+        p.updateInput(input.copy(network = WearNetworkFacts.OFFLINE, eligible = false)); p.updateInput(input); p.refresh(); runCurrent()
+        assertEquals(1, calls)
+        assertEquals(WearProbeFailure.UNSUPPORTED_TOOLS, p.state.value.failure)
+        assertNull(p.state.value.nextRefreshAtMillis)
+        p.refresh(true); runCurrent(); assertEquals(2, calls)
+        p.updateInput(input.copy(config = config.copy(model = "explicit-new-model"))); p.refresh(); runCurrent()
+        assertEquals(3, calls)
+        assertEquals(ProviderProbeResult.Unsupported, p.capability(config.copy(model = "explicit-new-model"), "1"))
+        p.close()
+    }
     private val config = ProviderConfig(ProviderConfigId("01900000-0000-7000-8000-000000000001"), "https://provider.example/v1", "explicit-model", 2048, 512, false, true, null)
     private val input = WearProbeInput(config, "1", WearNetworkFacts(true, true, true), true)
     @Test fun singleFlightForegroundAndRepeatedRefresh() = runTest {

@@ -4,6 +4,9 @@ import dev.agenticscheduler.agent.history.ProviderConfig
 import dev.agenticscheduler.application.sync.PlatformSecretStore
 import dev.agenticscheduler.application.sync.SecretReference
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpSend
+import io.ktor.client.plugins.plugin
+import io.ktor.util.AttributeKey
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.preparePost
@@ -55,6 +58,9 @@ sealed interface ProviderProbeResult {
 
 fun interface ProviderCredentialResolver { suspend fun resolve(reference: SecretReference): String? }
 
+/** Host authorization at the credential and network boundary; null permits this exact config. */
+fun interface ProviderRequestGuard { suspend fun rejectionCode(config: ProviderConfig): String? }
+
 /** Copies a credential only for the HTTP request; never persists it in Agent state. */
 class SecretStoreProviderCredentialResolver(private val secrets: PlatformSecretStore) : ProviderCredentialResolver {
     override suspend fun resolve(reference: SecretReference): String? {
@@ -67,7 +73,17 @@ class SecretStoreProviderCredentialResolver(private val secrets: PlatformSecretS
 class OpenAiCompatibleProvider(
     private val client: HttpClient,
     private val credentials: ProviderCredentialResolver,
+    private val requestGuard: ProviderRequestGuard? = null,
 ) {
+    init {
+        if (requestGuard != null && !client.attributes.contains(SEND_GUARD_INSTALLED)) {
+            client.plugin(HttpSend).intercept { request ->
+                request.attributes.getOrNull(SEND_AUTHORIZATION)?.check?.invoke()?.let { throw RequestRejected(it) }
+                execute(request)
+            }
+            client.attributes.put(SEND_GUARD_INSTALLED, true)
+        }
+    }
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true; explicitNulls = false }
 
     suspend fun probe(config: ProviderConfig): ProviderProbeResult {
@@ -115,6 +131,7 @@ class OpenAiCompatibleProvider(
         if (config.credentialReference != null && !config.baseUrl.startsWith("https://", ignoreCase = true)) {
             return ProviderCallResult.Failure("INSECURE_CREDENTIAL_TRANSPORT")
         }
+        authorize(config)?.let { return ProviderCallResult.Failure(it) }
         val externalNames = mutableMapOf<String, String>()
         for (tool in tools) {
             val externalName = toExternalToolName(tool.name)
@@ -139,6 +156,8 @@ class OpenAiCompatibleProvider(
             return ProviderCallResult.Failure("CREDENTIAL_FAILURE")
         }
         if (config.credentialReference != null && credential == null) return ProviderCallResult.Failure("MISSING_CREDENTIAL")
+        // Credential access can suspend while the host replaces/wipes a binding or loses its route.
+        authorize(config)?.let { return ProviderCallResult.Failure(it) }
         val payload = ChatRequest(
             model = config.model,
             messages = wireMessages,
@@ -152,6 +171,7 @@ class OpenAiCompatibleProvider(
         return try {
             if (streaming) {
                 val streamed = client.preparePost(config.baseUrl.trimEnd('/') + "/chat/completions") {
+                    if (requestGuard != null) attributes.put(SEND_AUTHORIZATION, SendAuthorization { authorize(config) })
                     contentType(ContentType.Application.Json)
                     header(HttpHeaders.Accept, "text/event-stream")
                     credential?.let { header(HttpHeaders.Authorization, "Bearer $it") }
@@ -163,6 +183,7 @@ class OpenAiCompatibleProvider(
                 return restoreInternalToolNames(streamed, externalNames)
             }
             val response = client.post(config.baseUrl.trimEnd('/') + "/chat/completions") {
+                if (requestGuard != null) attributes.put(SEND_AUTHORIZATION, SendAuthorization { authorize(config) })
                 contentType(ContentType.Application.Json)
                 credential?.let { header(HttpHeaders.Authorization, "Bearer $it") }
                 setBody(json.encodeToString(ChatRequest.serializer(), payload))
@@ -176,6 +197,8 @@ class OpenAiCompatibleProvider(
                 return ProviderCallResult.Failure("MALFORMED_PROVIDER_TOOL_CALL")
             }
             restoreInternalToolNames(ProviderCallResult.Success(message), externalNames)
+        } catch (rejected: RequestRejected) {
+            ProviderCallResult.Failure(rejected.code)
         } catch (_: SerializationException) {
             ProviderCallResult.Failure("INVALID_RESPONSE")
         } catch (_: IllegalArgumentException) {
@@ -185,6 +208,14 @@ class OpenAiCompatibleProvider(
         } catch (_: Exception) {
             ProviderCallResult.Failure("NETWORK_FAILURE")
         }
+    }
+
+    private suspend fun authorize(config: ProviderConfig): String? = try {
+        requestGuard?.rejectionCode(config)
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (_: Exception) {
+        "REQUEST_AUTHORIZATION_UNAVAILABLE"
     }
 
     /**
@@ -227,6 +258,8 @@ class OpenAiCompatibleProvider(
     }.getOrDefault(false)
 
     private companion object {
+        val SEND_GUARD_INSTALLED = AttributeKey<Boolean>("AgentProviderSendGuardInstalled")
+        val SEND_AUTHORIZATION = AttributeKey<SendAuthorization>("AgentProviderSendAuthorization")
         const val MAX_EXTERNAL_TOOL_NAME_LENGTH = 128
         const val HEX_DIGITS = "0123456789abcdef"
     }
@@ -306,3 +339,6 @@ class OpenAiCompatibleProvider(
         val arguments = StringBuilder()
     }
 }
+
+private class RequestRejected(val code: String) : RuntimeException(code)
+private class SendAuthorization(val check: suspend () -> String?)

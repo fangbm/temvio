@@ -14,7 +14,11 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-/** Manual lifecycle composition, deliberately not installed into the Agent command/D8 runtime. */
+/** Ephemeral authorization identity; never a history/wire record. */
+data class WearRequestSnapshot(val binding: WearProviderBinding, val config: dev.agenticscheduler.agent.history.ProviderConfig,
+    val generation: String, val selectionGeneration: Long)
+
+/** Platform readiness composition; commands consume snapshots without mutating readiness facts. */
 class WearReadinessComposition(
     scope: CoroutineScope,
     val capability: WearCapabilityService,
@@ -27,6 +31,7 @@ class WearReadinessComposition(
     private val mutex = Mutex()
     private var binding: WearProviderBinding? = null
     private var observation: WearBindingObservation? = null
+    private var selectionGeneration = 0L
     private val probe = WearProviderProbe(scope, monotonicMillis, provider::probe)
     private val mutableReadiness = MutableStateFlow(compose())
     val readiness = mutableReadiness.asStateFlow()
@@ -39,7 +44,32 @@ class WearReadinessComposition(
     /** Main-thread passive inspection/observer registration, without permission or Provider command UI. */
     fun start() { capability.inspectCapability(); network.start() }
     /** Called explicitly on selection/config/credential/install/wipe change, including same-config revision changes. */
-    suspend fun bindingChanged(value: WearProviderBinding?) { mutex.withLock { binding = value }; refresh() }
+    suspend fun bindingChanged(value: WearProviderBinding?) {
+        mutex.withLock { if (binding != value) selectionGeneration++; binding = value }; refresh()
+    }
+    suspend fun requestSnapshot(): WearRequestSnapshot? = mutex.withLock {
+        observation = bindings.observe(binding)
+        mutableReadiness.value = compose()
+        val selected = binding ?: return@withLock null
+        val observed = observation ?: return@withLock null
+        val config = observed.config ?: return@withLock null
+        // READY permits ordinary chat; structuredCapability still returns Unsupported for chat-only leases.
+        if (!mutableReadiness.value.requestReady || mutableReadiness.value.runtimeState != WearProviderRuntimeState.READY) return@withLock null
+        WearRequestSnapshot(selected, config, observed.generation, selectionGeneration)
+    }
+    suspend fun authorizes(snapshot: WearRequestSnapshot, config: dev.agenticscheduler.agent.history.ProviderConfig): Boolean {
+        val current = requestSnapshot() ?: return false
+        return current == snapshot && config == current.config
+    }
+    suspend fun structuredCapability(snapshot: WearRequestSnapshot): ProviderProbeResult {
+        if (!authorizes(snapshot, snapshot.config)) return ProviderProbeResult.Unavailable("READINESS_CHANGED")
+        return probe.capability(snapshot.config, snapshot.generation)
+    }
+    private suspend fun authorizesProbe(config: dev.agenticscheduler.agent.history.ProviderConfig): Boolean = mutex.withLock {
+        val current = bindings.observe(binding)
+        current.config == config && WearReadiness(capability.facts.value, settings.userEnabledAiEntry.value,
+            current.facts, binding?.let { network.facts.value.reachable(it.route) } ?: false, null).requestReady
+    }
     suspend fun refresh(explicitRetry: Boolean = false) = mutex.withLock {
         observation = bindings.observe(binding)
         mutableReadiness.value = compose()
@@ -73,16 +103,23 @@ class WearReadinessComposition(
                 { RoomLocalEnrollmentRepository(database).states().filterIsInstance<LocalEnrollmentState.Active>().any { it.deviceId == target } },
                 settings::isCredentialFreeBindingApproved)
             // Resolve immediately before HTTPS auth; recheck current approval/ownership/wipe.
+            lateinit var composition: WearReadinessComposition
             val provider = OpenAiCompatibleProvider(client, ProviderCredentialResolver { ref ->
                 val local = state.providerConfigs().singleOrNull { it.credentialReference == ref } ?: return@ProviderCredentialResolver null
                 val active = target?.let { revisions.state(it, local.id.value)?.activeBinding } ?: return@ProviderCredentialResolver null
                 val observation = source.observe(WearProviderBinding(active, WearEndpointRoute.PUBLIC_HTTPS))
                 if (!observation.facts.providerReady) return@ProviderCredentialResolver null
                 val bytes = secrets.readProviderSecret(ref) ?: return@ProviderCredentialResolver null
-                try { bytes.decodeToString() } finally { bytes.fill(0) }
+                try {
+                    val afterRead = source.observe(WearProviderBinding(active, WearEndpointRoute.PUBLIC_HTTPS))
+                    if (afterRead != observation || !afterRead.facts.providerReady) null else bytes.decodeToString()
+                } finally { bytes.fill(0) }
+            }, ProviderRequestGuard { config ->
+                if (state.selectedProviderConfigId() == config.id && composition.authorizesProbe(config)) null else "READINESS_CHANGED"
             })
-            return WearReadinessComposition(scope, WearCapabilityService(AndroidWearSpeechPlatform(context, requestMicrophoneFromUserAction), languageTag),
+            composition = WearReadinessComposition(scope, WearCapabilityService(AndroidWearSpeechPlatform(context, requestMicrophoneFromUserAction), languageTag),
                 settings, WearNetworkObserver(context), source, provider, SystemClock::elapsedRealtime)
+            return composition
         }
         fun newProviderHttpClient() = HttpClient(Android) { followRedirects = false }
     }
