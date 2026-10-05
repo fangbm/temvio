@@ -1,7 +1,7 @@
 # Agentic Scheduler — Open Decisions Register
 
 > Status: **Mandatory Decision Register**  
-> Updated: 2026-10-04
+> Updated: 2026-10-06
 > Purpose: ensure an undecided architecture choice is never mistaken for permission to guess.
 
 A `PENDING` item means contributors MUST NOT choose that architecture/security behavior on their own. `RESOLVED` decisions are frozen by the cited source. `DEFERRED` features are intentionally outside the current implementation gate.
@@ -470,20 +470,74 @@ Source: docs/AGENT_DECISIONS.md AGT-007
 ## OD-060 — Shared UI state/navigation architecture
 
 ```text
-Status: PENDING
-Current default: minimal Compose state + constructor/manual dependency composition;
-                 no project-wide framework introduction.
-Must resolve by: if feature complexity requires a shared framework.
+Status: RESOLVED FOR D10
+Decision: project-owned typed presentation/state architecture with Compose and
+          explicit screen coordinators; platform-owned typed destinations and
+          back-stacks; existing manual/platform composition remains.
+          No project-wide Redux/MVI/MVVM/navigation/DI framework or service locator.
+          Thin :shared:ui is the approved canonical design-system target;
+          creation/dependency/target details belong to D10-01.
+          Presentation only: no repositories/Room/network/Provider/Agent runtime,
+          Planner execution/business writes/secrets/lifecycle/navigation authority.
+Source: maintainer D10-00 review acceptance;
+        docs/tasks/D10_00_PRODUCT_UI_ARCHITECTURE_FREEZE.md §§3–6
 ```
+
+The target is **ACCEPTED / RESOLVED FOR D10**. D10-00 is **FROZEN / MAINTAINER
+APPROVED / AWAITING MERGE**. No `:shared:ui` or navigation implementation is
+created by this docs-only resolution; D10-00A and D10-01 remain unstarted.
 
 ## OD-061 — Calendar rendering
 
 ```text
-Status: RESOLVED FOR D5 AGENDA/DAY
-Decision: semantic projection in :shared:application; platform Compose rendering;
-          viewport-bounded lazy Agenda/Day; no shared UI module.
-Source: docs/CALENDAR_DECISIONS.md
+Status: RESOLVED FOR D5 AGENDA/DAY + D10 WEEK/MONTH RENDERING
+D5 decision (preserved): semantic projection in :shared:application;
+          platform Compose rendering; viewport-bounded lazy Agenda/Day;
+          no shared UI module in D5.
+D10 extension: existing authoritative Calendar projection and explicit finite
+          CalendarViewports; Week at most seven dates; Month at most 42 cells;
+          distinct AllDay/DateOnly/Floating display; bounded summaries/overflow
+          detail; compose visible cells/rows only; accessible/list alternatives.
+          No UI recurrence or conflict-truth recomputation, no Calendar
+          Domain/Application semantic change.
+Source: docs/CALENDAR_DECISIONS.md (D5);
+        maintainer D10-00 review acceptance;
+        docs/tasks/D10_00_PRODUCT_UI_ARCHITECTURE_FREEZE.md §8 (D10 extension)
 ```
+
+The D10 presentation extension is accepted. D10-02 rendering tests must cover
+DST, cross-midnight, long titles, large bounded fixture counts and semantic type
+labels. This records a later extension without rewriting the historical D5 decision.
+
+## OD-062 — D10 Academic Authoring
+
+```text
+Status: RESOLVED FOR D10 / OPTION B
+Decision: separately reviewed D10-00A Academic Authoring Foundation before
+          D10-01 and product Academic UI authoring; no UI repository upserts.
+Impact: APPLICATION BOUNDARY / AUDIT / SYNC / PRODUCT SCOPE
+Source: maintainer D10-00 review acceptance;
+        docs/tasks/D10_00_PRODUCT_UI_ARCHITECTURE_FREEZE.md §13
+        docs/D10_CAPABILITY_INVENTORY.md §3
+```
+
+The audited D9 closure baseline has Course/Exam read/persistence, typed D7
+mutations and D8 receive/conflict-resolution support, but no dedicated local
+Course/Exam create/edit application command. Repository upsert is not authoring.
+
+Maintainer selected **B**; the read-only alternative A was not selected.
+D10-00A first audits the minimum usable academic prerequisite graph, including
+as applicable AcademicYear/Semester, Course, CourseScheduleRule/schedule authoring,
+Exam and required PeriodTemplate relationships, with explicit validation and
+cross-entity constraints. No silent Semester/AcademicYear/default timetable synthesis.
+
+Use production ID generation, application commands/services, MutationCoordinator,
+typed D7 mutations/ChangeLog, existing D8 write/conflict policy and deterministic
+validation, with real persistence/integration tests. UI calls those legitimate
+boundaries only. D10-00A remains unstarted in this PR and needs separate review.
+This decision does not automatically authorize academic deletion, new Undo support,
+new Agent Tools, wire DTOs, merge semantics or Domain changes; escalate separately
+if implementation proves they are required.
 
 ---
 
