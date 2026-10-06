@@ -178,6 +178,19 @@ jobs:
         run: .\gradlew.bat :apps:desktop:createDistributable --no-daemon
       - name: Verify Windows DPAPI secure store
         run: .\gradlew.bat :shared:application:desktopTest --tests "*DesktopPlatformSecureStoreTest" --no-daemon
+      - name: Verify Windows presentation and capture synthetic Compose fixtures
+        run: .\gradlew.bat :shared:ui:desktopTest :apps:desktop:test --no-daemon
+      - name: Upload Windows presentation candidates and reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d10-windows-presentation
+          path: |
+            apps/desktop/build/d10-01/screenshots/*.png
+            apps/desktop/build/test-results/test/*.xml
+            shared/ui/build/test-results/desktopTest/*.xml
+          if-no-files-found: warn
+          retention-days: 14
       - name: Upload Windows Desktop dogfood app
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4

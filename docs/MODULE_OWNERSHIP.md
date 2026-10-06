@@ -14,6 +14,8 @@ This document is about **ownership**, not just directory names. If a coding agen
 :shared:application
 :shared:planner
 :shared:sync
+:shared:agent
+:shared:ui
 :shared:database
 :server:sync
 :apps:android
@@ -49,17 +51,18 @@ Platform Apps
 
 Future Agent modules remain higher-level consumers of Domain/Application/Planner/Sync contracts rather than dependencies of `shared:domain`.
 
-### D10-00 presentation target (no module created)
+### D10 presentation ownership
 
 [D10-00](tasks/D10_00_PRODUCT_UI_ARCHITECTURE_FREEZE.md) records the current
 maintainer-authorized OD-060 target: platform-owned typed navigation, explicit
 screen coordinators and manual/platform composition. Maintainer review passed;
-the packet is FROZEN / MAINTAINER APPROVED / AWAITING MERGE.
+the packet is FROZEN / MAINTAINER APPROVED / MERGED (PR #30).
 The audited repository also contains `:shared:agent`, authorized by AGT-001;
 the older baseline sketch above does not move its ownership into Domain.
 
-The approved canonical design-system target is a thin `:shared:ui`;
-creation/dependency/target details remain D10-01 implementation work.
+The approved canonical design-system is a thin `:shared:ui`, created in
+[D10-01](tasks/D10_01_DESIGN_SYSTEM_APP_SHELL.md) for Android and Desktop using
+the existing toolchain pins and Compose presentation dependencies only.
 It owns tokens/themes,
 presentation-only immutable display models, explicit formatting/accessibility
 helpers and Android/Desktop Compose primitives. Wear keeps platform components
