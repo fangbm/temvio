@@ -18,13 +18,38 @@ import java.io.File
 class AppShellInstrumentedTest {
     @get:Rule val compose=createComposeRule()
 
-    @Test fun typedBackStackDoesNotExecuteAnIntent() {
+    @Test fun primarySelectionReplacesHistoryAndMoreOwnsItsSecondaryRoutes() {
         val nav=AndroidNavigation()
         check(!nav.canGoBack)
-        nav.open(AndroidDestination.MORE); nav.open(AndroidDestination.PROVIDER)
-        check(nav.back()); check(nav.current==AndroidDestination.MORE)
-        check(nav.back()); check(nav.current==AndroidDestination.TODAY)
-        check(!nav.back())
+        AndroidDestination.primary.forEach { primary ->
+            nav.open(primary); nav.open(primary)
+            check(nav.current==primary); check(!nav.canGoBack); check(!nav.back())
+        }
+        AndroidDestination.entries.filter { it !in AndroidDestination.primary }.forEach { secondary ->
+            nav.open(secondary); nav.open(secondary)
+            check(nav.current==secondary); check(nav.canGoBack)
+            check(nav.back()); check(nav.current==AndroidDestination.MORE); check(!nav.back())
+            AndroidDestination.primary.forEach { primary ->
+                nav.open(secondary); nav.open(primary)
+                check(nav.current==primary); check(!nav.canGoBack); check(!nav.back())
+            }
+        }
+    }
+
+    @Test fun systemBackReturnsFromMoreSecondaryAndPrimarySwitchLeavesIt() = fixture { f, _ ->
+        val nav=AndroidNavigation()
+        compose.setContent { AndroidApp(f.reads,f.planner,f.profileSettings,f.eventEditor,f.taskEditor,
+            f.agent,f.run,f.secrets,f.enrollments,f.ids,f.conversationSettings,null,{},
+            AndroidScheduleScreenCoordinator(f.reads,f.date,f.zone),nav,false) }
+        openPrimary("MORE")
+        compose.onNodeWithText("Courses").performScrollTo().performClick()
+        compose.runOnIdle { check(nav.current==AndroidDestination.COURSES) }
+        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK)
+        compose.runOnIdle { check(nav.current==AndroidDestination.MORE); check(!nav.canGoBack) }
+        compose.onNodeWithText("Courses").performScrollTo().performClick()
+        openPrimary("TODAY")
+        compose.runOnIdle { check(nav.current==AndroidDestination.TODAY); check(!nav.canGoBack) }
+        check(f.providerRequests==0)
     }
 
     @Test fun agentDraftSurvivesNavigationAndThemeWithoutSending() = fixture { f, _ ->

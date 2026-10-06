@@ -29,11 +29,21 @@ Neutral Light/deep neutral Dark, restrained teal accent, crisp hierarchy. Semant
 surface/container/elevated/selected, text/secondary/muted, border/strong/focus,
 accent/success/warning/danger/conflict and six entity roles. Labels accompany color.
 Ordered spacing, restrained radii/elevation, readable widths, no decorative motion.
+Explicit `ActionRole` hierarchy: PRIMARY filled, SECONDARY outlined, TERTIARY
+text. Today/Calendar day navigation is tertiary, New Event primary, New Task
+secondary. Roles retain shared theme colors, focus and >=48dp targets.
+`ElevationRole`: FLAT 0dp, RAISED 2dp, OVERLAY 6dp; layering only.
+`MotionRole`: IMMEDIATE 0ms, SHORT 120ms, STANDARD 200ms; explicit no-motion
+override returns 0ms. These are presentation tokens, not newly enabled animation.
 
 Desktop destinations: Today, Calendar, Tasks, Courses, Exams, Planner, Agent,
 History, Insights, Settings. Android primary: Today, Calendar, Tasks, Agent, More;
 More exposes Courses, Exams, Planner, History, Insights, Sync/Security, Provider,
-Settings. Platform enums/back-stacks own navigation. Global Agent only opens it.
+Settings. Desktop destinations and Android's five primary destinations select a
+primary position, never accumulated history. Android secondary destinations
+have the typed path More -> secondary; Back returns to More. A primary selection
+leaves any secondary path. No fake detail route is introduced. Platform enums
+own navigation and the secondary back-stack. Global Agent only opens it.
 
 Desktop width classes: <900, 900–1439, >=1440. Android: <600, 600–839, >=840;
 height <480 uses one pane. Resize/theme/navigation must retain session drafts,
@@ -103,11 +113,17 @@ python test-support/d10-01/compare-captures.py --reference docs/tasks/fixtures/d
 git diff --check
 ```
 
-- Full local build: SUCCESS, 464 tasks (17 executed, 447 up-to-date on final build).
-- Targeted JVM: shared UI 2/2; Desktop 9/9 (6 new shell/actual Compose tests,
+- Initial full local build: SUCCESS on reviewed head `eecdaa6`, 464 tasks.
+- Review follow-up targeted JVM: shared UI 3/3; Desktop 10/10 (7 shell/actual Compose tests,
   3 retained Planner/Agent-control tests). Zero failures/skips in these sets.
-- Android native instrumentation: 3/3, zero failures/skips. Navigation/draft/theme,
+- Review follow-up Android native instrumentation: 4/4, zero failures/skips. Navigation/draft/theme,
   typed back-stack and actual Android Compose Light/Dark captures executed.
+- Primary selection tests cover every current Desktop destination and all five
+  Android primary destinations. Every More secondary returns to More, and every
+  primary leaves a secondary route. Native KEYCODE_BACK dispatch verifies the
+  actual BackHandler path. Desktop has no Back control after primary switching.
+  Both themes verify shared day-action roles and >=48dp targets. Token tests
+  verify restrained elevation/durations and explicit no-motion behavior.
 - The first rerun at 200% font found the test clicking an offscreen navigation
   control. It now scrolls to that control before clicking; the final run passed
   at that same 200% configuration.
@@ -134,6 +150,10 @@ retained unchanged.
 32 selected PNGs, SHA256 hashes, fixed inputs and actual platform renderers.
 The full generated matrix is 36 Desktop + 36 Android images. Core evidence is
 Light/Dark Today/Calendar/Agent at Desktop 1024×900 and Android 360×800.
+The focused review follow-up regenerates this same matrix. Desktop and Android
+Light/Dark Today and Calendar were each inspected; primary navigation no longer
+creates history, and day/creation actions have explicit visual hierarchy.
+Repeat rendering matches all 32 selected candidate hashes on the same platforms.
 Additional selected Today/Agent images cover Desktop 640×720, 1280×900,
 1440×960, 1920×1080 and 640×900 at 200%; Android 480×900, 600×960, 840×900,
 800×360 and 360×800 at 200%. Boundary tests cover 599/600, 839/840, 899/900,

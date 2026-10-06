@@ -112,10 +112,10 @@ internal fun DesktopApp(
                         }
                         item {
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Button(onClick = { selectedDate = selectedDate.plus(-1, DateTimeUnit.DAY) }) { Text("Previous day") }
-                                Button(onClick = { selectedDate = selectedDate.plus(1, DateTimeUnit.DAY) }) { Text("Next day") }
+                                Button(role = ActionRole.TERTIARY, onClick = { selectedDate = selectedDate.plus(-1, DateTimeUnit.DAY) }) { Text("Previous day") }
+                                Button(role = ActionRole.TERTIARY, onClick = { selectedDate = selectedDate.plus(1, DateTimeUnit.DAY) }) { Text("Next day") }
                                 Button(onClick = { creatingEvent = true }) { Text("New Event") }
-                                Button(onClick = { creatingTask = true }) { Text("New Task") }
+                                Button(role = ActionRole.SECONDARY, onClick = { creatingTask = true }) { Text("New Task") }
                             }
                         }
                         item { SectionHeading("All-day / date-only", "Dates retain their original semantic type.") }

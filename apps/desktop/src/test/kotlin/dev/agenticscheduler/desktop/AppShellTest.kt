@@ -20,11 +20,14 @@ import androidx.compose.ui.graphics.asSkiaBitmap
 
 @OptIn(ExperimentalTestApi::class)
 class AppShellTest {
-    @Test fun typedNavigationIsIdempotentAndBackIsExplicit() {
+    @Test fun primarySelectionsNeverBecomeBackHistory() {
         val nav=DesktopNavigation()
         check(nav.current==DesktopDestination.TODAY)
-        nav.open(DesktopDestination.AGENT); nav.open(DesktopDestination.AGENT)
-        check(nav.back()); check(nav.current==DesktopDestination.TODAY); check(!nav.back())
+        DesktopDestination.entries.forEach { destination ->
+            nav.open(destination); nav.open(destination)
+            check(nav.current==destination); check(!nav.canGoBack)
+            check(!nav.back()); check(nav.current==destination)
+        }
     }
 
     @Test fun navigationAndThemeNeverSendAndAgentDraftSurvives() = fixture { f ->
@@ -45,6 +48,7 @@ class AppShellTest {
             runOnIdle { width=1024f }
             onNodeWithText("Do not send this draft").assertExists()
             onNodeWithTag("desktop-nav-AGENT").assertIsSelected()
+            onNodeWithText("Back").assertDoesNotExist()
             check(f.providerRequests==0)
         }
     }
@@ -108,6 +112,25 @@ class AppShellTest {
             onNodeWithText("Discard draft").performClick()
             onNodeWithText("Uncommitted draft").assertDoesNotExist()
             runBlocking { check(f.journal.timeline().size==4) }
+        }
+    }
+
+    @Test fun dayActionsUseSharedHierarchyAndFullTargetsInBothThemes() = fixture { f ->
+        for (dark in listOf(false,true)) runDesktopComposeUiTest(width=1024,height=900) {
+            val nav=DesktopNavigation()
+            setContent { DesktopApp(f.reads,f.planner,f.profileSettings,f.eventEditor,f.taskEditor,null,{},
+                f.run,f.agent,f.secrets,f.enrollments,f.ids,f.conversationSettings,
+                DesktopScheduleScreenCoordinator(f.reads,f.date,f.zone),nav,dark) }
+            for (destination in listOf(DesktopDestination.TODAY,DesktopDestination.CALENDAR)) {
+                runOnIdle { nav.open(destination) }
+                waitUntil(timeoutMillis=10000) { onAllNodesWithTag("schedule-ready").fetchSemanticsNodes().isNotEmpty() }
+                listOf("Previous day" to ActionRole.TERTIARY,"Next day" to ActionRole.TERTIARY,
+                    "New Event" to ActionRole.PRIMARY,"New Task" to ActionRole.SECONDARY).forEach { (label,role) ->
+                    onNodeWithText(label).assert(SemanticsMatcher.expectValue(ActionRoleKey,role)).assertHeightIsAtLeast(48.dp)
+                }
+                onNodeWithText("Back").assertDoesNotExist()
+            }
+            check(f.providerRequests==0)
         }
     }
 

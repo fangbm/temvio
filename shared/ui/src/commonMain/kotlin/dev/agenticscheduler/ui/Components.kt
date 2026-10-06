@@ -12,14 +12,27 @@ import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+enum class ActionRole { PRIMARY, SECONDARY, TERTIARY }
+val ActionRoleKey = SemanticsPropertyKey<ActionRole>("TemvioActionRole")
+
 @Composable
 fun ActionButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true,
+    role: ActionRole = ActionRole.PRIMARY,
     content: @Composable RowScope.() -> Unit) {
     var focused by remember { mutableStateOf(false) }
     val c = LocalTemvioColors.current
-    Button(onClick = onClick, modifier = modifier.heightIn(min = 48.dp).onFocusChanged { focused = it.isFocused }
-        .then(if (focused) Modifier.border(2.dp, c.text, RoundedCornerShape(8.dp)) else Modifier), enabled = enabled,
-        shape = RoundedCornerShape(8.dp), content = content)
+    val actionModifier = modifier.heightIn(min = TemvioSpace.target)
+        .semantics { this[ActionRoleKey] = role }.onFocusChanged { focused = it.isFocused }
+        .then(if (focused) Modifier.border(2.dp, c.text, RoundedCornerShape(8.dp)) else Modifier)
+    when (role) {
+        ActionRole.PRIMARY -> Button(onClick = onClick, modifier = actionModifier, enabled = enabled,
+            shape = RoundedCornerShape(8.dp), content = content)
+        ActionRole.SECONDARY -> OutlinedButton(onClick = onClick, modifier = actionModifier, enabled = enabled,
+            shape = RoundedCornerShape(8.dp), border = BorderStroke(1.dp, c.strongBorder),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = c.accent), content = content)
+        ActionRole.TERTIARY -> TextButton(onClick = onClick, modifier = actionModifier, enabled = enabled,
+            shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.textButtonColors(contentColor = c.secondary), content = content)
+    }
 }
 
 @Composable
@@ -33,7 +46,8 @@ fun SectionHeading(title: String, detail: String? = null) {
 @Composable
 fun PresentationCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     Surface(modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp),
-        color = LocalTemvioColors.current.elevated, border = BorderStroke(1.dp, LocalTemvioColors.current.border)) {
+        color = LocalTemvioColors.current.elevated, shadowElevation = ElevationRole.FLAT.shadowElevation,
+        border = BorderStroke(1.dp, LocalTemvioColors.current.border)) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
     }
 }

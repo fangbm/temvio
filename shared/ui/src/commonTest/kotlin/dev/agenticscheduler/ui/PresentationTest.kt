@@ -2,6 +2,7 @@ package dev.agenticscheduler.ui
 
 import kotlin.test.*
 import kotlin.math.pow
+import androidx.compose.ui.unit.dp
 
 class PresentationTest {
     @Test fun responsiveBoundaries() {
@@ -27,6 +28,8 @@ class PresentationTest {
             listOf(c.surface,c.container,c.elevated,c.selected).forEach { bg ->
                 listOf(c.text,c.secondary,c.muted).forEach { assertTrue(contrast(it,bg)>=4.5, "Text contrast $it on $bg") }
                 assertTrue(contrast(c.focus,bg)>=3, "Focus contrast")
+                assertTrue(contrast(c.strongBorder,bg)>=3, "Secondary control outline contrast")
+                assertTrue(contrast(c.accent,bg)>=4.5, "Secondary action text contrast")
             }
             listOf(c.event,c.task,c.course,c.exam,c.focusBlock,c.agent,c.success,c.warning,c.danger,c.conflict).forEach {
                 assertTrue(contrast(it,c.elevated)>=4.5, "Semantic label contrast")
@@ -34,5 +37,11 @@ class PresentationTest {
         }
         assertEquals(6, EntityKind.entries.map { it.label }.toSet().size)
         assertEquals("FocusBlock", EntityKind.FOCUS_BLOCK.label)
+    }
+    @Test fun restrainedElevationAndMotionRolesHaveExplicitNoMotionOverride() {
+        assertEquals(listOf(0.dp,2.dp,6.dp),ElevationRole.entries.map { it.shadowElevation })
+        assertEquals(listOf(0,120,200),MotionRole.entries.map { it.durationMillis() })
+        MotionRole.entries.forEach { assertEquals(0,it.durationMillis(noMotion=true)) }
+        assertEquals(3,ActionRole.entries.size)
     }
 }

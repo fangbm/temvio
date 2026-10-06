@@ -21,11 +21,15 @@ enum class AndroidDestination(val label: String) {
     companion object { val primary = listOf(TODAY, CALENDAR, TASKS, AGENT, MORE) }
 }
 class AndroidNavigation {
-    private val stack = mutableStateListOf(AndroidDestination.TODAY)
+    private var stack by mutableStateOf(listOf(AndroidDestination.TODAY))
     val current: AndroidDestination get() = stack.last()
     val canGoBack: Boolean get() = stack.size > 1
-    fun open(destination: AndroidDestination) { if (current != destination) stack.add(destination) }
-    fun back(): Boolean = if (canGoBack) { stack.removeAt(stack.lastIndex); true } else false
+    fun open(destination: AndroidDestination) {
+        // A primary replaces the selection; current secondary destinations all belong to More.
+        stack = if (destination in AndroidDestination.primary) listOf(destination)
+            else listOf(AndroidDestination.MORE, destination)
+    }
+    fun back(): Boolean = if (canGoBack) { stack = stack.dropLast(1); true } else false
 }
 
 @Composable

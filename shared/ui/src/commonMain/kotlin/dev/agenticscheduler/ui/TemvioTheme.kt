@@ -5,6 +5,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -36,6 +37,14 @@ val DarkTemvioColors = TemvioColors(
     Color(0xFFBACCDD), Color(0xFF81D8C4),
 )
 val LocalTemvioColors = staticCompositionLocalOf { LightTemvioColors }
+/** Visual layering only; elevation carries no business authority. */
+enum class ElevationRole(val shadowElevation: Dp) { FLAT(0.dp), RAISED(2.dp), OVERLAY(6.dp) }
+
+/** Duration vocabulary, not an animation scheduler. Platforms supply no/reduced-motion facts. */
+enum class MotionRole(private val nominalDurationMillis: Int) {
+    IMMEDIATE(0), SHORT(120), STANDARD(200);
+    fun durationMillis(noMotion: Boolean = false): Int = if (noMotion) 0 else nominalDurationMillis
+}
 object TemvioSpace {
     val small = 8.dp; val medium = 16.dp; val large = 24.dp; val section = 32.dp
     val readingWidth = 1040.dp; val formWidth = 640.dp; val target = 48.dp

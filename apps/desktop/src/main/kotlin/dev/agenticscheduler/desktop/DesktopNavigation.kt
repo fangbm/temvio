@@ -20,11 +20,12 @@ enum class DesktopDestination(val label: String) {
 
 /** Session navigation only. No service or command is executed on a transition. */
 class DesktopNavigation {
-    private val stack = mutableStateListOf(DesktopDestination.TODAY)
-    val current: DesktopDestination get() = stack.last()
-    val canGoBack: Boolean get() = stack.size > 1
-    fun open(destination: DesktopDestination) { if (current != destination) stack.add(destination) }
-    fun back(): Boolean = if (stack.size > 1) { stack.removeAt(stack.lastIndex); true } else false
+    // Every current destination is primary. Detail/form routes are a later typed graph.
+    private var primary by mutableStateOf(DesktopDestination.TODAY)
+    val current: DesktopDestination get() = primary
+    val canGoBack: Boolean get() = false
+    fun open(destination: DesktopDestination) { primary = destination }
+    fun back(): Boolean = false
 }
 
 @Composable
