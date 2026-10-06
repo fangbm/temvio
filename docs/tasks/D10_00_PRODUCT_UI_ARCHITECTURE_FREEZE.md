@@ -1,7 +1,8 @@
 # D10-00 — Product / Information Architecture / UI Architecture Freeze
 
-Status: **FROZEN / MAINTAINER APPROVED / AWAITING MERGE**.
-Task: **D10-00 architecture review passed**; PR remains Draft.
+Status: **FROZEN / MAINTAINER APPROVED / MERGED**.
+Task: **D10-00 architecture review passed**; [PR #30](https://github.com/fangbm/temvio/pull/30)
+merged as `f8efbde97e185cbcaf704f5a487538cf147b034d`.
 Date: 2026-10-06.
 Baseline: `feature/d9-02-agent-sync`, `378630cb63447443b02cae4599845b06c9353b5b`
 ([D9 final closure PR #29](https://github.com/fangbm/temvio/pull/29)).
@@ -9,7 +10,9 @@ Delivery branch: `docs/d10-00-product-ui-architecture-freeze`.
 
 This packet records the maintainer-approved presentation target and final
 D10-00 review decisions. It implements no UI. Execution order is
-**D10-00 -> D10-00A -> D10-01 -> D10-02...**; D10-00A and D10-01 remain unstarted.
+**D10-00 -> D10-00A -> D10-01 -> D10-02...**. D10-00A was unstarted at this
+freeze; its separately reviewed [authoring task](D10_00A_ACADEMIC_AUTHORING_FOUNDATION.md)
+now owns that implementation. D10-01 remains unstarted.
 Passing CI is documentation
 validation and predecessor regression evidence, not final product/visual acceptance.
 
@@ -491,8 +494,8 @@ packet performs no extraction.
 
 | Slice | Scope / dependency gate |
 | --- | --- |
-| D10-00 | This docs-only freeze; FROZEN / MAINTAINER APPROVED / AWAITING MERGE |
-| D10-00A | Separately reviewed Academic Authoring Foundation selected by OD-062 Option B; unstarted, precedes D10-01 |
+| D10-00 | This docs-only freeze; FROZEN / MAINTAINER APPROVED / MERGED PR #30 `f8efbde` |
+| D10-00A | Separately reviewed Academic Authoring Foundation selected by OD-062 Option B; unstarted at freeze, current status in its task, precedes D10-01 |
 | D10-01 | Design System + App Shell; after D10-00 and accepted D10-00A; implement approved thin shared UI target, dependency/target/capture details |
 | D10-02 | Today / Calendar / Tasks / Academic; after shell and academic foundation; follow accepted OD-061 Week/Month rendering extension |
 | D10-03 | Planner / History / Sync / Settings; after shell and relevant projections/navigation, preserving earlier semantic services |
@@ -537,9 +540,9 @@ Android/Wear emulator acceptance is required for this packet.
 
 Maintainer architecture review passed: OD-060 and the thin shared-UI target
 accepted, OD-061 D10 rendering extension accepted, OD-062 resolved Option B.
-D10-00 is **FROZEN / MAINTAINER APPROVED / AWAITING MERGE**. No remaining
-decision blocker was identified for D10-00. D10-00A and D10-01 remain unstarted;
-their separately reviewed tasks own implementation details and acceptance.
+D10-00 is **FROZEN / MAINTAINER APPROVED / MERGED**. No remaining
+decision blocker was identified for D10-00. D10-00A and D10-01 were unstarted at
+freeze; their separately reviewed tasks own implementation details and acceptance.
 
 Scope fences: no Domain/Planner/D7/D8/D9/provisioning/Tool/policy changes, no
 V3/Envelope/AAD/server/crypto change, no Room migration, no automatic Agent replay,

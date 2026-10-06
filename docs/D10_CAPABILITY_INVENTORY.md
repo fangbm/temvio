@@ -4,7 +4,15 @@ Status: **AUDITED / D10-00 MAINTAINER APPROVED**. Date: 2026-10-06.
 Baseline: `feature/d9-02-agent-sync`, `378630cb63447443b02cae4599845b06c9353b5b`
 ([PR #29](https://github.com/fangbm/temvio/pull/29) merged).
 Approved architecture: [D10-00 freeze packet](tasks/D10_00_PRODUCT_UI_ARCHITECTURE_FREEZE.md),
-FROZEN / MAINTAINER APPROVED / AWAITING MERGE. No implementation changes.
+FROZEN / MAINTAINER APPROVED / MERGED (PR #30, `f8efbde`). This inventory's
+tables retain the audited D9 baseline; no implementation was part of D10-00.
+
+Current foundation follow-up: [D10-00A Academic Authoring Foundation](tasks/D10_00A_ACADEMIC_AUTHORING_FOUNDATION.md)
+adds typed local Year/Semester/Template/Course/Rule/Exam commands and conflict-aware
+loads for separate review. The historical `REQUIRES_FOUNDATION`/unstarted entries
+below describe the D10-00 audit, not the current slice's implementation status.
+Product academic UI remains unimplemented; frontend consumers must use the
+reviewed Application boundary rather than repository writes.
 
 This is a source audit, not a new running-app, screenshot, accessibility or device
 acceptance claim. Earlier acceptance remains in its original records. A persisted
