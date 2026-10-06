@@ -13,6 +13,7 @@ kotlin {
 }
 
 dependencies {
+    implementation(project(":shared:ui"))
     implementation(project(":shared:domain"))
     implementation(project(":shared:application"))
     implementation(project(":shared:database"))
@@ -24,7 +25,10 @@ dependencies {
     testImplementation(compose.desktop.uiTestJUnit4)
     testImplementation(compose.desktop.currentOs)
     testImplementation(libs.androidx.room3.runtime)
+    testImplementation(libs.ktor.client.mock)
 }
+
+sourceSets.test { kotlin.srcDir(rootProject.file("test-support/d10-01")) }
 
 compose.desktop {
     application {

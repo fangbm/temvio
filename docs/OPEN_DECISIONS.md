@@ -487,7 +487,7 @@ The target is **ACCEPTED / RESOLVED FOR D10**. D10-00 is **FROZEN / MAINTAINER
 APPROVED / MERGED** (PR #30, `f8efbde`). No `:shared:ui` or navigation implementation
 was created by this docs-only resolution. D10-00A now has a separate
 [authoring implementation review](tasks/D10_00A_ACADEMIC_AUTHORING_FOUNDATION.md);
-D10-01 remains unstarted.
+D10-01 now has a separate [shell implementation review](tasks/D10_01_DESIGN_SYSTEM_APP_SHELL.md).
 
 ## OD-061 — Calendar rendering
 

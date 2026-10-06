@@ -18,9 +18,11 @@ android {
         manifestPlaceholders["d8SyncAccountId"] = providers.gradleProperty("d8SyncAccountId").orElse("").get()
     }
     sourceSets.getByName("androidTest").kotlin.directories.add(rootProject.file("test-support/d9-02-05").absolutePath)
+    sourceSets.getByName("androidTest").kotlin.directories.add(rootProject.file("test-support/d10-01").absolutePath)
 }
 
 dependencies {
+    implementation(project(":shared:ui"))
     implementation(project(":shared:domain"))
     implementation(project(":shared:application"))
     implementation(project(":shared:database"))
@@ -33,6 +35,7 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.room3.runtime)
+    androidTestImplementation(libs.ktor.client.mock)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
