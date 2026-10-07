@@ -1,5 +1,9 @@
 package dev.agenticscheduler.android
 
+import dev.agenticscheduler.presentation.*
+import dev.agenticscheduler.application.academic.AcademicAuthoringService
+import androidx.compose.runtime.LaunchedEffect
+
 import androidx.compose.ui.platform.testTag
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -18,8 +22,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import dev.agenticscheduler.application.calendar.CalendarItem
-import dev.agenticscheduler.application.calendar.CalendarViewport
 import dev.agenticscheduler.application.editing.EventEditingService
 import dev.agenticscheduler.application.editing.TaskEditingService
 import dev.agenticscheduler.application.history.ConflictAwareRead
@@ -34,11 +36,12 @@ import dev.agenticscheduler.agent.history.AgentStateRepository
 import dev.agenticscheduler.agent.runtime.AgentRunService
 import dev.agenticscheduler.application.sync.AgentConversationSyncSettings
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 
 @Composable
 internal fun AndroidApp(
@@ -59,38 +62,34 @@ internal fun AndroidApp(
     navigationSession: AndroidNavigation? = null,
     initialDark: Boolean? = null,
     providerProbes: ProviderProbePresentation? = null,
+    academicService: AcademicAuthoringService? = null,
+    coreSession: CoreScreenCoordinator? = null,
+    academicSession: AcademicScreenCoordinator? = null,
+    presentationNow: kotlin.time.Instant? = null,
 ) {
     val schedule = scheduleSession ?: remember(reads) {
         val zone = TimeZone.currentSystemDefault()
         AndroidScheduleScreenCoordinator(reads, Clock.System.now().toLocalDateTime(zone).date, zone)
     }
+    val core = coreSession ?: remember { CoreScreenCoordinator() }
+    val academic = academicSession ?: academicService?.let { remember(it) { AcademicScreenCoordinator(it, eventEditor) } }
+    val navigation = navigationSession ?: remember { AndroidNavigation() }
+    val now = presentationNow ?: Clock.System.now()
+    LaunchedEffect(navigation.current) { core.selection = null; core.expandedDate = null }
     val displayTimeZone = schedule.displayTimeZone
     var selectedDate by schedule.selectedDate
     var editingEvent by schedule.editingEvent
     var editingTask by schedule.editingTask
     var creatingEvent by schedule.creatingEvent
     var creatingTask by schedule.creatingTask
-    val viewport = remember(selectedDate, displayTimeZone) {
-        CalendarViewport(selectedDate, selectedDate.plus(1, DateTimeUnit.DAY), displayTimeZone)
-    }
+    val viewport = remember(selectedDate, displayTimeZone, core.mode, navigation.current) { calendarViewport(selectedDate, if (navigation.current == AndroidDestination.CALENDAR) core.mode else CalendarMode.DAY, displayTimeZone) }
     // Capture one immutable frame value; deferred lazy content must not reread a moving delegate.
-    val projectionRead = remember(reads, viewport) { schedule.calendar(viewport) }.collectAsState(initial = null).value
-    val projection = projectionRead ?: emptyProjection()
-    val taskRead by remember(reads) { schedule.tasks() }.collectAsState(ConflictAwareRead.Projected(emptyList<Task>().toImmutableList()))
-    val focusRead by remember(reads) { schedule.focusBlocks() }.collectAsState(ConflictAwareRead.Projected(emptyList<dev.agenticscheduler.domain.task.FocusBlock>().toImmutableList()))
-    val taskValues = (taskRead as? ConflictAwareRead.Projected)?.value.orEmpty().toImmutableList()
+    val revision = core.refreshRevision
+    val frame = remember(reads, viewport, revision) { core.observe("Calendar", schedule.calendar(viewport)).map { CalendarReadFrame(viewport, revision, it) } }.collectAsState(initial = null).value
+    val projectionRead = frame?.takeIf { it.viewport == viewport && it.revision == revision }?.projection
+    val taskRead = remember(reads, core.refreshRevision) { core.observe("Tasks", schedule.tasks()) }.collectAsState(initial = null).value
+    val focusRead = remember(reads, core.refreshRevision) { core.observe("FocusBlocks", schedule.focusBlocks()) }.collectAsState(initial = null).value
     val focusBlocks = (focusRead as? ConflictAwareRead.Projected)?.value.orEmpty().toImmutableList()
-    val projectedSyncConflictRefs =
-        (taskRead as? ConflictAwareRead.Projected<*>)?.syncConflictRefs.orEmpty() +
-            (focusRead as? ConflictAwareRead.Projected<*>)?.syncConflictRefs.orEmpty()
-    val syncConflictCount = (projection.syncConflictRefs + projectedSyncConflictRefs)
-        .flatMap { it.conflictIds }
-        .distinct()
-        .size
-    val dateItems = projection.items.filter { it is CalendarItem.AllDay || it is CalendarItem.DateOnly }
-    val timedItems = projection.items.filterNot { it is CalendarItem.AllDay || it is CalendarItem.DateOnly }
-
-    val navigation = navigationSession ?: remember { AndroidNavigation() }
     val agentCoordinator = remember(agentState, agentRun, enrollments) { AndroidAgentScreenCoordinator(agentState, agentRun, enrollments) }
     val plannerCoordinator = remember { AndroidPlannerScreenCoordinator() }
     val featureScope = rememberCoroutineScope()
@@ -101,50 +100,22 @@ internal fun AndroidApp(
     val dark = darkOverride ?: systemDark
     TemvioTheme(dark) {
         AndroidAppShell(navigation, dark, { darkOverride = !dark }) { destination ->
+            if (destination in listOf(AndroidDestination.TODAY, AndroidDestination.CALENDAR, AndroidDestination.TASKS)) {
+                CoreSchedulingScreen(when (destination) { AndroidDestination.TODAY -> CoreScreen.TODAY; AndroidDestination.CALENDAR -> CoreScreen.CALENDAR; else -> CoreScreen.TASKS },
+                    core, selectedDate, displayTimeZone, now, projectionRead, taskRead, focusRead, reads,
+                    { selectedDate = it }, { creatingEvent = true }, { creatingTask = true }, { editingEvent = it }, { editingTask = it },
+                    { navigation.open(AndroidDestination.AGENT) },
+                    { ruleId -> featureScope.launch { academic?.refresh(); academic?.facts?.courseScheduleRules?.firstOrNull { it.id == ruleId }?.let { rule ->
+                        academic.requestedCourse = rule.courseId; navigation.open(AndroidDestination.COURSES)
+                    } } },
+                    { examId -> academic?.requestedExam = examId; navigation.open(AndroidDestination.EXAMS) }, syncStoppedReason, onRetrySync, { navigation.open(AndroidDestination.CALENDAR) }, { navigation.open(AndroidDestination.TASKS) })
+            } else if (destination in listOf(AndroidDestination.COURSES, AndroidDestination.EXAMS) && academic != null) {
+                AcademicScreen(academic, if (destination == AndroidDestination.EXAMS) AcademicKind.EXAM else AcademicKind.COURSE)
+            } else {
             LazyColumn(Modifier.fillMaxSize().padding(horizontal = 20.dp).testTag(if (projectionRead == null) "schedule-loading" else "schedule-ready"),
                 contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (projectionRead == null && destination in listOf(AndroidDestination.TODAY, AndroidDestination.CALENDAR)) item { StatusMessage("Loading", "Reading authoritative local source facts…") }
                 else when (destination) {
-                    AndroidDestination.TODAY, AndroidDestination.CALENDAR -> {
-                        if (syncStoppedReason != null) item { StatusMessage("Sync stopped", syncStoppedReason); Button(onClick = onRetrySync) { Text("Retry sync") } }
-                        item { SectionHeading(if (destination == AndroidDestination.TODAY) "Your day, in focus" else "Agenda / Day", "$selectedDate · ${displayTimeZone.id}") }
-                        if (destination == AndroidDestination.TODAY) {
-                            item { StatusMessage("Agent", "Ask a question or start a deliberate command.") }
-                            item { NavigationControl("Open Agent", false, { navigation.open(AndroidDestination.AGENT) }) }
-                        }
-                        item {
-                            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Button(role = ActionRole.TERTIARY, onClick = { selectedDate = selectedDate.plus(-1, DateTimeUnit.DAY) }) { Text("Previous day") }
-                                Button(role = ActionRole.TERTIARY, onClick = { selectedDate = selectedDate.plus(1, DateTimeUnit.DAY) }) { Text("Next day") }
-                                Button(onClick = { creatingEvent = true }) { Text("New Event") }
-                                Button(role = ActionRole.SECONDARY, onClick = { creatingTask = true }) { Text("New Task") }
-                            }
-                        }
-                        item { SectionHeading("All-day / date-only", "Dates retain their original semantic type.") }
-                        if (dateItems.isEmpty()) item { StatusMessage("No date items", "No AllDay or DateOnly items in this viewport.") }
-                        items(dateItems, key = { it.source.toString() }) { item -> CalendarRow(item, reads, focusBlocks.associate { it.id to (taskValues.firstOrNull { task -> task.id == it.taskId }?.title ?: it.taskId.value) }, displayTimeZone) { editingEvent = it } }
-                        item { SectionHeading("Schedule", "Zoned and Floating times remain distinct.") }
-                        if (timedItems.isEmpty()) item { StatusMessage("A clear schedule", "No timed items in this viewport. Add an Event or ask Agent to inspect your plans.") }
-                        items(timedItems, key = { it.source.toString() }) { item -> CalendarRow(item, reads, focusBlocks.associate { it.id to (taskValues.firstOrNull { task -> task.id == it.taskId }?.title ?: it.taskId.value) }, displayTimeZone) { editingEvent = it } }
-                        if (destination == AndroidDestination.TODAY) {
-                            item { SectionHeading("Tasks", "Authoritative task state; no inferred urgency.") }
-                            items(taskValues, key = { it.id.value }) { task -> TaskPresentation(task) { editingTask = task } }
-                            if (taskValues.isEmpty() && taskRead is ConflictAwareRead.Projected) item { StatusMessage("No tasks yet", "Create a Task with explicit effort and deadline choices.") }
-                        }
-                        item {
-                            if (projection.conflicts.isNotEmpty()) StatusMessage("Calendar overlap", "${projection.conflicts.size} overlap(s) in the current projection.")
-                            if (syncConflictCount > 0) StatusMessage("Sync conflict", "$syncConflictCount conflict(s) require resolution.")
-                            if (projection.issues.isNotEmpty()) StatusMessage("Projection issue", "${projection.issues.size} issue(s); some facts cannot be projected.")
-                            if (taskRead is ConflictAwareRead.Unprojectable || focusRead is ConflictAwareRead.Unprojectable) Text("Sync conflict source facts require resolution before display.")
-                        }
-                    }
-                    AndroidDestination.TASKS -> {
-                        item { SectionHeading("Tasks", "Work to do. FocusBlocks are planned time, not completion.") }
-                        item { Button(onClick = { creatingTask = true }) { Text("New Task") } }
-                        items(taskValues, key = { it.id.value }) { task -> TaskPresentation(task) { editingTask = task } }
-                        if (taskValues.isEmpty() && taskRead is ConflictAwareRead.Projected) item { StatusMessage("No tasks", "Your saved tasks appear here.") }
-                        if (taskRead is ConflictAwareRead.Unprojectable) item { StatusMessage("Sync conflict", "Task source facts require resolution before display.") }
-                    }
                     AndroidDestination.PLANNER -> plannerDogfoodItem { PlannerDogfoodPanel(reads, focusBlocks, dogfoodPlanner, profileSettings, plannerCoordinator) }
                     AndroidDestination.AGENT, AndroidDestination.PROVIDER -> item(key = "agent") { AndroidAgentPanel(agentState, agentRun, secureStore, enrollments, ids, agentCoordinator, destination == AndroidDestination.PROVIDER, providerProbes) }
                     AndroidDestination.MORE -> {
@@ -159,11 +130,19 @@ internal fun AndroidApp(
                     else -> item { StatusMessage("${destination.label}", "This view is not available yet. Your existing data remains unchanged.") }
                 }
             }
+            }
         }
+    academic?.let { AcademicEditor(it) }
     if (creatingEvent) EventEditorDialog(null, selectedDate, displayTimeZone, eventEditor, { creatingEvent = false }, { creatingEvent = false })
-    editingEvent?.let { event -> EventEditorDialog(event, selectedDate, displayTimeZone, eventEditor, { editingEvent = null }, { editingEvent = null }) }
+    editingEvent?.let { event -> EventEditorDialog(event, selectedDate, displayTimeZone, eventEditor, { editingEvent = null; core.detailRevision++ }, { editingEvent = null }, onReload = {
+        val fresh = try { reads.event(event.id) } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled } catch (_: Exception) { null } as? ConflictAwareRead.Projected
+        fresh?.value?.let { editingEvent = it; true } ?: false
+    }) }
     if (creatingTask) TaskEditorDialog(null, taskEditor, { creatingTask = false }, { creatingTask = false })
-    editingTask?.let { task -> TaskEditorDialog(task, taskEditor, { editingTask = null }, { editingTask = null }) }
+    editingTask?.let { task -> TaskEditorDialog(task, taskEditor, { editingTask = null }, { editingTask = null }, onReload = {
+        val fresh = try { reads.observeTasks().first() } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled } catch (_: Exception) { null } as? ConflictAwareRead.Projected
+        fresh?.value?.firstOrNull { it.id == task.id }?.let { editingTask = it; true } ?: false
+    }) }
     }
 }
 

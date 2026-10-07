@@ -136,6 +136,7 @@ class MainActivity : ComponentActivity() {
                             ids,
                             conversationSettings,
                             providerProbes = composition.providerProbes,
+                            academicService = composition.academicService,
                             syncStoppedReason = syncStoppedReason,
                             onRetrySync = {
                                 d8SyncStoppedReason.value = null

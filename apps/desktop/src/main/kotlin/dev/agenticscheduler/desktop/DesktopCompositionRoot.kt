@@ -168,6 +168,7 @@ internal fun androidx.compose.ui.window.ApplicationScope.DesktopCompositionRoot(
         DogfoodPlannerService(tasks, events, profiles, academics, ids, mutations = mutations, conflictWritePolicy = d8Runtime.writePolicy, sourceFacts = d8Runtime.sourceFacts)
     }
     val profileSettings = remember(profiles, ids, mutations, d8Runtime) { PlanningProfileSettingsService(profiles, ids, mutations, d8Runtime.writePolicy) }
+    val academicService = remember(academics, ids, mutations, d8Runtime) { dev.agenticscheduler.application.academic.AcademicAuthoringService(academics, ids, mutations, d8Runtime.writePolicy, d8Runtime.sourceFacts) }
     val eventEditor = remember(events, ids, mutations, d8Runtime) { EventEditingService(events, ids, mutations, d8Runtime.writePolicy) }
     val taskEditor = remember(tasks, ids, mutations, d8Runtime) { TaskEditingService(tasks, ids, mutations, d8Runtime.writePolicy) }
     val providerProbes = remember { ProviderProbePresentation() }
@@ -236,6 +237,7 @@ internal fun androidx.compose.ui.window.ApplicationScope.DesktopCompositionRoot(
                         ids = ids,
                         conversationSettings = conversationSettings,
                         providerProbes = providerProbes,
+                        academicService = academicService,
                     )
                     D8StartupState.Activating -> D8StartupStatus("Connecting to your secure sync space…")
                     D8StartupState.Blocked -> D8StartupStatus("Sync setup is unavailable. Restore the device credential or check the configured account and server.")

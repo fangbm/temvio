@@ -1,8 +1,8 @@
 # Agentic Scheduler — Reviewed Roadmap D5–D10 + Post-project Hackathon
 
 > Status: **Roadmap Baseline — individual Task Specs remain authoritative**  
-> Baseline: D5-01 complete; D5-02 implemented/build-verified; D6 complete; D6.5 build/Desktop-verified/Android-surface-and-dialog-touch-verified (full input pending); D7 complete; D8 complete through production runtime closure; D9-01 complete/merged; D9-02 complete/merged (PR #24 `6583e61`); D9-03-00 frozen/merged `82f4c62`; D9-03-01 merged `37b6759`; D9-03-02 merged `dcd3e3c`; D9-03-03 COMPLETE / MERGED PR #28 `27092ba`; D9-03 COMPLETE; D9 COMPLETE — IMPLEMENTATION + ACCEPTANCE PASS; D9 final closure merged `378630c`; OD-012 OPEN — independent production release gate; OD-059 resolved; D10-00 FROZEN / MAINTAINER APPROVED / MERGED `f8efbde`; D10-00A MERGED `dfb9652`; D10-01 IMPLEMENTED / AWAITING REVIEW; post-project DGX Spark hackathon fork planned
-> Date: 2026-10-06 (D10-01 first UI pass review)
+> Baseline: D5-01 complete; D5-02 implemented/build-verified; D6 complete; D6.5 build/Desktop-verified/Android-surface-and-dialog-touch-verified (full input pending); D7 complete; D8 complete through production runtime closure; D9-01 complete/merged; D9-02 complete/merged (PR #24 `6583e61`); D9-03-00 frozen/merged `82f4c62`; D9-03-01 merged `37b6759`; D9-03-02 merged `dcd3e3c`; D9-03-03 COMPLETE / MERGED PR #28 `27092ba`; D9-03 COMPLETE; D9 COMPLETE — IMPLEMENTATION + ACCEPTANCE PASS; D9 final closure merged `378630c`; OD-012 OPEN — independent production release gate; OD-059 resolved; D10-00 FROZEN / MAINTAINER APPROVED / MERGED `f8efbde`; D10-00A MERGED `dfb9652`; D10-01 MERGED PR #32 `19d6a077`; D10-02 IN PROGRESS; post-project DGX Spark hackathon fork planned
+> Date: 2026-10-07 (D10-02 implementation)
 
 ---
 
@@ -30,7 +30,8 @@ D10-00 Product / IA / UI architecture          FROZEN / MAINTAINER APPROVED / ME
  ↓
 D10-00A Academic Authoring Foundation          MERGED PR #31 / dfb9652 — Application foundation only
  ↓
-D10-01 Design System + App Shell               IMPLEMENTED / AWAITING REVIEW — first UI pass; D10-02 unstarted
+D10-01 Design System + App Shell               MERGED PR #32 / 19d6a077 — accepted foundation
+D10-02 Today / Calendar / Tasks / Academic      IN PROGRESS — independent UI slice
  ↓
 DGX-H   DGX Spark Server-Agent Hackathon Fork   OPTIONAL — ONLY AFTER MAIN PRODUCT COMPLETION
 ```
@@ -289,7 +290,7 @@ does not approve production-sensitive-data release or implicitly resolve OD-012.
 # D10 — Final Product UI / UX
 
 Status: **D10-00 FROZEN / MAINTAINER APPROVED / MERGED `f8efbde`; D10-00A MERGED
-`dfb9652`; D10-01 IMPLEMENTED / AWAITING REVIEW — D10-02+ unstarted**.
+`dfb9652`; D10-01 MERGED PR #32 `19d6a077`; D10-02 IN PROGRESS; D10-03+ unstarted**.
 
 D10 turns the completed product capabilities from D5-D9 into the final coherent cross-platform product experience. It is the first milestone whose acceptance explicitly includes final visual language and complete product-level interaction polish.
 
@@ -319,8 +320,8 @@ repository CI and maintainer review, within the accepted slice order.
 ```text
 D10-00   Product / IA / UI architecture freeze        MAINTAINER APPROVED / MERGED f8efbde (docs only)
 D10-00A  Academic Authoring Foundation                MERGED PR #31 / dfb9652; separately reviewed
-D10-01   Design System + App Shell                   IMPLEMENTED / AWAITING REVIEW; first pass only
-D10-02   Today / Calendar / Tasks / Academic          after shell/foundation; accepted OD-061 rendering extension
+D10-01   Design System + App Shell                   MERGED PR #32 / 19d6a077; accepted foundation
+D10-02   Today / Calendar / Tasks / Academic          IN PROGRESS; accepted OD-061 rendering extension
 D10-03   Planner / History / Sync / Settings          after shell and relevant projections
 D10-04   Agent Product Surface                       after shell and context/preview surfaces
 D10-05   Wear Final UX                               after tokens and reviewed Wear graph

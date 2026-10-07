@@ -79,6 +79,7 @@ internal class AndroidCompositionRoot(context: Context) {
     }
     val d8Runtime by d8RuntimeLazy
     val reads by lazy { ConflictAwareSourceFactReadService(events, tasks, profiles, academics, d8Runtime.sourceFacts) }
+    val academicService by lazy { dev.agenticscheduler.application.academic.AcademicAuthoringService(academics, ids, mutations, d8Runtime.writePolicy, d8Runtime.sourceFacts) }
     val eventEditor by lazy { EventEditingService(events, ids, mutations, d8Runtime.writePolicy) }
     val taskEditor by lazy { TaskEditingService(tasks, ids, mutations, d8Runtime.writePolicy) }
     val dogfoodPlanner by lazy { DogfoodPlannerService(tasks, events, profiles, academics, ids, mutations = mutations, conflictWritePolicy = d8Runtime.writePolicy, sourceFacts = d8Runtime.sourceFacts) }

@@ -180,6 +180,8 @@ jobs:
         run: .\gradlew.bat :shared:application:desktopTest --tests "*DesktopPlatformSecureStoreTest" --no-daemon
       - name: Verify Windows presentation and capture synthetic Compose fixtures
         run: .\gradlew.bat :shared:ui:desktopTest :apps:desktop:test --no-daemon
+      - name: Check presentation ownership and Markdown status
+        run: python test-support/d10-02/check-boundaries.py --source-only
       - name: Upload Windows presentation candidates and reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -187,6 +189,7 @@ jobs:
           name: d10-windows-presentation
           path: |
             apps/desktop/build/d10-01/screenshots/*.png
+            apps/desktop/build/d10-02/screenshots/*.png
             apps/desktop/build/test-results/test/*.xml
             shared/ui/build/test-results/desktopTest/*.xml
           if-no-files-found: warn
@@ -224,6 +227,7 @@ jobs:
           arch: x86_64
           script: |
             ./gradlew :apps:android:connectedDebugAndroidTest --no-daemon
+            bash test-support/d10-02/capture-android.sh
             # Core Watch runtime/UI acceptance is required on the Wear job, never phone/fake platform.
             ./gradlew :apps:wear:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.agenticscheduler.wear.WearKeystoreSecureStoreInstrumentedTest --no-daemon
             mkdir -p apps/wear/build/phone-platform-reports/keystore
@@ -242,6 +246,7 @@ jobs:
           name: provider-credential-android-reports
           path: |
             apps/android/build/outputs/androidTest-results/connected/**/TEST-*.xml
+            build/d10-02/android-captures/**
             apps/wear/build/outputs/androidTest-results/connected/**/TEST-*.xml
             apps/wear/build/phone-platform-reports/**/TEST-*.xml
             apps/wear/build/d90302-platform-evidence.txt
