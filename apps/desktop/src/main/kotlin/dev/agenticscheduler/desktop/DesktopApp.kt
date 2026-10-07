@@ -66,6 +66,15 @@ internal fun DesktopApp(
     coreSession: CoreScreenCoordinator? = null,
     academicSession: AcademicScreenCoordinator? = null,
     presentationNow: kotlin.time.Instant? = null,
+    historyQueries: dev.agenticscheduler.application.history.HistoryQueryService? = null,
+    undoService: dev.agenticscheduler.application.history.UndoService? = null,
+    conflictQueries: dev.agenticscheduler.application.history.SyncConflictQueryService? = null,
+    syncConfigured: Boolean = false,
+    securityServices: SecurityWorkflowServices? = null,
+    applicationActionScope: kotlinx.coroutines.CoroutineScope? = null,
+    plannerWorkspaceSession: PlannerWorkspaceCoordinator? = null,
+    historySession: HistoryScreenCoordinator? = null,
+    syncSession: SyncSecurityScreenCoordinator? = null,
 ) {
     val schedule = scheduleSession ?: remember(reads) {
         val zone = TimeZone.currentSystemDefault()
@@ -91,10 +100,13 @@ internal fun DesktopApp(
     val focusRead = remember(reads, core.refreshRevision) { core.observe("FocusBlocks", schedule.focusBlocks()) }.collectAsState(initial = null).value
     val focusBlocks = (focusRead as? ConflictAwareRead.Projected)?.value.orEmpty().toImmutableList()
     val agentCoordinator = remember(agentState, agentRunService) { DesktopAgentScreenCoordinator(agentState, agentRunService) }
-    val plannerCoordinator = remember { DesktopPlannerScreenCoordinator() }
-    val featureScope = rememberCoroutineScope()
+    val featureScope = applicationActionScope ?: rememberCoroutineScope()
+    val plannerWorkspace = plannerWorkspaceSession ?: remember(reads,dogfoodPlanner,profileSettings) { PlannerWorkspaceCoordinator(reads,dogfoodPlanner,profileSettings) }
+    val historyScreen = historySession ?: if(historyQueries != null && undoService != null) remember(historyQueries,undoService) { HistoryScreenCoordinator(historyQueries,undoService) } else null
+    val syncScreen = syncSession ?: conflictQueries?.let { remember(enrollments,it,agentState) { SyncSecurityScreenCoordinator(enrollments,it,agentState) } }
+    val securityScreen = securityServices?.let {remember(it) {SecurityWorkflowCoordinator(it)}}
+    var settingsSection by remember {mutableStateOf(SettingsSection.GENERAL)}
     agentCoordinator.scope = featureScope
-    plannerCoordinator.scope = featureScope
     val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
     var darkOverride by remember { mutableStateOf(initialDark) }
     val dark = darkOverride ?: systemDark
@@ -111,19 +123,21 @@ internal fun DesktopApp(
                     { examId -> academic?.requestedExam = examId; navigation.open(DesktopDestination.EXAMS) }, syncStoppedReason, onRetrySync, { navigation.open(DesktopDestination.CALENDAR) }, { navigation.open(DesktopDestination.TASKS) })
             } else if (destination in listOf(DesktopDestination.COURSES, DesktopDestination.EXAMS) && academic != null) {
                 AcademicScreen(academic, if (destination == DesktopDestination.EXAMS) AcademicKind.EXAM else AcademicKind.COURSE)
+            } else if (destination == DesktopDestination.PLANNER) {
+                PlannerWorkspaceScreen(plannerWorkspace,featureScope)
+            } else if (destination == DesktopDestination.HISTORY && historyScreen != null) {
+                HistoryScreen(historyScreen,featureScope)
+            } else if (destination == DesktopDestination.SETTINGS) {
+                SettingsHub(settingsSection,{settingsSection=it},dark,{darkOverride=!dark},
+                    planning={PlanningProfiles(plannerWorkspace,featureScope);NewProfileDialogHost(plannerWorkspace,featureScope)},
+                    sync={syncScreen?.let {SyncSecurityScreen(it,featureScope,SyncRuntimeDisplay(syncConfigured,syncStoppedReason),onRetrySync,{DesktopConversationSyncControls(conversationSettings)},securityScreen)}},
+                    onProvider={navigation.open(DesktopDestination.AGENT); agentCoordinator.providerDialog.value=true})
             } else {
             LazyColumn(Modifier.fillMaxSize().padding(horizontal = 20.dp).testTag(if (projectionRead == null) "schedule-loading" else "schedule-ready"),
                 contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (projectionRead == null && destination in listOf(DesktopDestination.TODAY, DesktopDestination.CALENDAR)) item { StatusMessage("Loading", "Reading authoritative local source facts…") }
                 else when (destination) {
-                    DesktopDestination.PLANNER -> plannerDogfoodItem { PlannerDogfoodPanel(reads, focusBlocks, dogfoodPlanner, profileSettings, plannerCoordinator) }
                     DesktopDestination.AGENT -> item(key = "agent") { AgentCommandPanel(agentRunService, agentState, secureStore, enrollments, ids, agentCoordinator, providerProbes) }
-                    DesktopDestination.SETTINGS -> {
-                        item { SectionHeading("Settings", "Device-local choices and secure sync status") }
-                        item { DesktopConversationSyncControls(conversationSettings) }
-                        item { NavigationControl("Provider settings", false, { navigation.open(DesktopDestination.AGENT); agentCoordinator.providerDialog.value = true }) }
-                        if (syncStoppedReason != null) item { StatusMessage("Sync stopped", syncStoppedReason); Button(onClick = onRetrySync) { Text("Retry sync") } }
-                    }
                     else -> item { StatusMessage("${destination.label}", "This view is not available yet. Your existing data remains unchanged.") }
                 }
             }

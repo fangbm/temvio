@@ -1,6 +1,6 @@
 # D10-03 — Planner / History / Sync / Settings
 
-Status: **IN PROGRESS**. Baseline: `cda86a815d21fe4a501b79a92074962001a54039`
+Status: **IN PROGRESS / FOUNDATION_GAP**. Baseline: `cda86a815d21fe4a501b79a92074962001a54039`
 (accepted D10-02 / PR #33); D10-02F `60d2670f063357177a8e222db7ccbcc679bc0d92`
 is already authoritative. Branch: `feature/d10-03-planner-history-sync-settings`.
 Target: `feature/d9-02-agent-sync`. Keep Draft; do not merge or start D10-04/05/06.
@@ -59,10 +59,159 @@ read/selection model that feeds the existing resolution service and preserves
 its target/group/current-component validation. Read-only conflict metadata remains
 available; no fake Resolve/dismiss or manual status update.
 
+### Maintainer disposition
+
+The maintainer explicitly chose: **record FG-01/FG-02 in this PR; foundation
+separately reviewed**. No ordinary profile Save/SaveAgent shortcut and no UI
+candidate JSON decoding are authorized. These paths remain unavailable. The
+whole D10-03 slice is not marked IMPLEMENTED or COMPLETE.
+
+### FG-03 — complete typed pairing workflow
+
+FOUNDATION_GAP. User interaction: request/admit or approve a new device after
+explicit SAS comparison. `LocalEnrollmentRequestService` safely stages identity;
+`PairingApprovalService.approve` returns a typed approved envelope;
+`PairingRecipientAdmissionService.admit` consumes an authenticated envelope.
+However `KtorSyncLifecycleTransport.registerEnrollment/fetchKeyPackage/approveEnrollment`
+exposes raw package Base64 strings and does not provide an application-owned
+end-to-end typed publication/fetch/admission workflow. This screen cannot complete
+pairing without owning package encoding/decoding or partial success orchestration.
+Minimal requested foundation: separately reviewed Application orchestration
+joining those existing steps with typed Pending/Approved/Admitted/retry outcomes,
+exact package identity and explicit SAS acknowledgement. No new pairing/crypto
+semantics are proposed. Pairing remains unavailable; recovery and revocation use
+the existing complete services independently.
+
+### FG-04 — richer directional progress (optional status capability)
+
+`ActiveSyncCatchUpTrigger` exposes terminal `stoppedReason` and explicit
+`retryNow`, but no observable latest per-direction result/held queue snapshot.
+The screen reports the real configured trigger and stopped reason only. It does
+not derive sync progress from outbox rows or equate held outbound with blocked
+inbound. A future reviewed typed read API is needed for richer progress; it is
+not required to run the independently available explicit Retry path.
+
+## Implemented independent presentation
+
+- App-owned immutable Planner request draft: explicit selected profile, reference
+  Instant, finite horizon; Local Reflow affected blocks/disrupted ranges/search
+  window. Existing DogfoodPlannerService builds authoritative snapshots and
+  determines all placements, legality and issues. No Provider request or write
+  occurs during Preview. Read-only profile configuration and explicit
+  Unconfigured creation are shared between Planner and Settings.
+- Session PlanBranch, readable proposed FocusBlock changes, issues and criteria;
+  wide list/preview panes and narrow/large-font modal detail. Apply delegates to
+  the existing atomic applier, consumes success, retains Stale/Conflicted outcomes
+  with disabled Apply, and never allows force application. Cancel discards only
+  the preview. A new process starts without a branch or implicit request.
+- Room-backed HistoryQueryService cursor pages (50 per page), mutation detail,
+  typed readable before/after for supported product records, opt-in raw technical
+  images/HLC/DVV and a bounded entity history first page. Undo capability is
+  shown faithfully; one explicit confirmation invokes one existing all-or-none
+  compensating command. No per-child Undo or undo matrix expansion.
+- Business conflict identity/entities/groups/participants/provisional identity
+  and OPEN/RESOLVED/SUPERSEDED detail remain read-only. Calendar overlaps and Agent
+  history conflicts are not conflated with business conflicts.
+- Existing enrollment metadata, explicit stopped Retry, V2 business compatibility
+  and existing V3 conversation controls remain separate. V3 consent does not
+  initiate history export. No claim of queue drain or all-device upgrade.
+- Existing RecoveryEnrollmentService and RevocationRotationService are manually
+  composed in each platform root. Recovery reuses durable Pending identity;
+  activated enrollment reactivates the guarded runtime. Blocked startup mounts
+  only restricted recovery, never business screens. Explicit revocation requires
+  confirmation; uncertain submit retains the opaque prepared attempt and retries
+  it exactly. Self device is excluded from revocation selection. Recovery Secret
+  input is transient, masked, cleared on submission/cancel and never logged,
+  saved/restored, or used in screenshot fixtures.
+- Platform lifecycle scope owns explicit actions across route/activation remount;
+  closing the app cancels it. No UI automatic retry, request replay, background
+  security approval or new network/crypto implementation.
+- Settings organizes session theme, shared profiles, Sync/Security and existing
+  Provider link-out. No new durable preference or fake analytics. OD-012 stays
+  OPEN and local SQLite is not represented as encrypted at rest.
+
 ## Verification and delivery
 
-Targeted real Application + Room integration, Desktop Compose, Android native
-instrumentation, bounded synthetic Light/Dark/adaptive/200% captures and full
-exact-head five-job CI are required. Tests/capture/CI results are pending and
-will be recorded after actual execution. Historic D10-01/02 screenshots remain.
-No implementation or acceptance completion is claimed by this initial packet.
+### Executed local evidence
+
+On Windows, JDK 17, isolated Gradle home, the following command passed:
+
+```powershell
+./gradlew.bat --no-daemon --console=plain --gradle-user-home D:\codex\asp-d10-gradle-home :apps:desktop:test :shared:ui:desktopTest :shared:database:desktopTest --tests '*AggregateSnapshotConsistencyTest' --tests '*AcademicAuthoringIntegrationTest' :apps:android:assembleDebug :apps:android:assembleDebugAndroidTest
+```
+
+- Desktop **78/78**: existing 49 plus 16 ProductWorkspacePersistence, 6
+  ProductSecurityWorkflow and 7 ProductWorkspaceUi tests. Real Application/Room
+  preview/apply/reflow/Undo, retained restart history, read-only conflicts and
+  mounted Compose controls are exercised. Task/Academic creation remains
+  Unsupported Undo. An external Application resolution leaves the OPEN query
+  but retains inspectable RESOLVED identity. Theme/navigation/Provider link-out
+  do not Apply a session branch or invoke Provider.
+- `shared:ui` **3/3**. Targeted database **50/50**:
+  AggregateSnapshotConsistency 13 and AcademicAuthoringIntegration 37. Database
+  tests were actually executed with `--rerun`; the final combined invocation
+  reused those unchanged task outputs. Android app/test APK assembly passed.
+- Android API 35 emulator: native ProductWorkspace **6/6**; test APK installed
+  and executed through `am instrument`, not inferred from assembly. Covers
+  Planner explicit Apply, Back without commit, History unsupported detail,
+  Settings draft/theme, Sync stopped Retry/read-only conflict and capture.
+  Existing CoreScheduling/AppShell native regressions passed **9/9** on the same
+  APK. Expanded More/preview Back passed separately at 1024×768; all seven capture
+  configurations executed successfully.
+- Security tests use the real platform manual composition, Ktor lifecycle
+  boundary, RecoveryEnrollmentService/RevocationRotationService and Room. HTTP
+  peer and platform secret persistence are deterministic doubles. They prove
+  pending-identity retry, failed activation reporting, explicit destructive
+  confirmation and exact prepared-rotation retry. They do not certify physical
+  Keystore/DPAPI, live relay recovery or live multi-device revocation.
+
+Native command (use the owned test emulator serial):
+
+```powershell
+adb -s emulator-5554 shell am instrument -w -r -e class dev.agenticscheduler.android.ProductWorkspaceInstrumentedTest dev.agenticscheduler.android.test/androidx.test.runner.AndroidJUnitRunner
+./test-support/d10-03/capture-android.ps1 -Serial emulator-5554 -Sdk C:\ProgramData\Android
+```
+
+### Presentation regression and responsive evidence
+
+The full Desktop rerun exposed an existing Academic LazyColumn interval/count
+race (`IndexOutOfBoundsException: Index 5, size 5`). Its deferred structural
+inputs now retain one immutable composition frame. New lazy workspaces use the
+same rule. The original Academic form and refresh-barrier tests passed again;
+an additional History growth/refresh/scrolled-measurement regression passed.
+No Academic persistence, recurrence or authoring semantics changed.
+
+Actual Compose evidence is kept separately in the bounded **44-candidate**
+[D10-03 capture manifest](fixtures/d10-03/screenshots/capture-manifest.json).
+The generated matrix contains 50 Desktop and 50 Android candidates: Light/Dark,
+Desktop 640/1024/1280/1440/1920 widths; Android 360/480/600/840/1024 widths,
+800×360 short height, and 200% font. Wide detail panes become owned scrollable
+dialogs at narrow/short/large-font sizes. Native Back closes detail before More.
+Planner proposed changes and History diffs have text/list representations;
+existing shared roles, 48dp actions and keyboard focus are retained.
+
+Screenshots contain deterministic synthetic business fixtures and blank secret
+fields. Revocation confirmation uses a synthetic typed device-directory fixture
+with the actual dialog; it executes no rotation. Native screenshots include real
+emulator chrome/clock, so their bytes are acceptance snapshots rather than a
+claim of clock-independent golden rendering. Candidate hashes and normalized
+source hashes are checked. Visual maintainer approval remains pending. Historical
+D10-01/02 screenshot files are unchanged.
+
+### Delivery and remaining acceptance
+
+[Draft PR #35](https://github.com/fangbm/temvio/pull/35) targets
+`feature/d9-02-agent-sync`. Full exact-head CI must execute build,
+desktop-windows, android-keystore, wear-keystore and agent-history-platform-e2e;
+the accepted final run/head is reported on that PR. A local build or an older
+docs-only run is not full CI acceptance for this implementation.
+
+`git diff --check`, Markdown link/status checks, source ownership/diff fences and
+candidate hash checks are required before push. No DB migration or new production
+dependency. No changes to Domain/Application/Planner/D7/D8/D9, wire, crypto,
+server or Wear. OD-012 remains OPEN. D10-04/05/06 remain unstarted. FG-01/02
+require separately reviewed foundation work by explicit maintainer disposition;
+FG-03 pairing remains unavailable and FG-04 richer directional status is a future
+typed read capability. No new `BLOCKED_BY_DECISION` choice was guessed. The whole
+slice remains **IN PROGRESS / FOUNDATION_GAP**, awaiting review of the independent
+paths rather than claiming semantic completion.

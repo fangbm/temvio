@@ -84,6 +84,10 @@ internal class AndroidCompositionRoot(context: Context) {
     val taskEditor by lazy { TaskEditingService(tasks, ids, mutations, d8Runtime.writePolicy) }
     val dogfoodPlanner by lazy { DogfoodPlannerService(tasks, events, profiles, academics, ids, mutations = mutations, conflictWritePolicy = d8Runtime.writePolicy, sourceFacts = d8Runtime.sourceFacts) }
     val profileSettings by lazy { PlanningProfileSettingsService(profiles, ids, mutations, d8Runtime.writePolicy) }
+    val historyQueries by lazy { HistoryQueryService(RoomMutationJournalRepository(database)) }
+    val undoService by lazy { UndoService(mutations, RoomMutationJournalRepository(database), events, tasks, profiles, d8Runtime.writePolicy) }
+    val conflictQueries by lazy { dev.agenticscheduler.application.history.SyncConflictQueryService(dev.agenticscheduler.database.repository.RoomSyncReceiveRepository(database)) }
+
     val agentHttpClientLazy = lazy { HttpClient(Android) }
     val agentHttpClient by agentHttpClientLazy
     val providerProbes = ProviderProbePresentation()

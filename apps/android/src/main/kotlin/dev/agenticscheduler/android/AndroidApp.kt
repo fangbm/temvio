@@ -66,6 +66,15 @@ internal fun AndroidApp(
     coreSession: CoreScreenCoordinator? = null,
     academicSession: AcademicScreenCoordinator? = null,
     presentationNow: kotlin.time.Instant? = null,
+    historyQueries: dev.agenticscheduler.application.history.HistoryQueryService? = null,
+    undoService: dev.agenticscheduler.application.history.UndoService? = null,
+    conflictQueries: dev.agenticscheduler.application.history.SyncConflictQueryService? = null,
+    syncConfigured: Boolean = false,
+    securityServices: SecurityWorkflowServices? = null,
+    applicationActionScope: kotlinx.coroutines.CoroutineScope? = null,
+    plannerWorkspaceSession: PlannerWorkspaceCoordinator? = null,
+    historySession: HistoryScreenCoordinator? = null,
+    syncSession: SyncSecurityScreenCoordinator? = null,
 ) {
     val schedule = scheduleSession ?: remember(reads) {
         val zone = TimeZone.currentSystemDefault()
@@ -91,10 +100,13 @@ internal fun AndroidApp(
     val focusRead = remember(reads, core.refreshRevision) { core.observe("FocusBlocks", schedule.focusBlocks()) }.collectAsState(initial = null).value
     val focusBlocks = (focusRead as? ConflictAwareRead.Projected)?.value.orEmpty().toImmutableList()
     val agentCoordinator = remember(agentState, agentRun, enrollments) { AndroidAgentScreenCoordinator(agentState, agentRun, enrollments) }
-    val plannerCoordinator = remember { AndroidPlannerScreenCoordinator() }
-    val featureScope = rememberCoroutineScope()
+    val featureScope = applicationActionScope ?: rememberCoroutineScope()
+    val plannerWorkspace = plannerWorkspaceSession ?: remember(reads,dogfoodPlanner,profileSettings) { PlannerWorkspaceCoordinator(reads,dogfoodPlanner,profileSettings) }
+    val historyScreen = historySession ?: if(historyQueries != null && undoService != null) remember(historyQueries,undoService) { HistoryScreenCoordinator(historyQueries,undoService) } else null
+    val syncScreen = syncSession ?: conflictQueries?.let { remember(enrollments,it,agentState) { SyncSecurityScreenCoordinator(enrollments,it,agentState) } }
+    val securityScreen = securityServices?.let {remember(it) {SecurityWorkflowCoordinator(it)}}
+    var settingsSection by remember {mutableStateOf(SettingsSection.GENERAL)}
     agentCoordinator.scope = featureScope
-    plannerCoordinator.scope = featureScope
     val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
     var darkOverride by remember { mutableStateOf(initialDark) }
     val dark = darkOverride ?: systemDark
@@ -111,27 +123,36 @@ internal fun AndroidApp(
                     { examId -> academic?.requestedExam = examId; navigation.open(AndroidDestination.EXAMS) }, syncStoppedReason, onRetrySync, { navigation.open(AndroidDestination.CALENDAR) }, { navigation.open(AndroidDestination.TASKS) })
             } else if (destination in listOf(AndroidDestination.COURSES, AndroidDestination.EXAMS) && academic != null) {
                 AcademicScreen(academic, if (destination == AndroidDestination.EXAMS) AcademicKind.EXAM else AcademicKind.COURSE)
+            } else if (destination == AndroidDestination.PLANNER) {
+                PlannerWorkspaceScreen(plannerWorkspace,featureScope)
+            } else if (destination == AndroidDestination.HISTORY && historyScreen != null) {
+                HistoryScreen(historyScreen,featureScope)
+            } else if (destination == AndroidDestination.SETTINGS) {
+                SettingsHub(settingsSection,{settingsSection=it},dark,{darkOverride=!dark},
+                    planning={PlanningProfiles(plannerWorkspace,featureScope);NewProfileDialogHost(plannerWorkspace,featureScope)},
+                    sync={syncScreen?.let {SyncSecurityScreen(it,featureScope,SyncRuntimeDisplay(syncConfigured,syncStoppedReason),onRetrySync,{AndroidConversationSyncControls(conversationSettings)},securityScreen)}},
+                    onProvider={navigation.open(AndroidDestination.PROVIDER)})
+            } else if (destination == AndroidDestination.SYNC_SECURITY && syncScreen != null) {
+                SyncSecurityScreen(syncScreen,featureScope,SyncRuntimeDisplay(syncConfigured,syncStoppedReason),onRetrySync,{AndroidConversationSyncControls(conversationSettings)},securityScreen)
             } else {
             LazyColumn(Modifier.fillMaxSize().padding(horizontal = 20.dp).testTag(if (projectionRead == null) "schedule-loading" else "schedule-ready"),
                 contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (projectionRead == null && destination in listOf(AndroidDestination.TODAY, AndroidDestination.CALENDAR)) item { StatusMessage("Loading", "Reading authoritative local source facts…") }
                 else when (destination) {
-                    AndroidDestination.PLANNER -> plannerDogfoodItem { PlannerDogfoodPanel(reads, focusBlocks, dogfoodPlanner, profileSettings, plannerCoordinator) }
                     AndroidDestination.AGENT, AndroidDestination.PROVIDER -> item(key = "agent") { AndroidAgentPanel(agentState, agentRun, secureStore, enrollments, ids, agentCoordinator, destination == AndroidDestination.PROVIDER, providerProbes) }
                     AndroidDestination.MORE -> {
                         item { SectionHeading("More", "Your workspace") }
                         AndroidDestination.entries.filter { it !in AndroidDestination.primary }.forEach { d -> item { NavigationControl(d.label, false, { navigation.open(d) }, Modifier.fillMaxWidth()) } }
-                    }
-                    AndroidDestination.SETTINGS, AndroidDestination.SYNC_SECURITY -> {
-                        item { SectionHeading("Sync / Security", "Separate business and conversation consent") }
-                        item { AndroidConversationSyncControls(conversationSettings) }
-                        if (syncStoppedReason != null) item { StatusMessage("Sync stopped", syncStoppedReason); Button(onClick = onRetrySync) { Text("Retry sync") } }
                     }
                     else -> item { StatusMessage("${destination.label}", "This view is not available yet. Your existing data remains unchanged.") }
                 }
             }
             }
         }
+    // Detail owns Back before the shell secondary route, including expanded panes.
+    androidx.activity.compose.BackHandler(navigation.current == AndroidDestination.PLANNER && plannerWorkspace.preview != null) {plannerWorkspace.cancelPreview()}
+    androidx.activity.compose.BackHandler(navigation.current == AndroidDestination.HISTORY && historyScreen?.detail != null) {historyScreen?.closeDetail()}
+    androidx.activity.compose.BackHandler(navigation.current in listOf(AndroidDestination.SYNC_SECURITY,AndroidDestination.SETTINGS) && syncScreen?.selected != null) {syncScreen?.closeDetail()}
     academic?.let { AcademicEditor(it) }
     if (creatingEvent) EventEditorDialog(null, selectedDate, displayTimeZone, eventEditor, { creatingEvent = false }, { creatingEvent = false })
     editingEvent?.let { event -> EventEditorDialog(event, selectedDate, displayTimeZone, eventEditor, { editingEvent = null; core.detailRevision++ }, { editingEvent = null }, onReload = {

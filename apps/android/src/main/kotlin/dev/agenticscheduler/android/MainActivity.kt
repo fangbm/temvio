@@ -79,42 +79,15 @@ class MainActivity : ComponentActivity() {
         }
         if (d8StartupState.value != D8StartupState.Blocked) {
             d8StartupState.value = D8StartupState.Activating
-            d8Scope.launch {
-                try {
-                    val creation = configuration?.let { d8Runtime.activate(it) }
-                        ?: d8Runtime.activateWithoutConfiguration()
-                    when (creation) {
-                        is ActiveSyncRuntimeCreation.Active -> {
-                            val trigger = d8Runtime.newCatchUpTrigger(
-                                d8Scope,
-                                pollingIntervalMillis = ActiveSyncCatchUpTrigger.DESKTOP_ANDROID_POLL_INTERVAL_MILLIS,
-                                onUnexpectedFailure = { android.util.Log.w("D8Sync", "Catch-up failed unexpectedly; transient retry remains scheduled.") },
-                                onNonRetryableFailure = { reason ->
-                                    android.util.Log.e("D8Sync", "Automatic sync stopped: $reason. Check account credentials or sync integrity before retrying.")
-                                    runOnUiThread { d8SyncStoppedReason.value = reason }
-                                },
-                            )
-                            d8SyncTrigger = trigger
-                            trigger.start()
-                            trigger.setForeground(d8IsForeground)
-                            registerNetworkRetry(trigger)
-                            d8StartupState.value = D8StartupState.Ready
-                        }
-                        is ActiveSyncRuntimeCreation.ActiveEnrollmentOffline -> d8StartupState.value = D8StartupState.Ready
-                        ActiveSyncRuntimeCreation.NoEnrollment -> d8StartupState.value = D8StartupState.Ready
-                        is ActiveSyncRuntimeCreation.MultipleActiveEnrollments -> d8StartupState.value = D8StartupState.Blocked
-                        ActiveSyncRuntimeCreation.EnrollmentNotActive,
-                        is ActiveSyncRuntimeCreation.ActiveEnrollmentAccountMismatch,
-                        is ActiveSyncRuntimeCreation.MissingDeviceCredential,
-                        -> d8StartupState.value = D8StartupState.Blocked
-                    }
-                } catch (cancelled: CancellationException) {
-                    throw cancelled
-                } catch (_: Throwable) {
-                    d8StartupState.value = D8StartupState.Blocked
-                }
+            d8Scope.launch { activateRuntime(configuration) }
+        }
+        val securityServices = configuration?.let {
+            androidSecurityWorkflows(database, secureStore, agentHttpClient, ids, it) {
+                activateRuntime(it)
+                check(d8StartupState.value == D8StartupState.Ready && d8SyncTrigger != null)
             }
         }
+        val blockedSecurity = securityServices?.let { dev.agenticscheduler.presentation.SecurityWorkflowCoordinator(it) }
         setContent {
             val startupState by d8StartupState
             val syncStoppedReason by d8SyncStoppedReason
@@ -137,6 +110,13 @@ class MainActivity : ComponentActivity() {
                             conversationSettings,
                             providerProbes = composition.providerProbes,
                             academicService = composition.academicService,
+                            historyQueries = composition.historyQueries,
+                            undoService = composition.undoService,
+                            conflictQueries = composition.conflictQueries,
+                            syncConfigured = d8SyncTrigger != null,
+                            securityServices = securityServices,
+                            applicationActionScope = d8Scope,
+
                             syncStoppedReason = syncStoppedReason,
                             onRetrySync = {
                                 d8SyncStoppedReason.value = null
@@ -144,11 +124,51 @@ class MainActivity : ComponentActivity() {
                             },
                         )
                         D8StartupState.Activating -> D8StartupStatus("Connecting to your secure sync space…")
-                        D8StartupState.Blocked -> D8StartupStatus("Sync setup is unavailable. Restore the device credential or check the configured account and server.")
+                        D8StartupState.Blocked -> Column {
+                            D8StartupStatus("Sync setup is unavailable. Restore the device credential or check the configured account and server.")
+                            blockedSecurity?.let { dev.agenticscheduler.presentation.SecurityRecoveryPanel(it, d8Scope) }
+                        }
                     }
                 }
             }
         }
+    }
+
+    private suspend fun activateRuntime(configuration: ActiveSyncRuntimeConfiguration?) {
+        d8NetworkCallback?.let { callback ->
+            runCatching { getSystemService(ConnectivityManager::class.java).unregisterNetworkCallback(callback) }
+        }
+        d8NetworkCallback = null
+        d8SyncTrigger?.close()
+        d8SyncTrigger = null
+        d8SyncStoppedReason.value = null
+        d8StartupState.value = D8StartupState.Activating
+        try {
+            val creation = configuration?.let { d8Runtime.activate(it) }
+                ?: d8Runtime.activateWithoutConfiguration()
+            when (creation) {
+                is ActiveSyncRuntimeCreation.Active -> {
+                    val trigger = d8Runtime.newCatchUpTrigger(
+                        d8Scope,
+                        pollingIntervalMillis = ActiveSyncCatchUpTrigger.DESKTOP_ANDROID_POLL_INTERVAL_MILLIS,
+                        onUnexpectedFailure = { android.util.Log.w("D8Sync", "Catch-up failed unexpectedly; transient retry remains scheduled.") },
+                        onNonRetryableFailure = { reason ->
+                            android.util.Log.e("D8Sync", "Automatic sync stopped: $reason. Check account credentials or sync integrity before retrying.")
+                            runOnUiThread { d8SyncStoppedReason.value = reason }
+                        },
+                    )
+                    d8SyncTrigger = trigger
+                    trigger.start()
+                    trigger.setForeground(d8IsForeground)
+                    registerNetworkRetry(trigger)
+                    d8StartupState.value = D8StartupState.Ready
+                }
+                is ActiveSyncRuntimeCreation.ActiveEnrollmentOffline,
+                ActiveSyncRuntimeCreation.NoEnrollment -> d8StartupState.value = D8StartupState.Ready
+                else -> d8StartupState.value = D8StartupState.Blocked
+            }
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { d8StartupState.value = D8StartupState.Blocked }
     }
 
     override fun onStart() {

@@ -21,6 +21,7 @@ android {
     sourceSets.getByName("androidTest").kotlin.directories.add(rootProject.file("test-support/d10-01").absolutePath)
     sourceSets.getByName("main").kotlin.directories.add(rootProject.file("apps/presentation/src/main/kotlin").absolutePath)
     sourceSets.getByName("androidTest").kotlin.directories.add(rootProject.file("test-support/d10-02").absolutePath)
+    sourceSets.getByName("androidTest").kotlin.directories.add(rootProject.file("test-support/d10-03").absolutePath)
 }
 
 dependencies {
