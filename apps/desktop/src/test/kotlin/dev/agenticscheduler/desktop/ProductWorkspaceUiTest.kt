@@ -13,6 +13,8 @@ import dev.agenticscheduler.application.planner.*
 import dev.agenticscheduler.presentation.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import org.junit.Test
 import org.jetbrains.skia.Image
 import org.jetbrains.skia.EncodedImageFormat
@@ -117,6 +119,39 @@ class ProductWorkspaceUiTest {
             check(f.base.providerRequests==0)
         }
     }
+    @Test fun hostUiScopeSurvivesChildRemountAndBusyApplyDoesNotCommitTwice() = fixture {f ->
+        val refreshEntered=CompletableDeferred<Unit>();val release=CompletableDeferred<Unit>();var blockRefresh=false
+        val tasks=object:dev.agenticscheduler.application.persistence.TaskRepository by f.base.tasks {
+            override fun observeTasks()=flow {
+                if(blockRefresh) {refreshEntered.complete(Unit);release.await()}
+                emitAll(f.base.tasks.observeTasks())
+            }
+        }
+        val reads=dev.agenticscheduler.application.history.ConflictAwareSourceFactReadService(f.base.events,tasks,f.base.profiles,f.base.academics,f.source)
+        val p=PlannerWorkspaceCoordinator(reads,f.planner,f.profileSettings)
+        runBlocking {p.refresh();p.draft=f.request();p.requestPreview()}
+        val count=runBlocking {f.base.journal.timeline().size}
+        var mounted by mutableStateOf(true);lateinit var host:CoroutineScope
+        runDesktopComposeUiTest(width=1280,height=1000) {
+            setContent {
+                host=rememberCoroutineScope() // Same root-owned UI scope as production Desktop composition.
+                if(mounted) app(f,DesktopNavigation().also {it.open(DesktopDestination.PLANNER)},p,hostScope=host)
+            }
+            onNodeWithTag("planner-apply-time").performScrollTo().performTextReplacement(f.now.toString())
+            runOnIdle {blockRefresh=true}
+            onNodeWithTag("planner-apply").performScrollTo().performClick()
+            waitUntil(timeoutMillis=10000) {refreshEntered.isCompleted}
+            runOnIdle {
+                check(p.busy);check(p.preview==null);mounted=false
+                host.launch {p.apply(f.now)} // Guard remains serialized on the presentation dispatcher.
+            }
+            waitForIdle();runBlocking {check(f.base.journal.timeline().size==count+1)}
+            runOnIdle {release.complete(Unit)}
+            waitUntil(timeoutMillis=10000) {!p.busy}
+            runOnIdle {check(p.message!!.startsWith("Applied"));mounted=true}
+            waitForIdle();runBlocking {check(f.base.journal.timeline().size==count+1)}
+        }
+    }
     @Test fun actualDesktopD10ProductScreenshotCandidates() {
         val out=File("build/d10-03/screenshots").also {it.mkdirs()}
         val variants=listOf(Triple(640,720,1f),Triple(1024,900,1f),Triple(1280,1000,1f),Triple(1440,1000,1f),Triple(1920,1080,1f),Triple(1280,1000,2f))
@@ -160,11 +195,11 @@ class ProductWorkspaceUiTest {
         }
     }
     @Composable private fun app(f:D10ProductFixtureGraph,nav:DesktopNavigation,p:PlannerWorkspaceCoordinator=remember {f.workspace()},
-        history:HistoryScreenCoordinator=remember {f.history()},sync:SyncSecurityScreenCoordinator=remember {f.sync()},dark:Boolean=false,stopped:String?=null,retry:()->Unit={},security:SecurityWorkflowServices?=null) {
+        history:HistoryScreenCoordinator=remember {f.history()},sync:SyncSecurityScreenCoordinator=remember {f.sync()},dark:Boolean=false,stopped:String?=null,retry:()->Unit={},security:SecurityWorkflowServices?=null,hostScope:CoroutineScope?=null) {
         val b=f.base
         DesktopApp(f.reads,f.planner,f.profileSettings,b.eventEditor,b.taskEditor,stopped,retry,b.run,b.agent,b.secrets,b.enrollments,b.ids,b.conversationSettings,
             remember {DesktopScheduleScreenCoordinator(f.reads,b.date,b.zone)},nav,dark,historyQueries=f.queries,undoService=f.undo,conflictQueries=f.conflicts,
-            plannerWorkspaceSession=p,historySession=history,syncSession=sync,presentationNow=f.now,securityServices=security)
+            plannerWorkspaceSession=p,historySession=history,syncSession=sync,presentationNow=f.now,securityServices=security,applicationActionScope=hostScope)
     }
     private fun fixture(test:(D10ProductFixtureGraph)->Unit) {
         val file=File.createTempFile("d10-ui-",".db");val db=openDesktopDatabase(file.absolutePath);val f=D10ProductFixtureGraph(db)

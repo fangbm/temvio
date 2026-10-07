@@ -65,6 +65,8 @@ class MainActivity : ComponentActivity() {
     private val agentHttpClient get() = composition.agentHttpClient
     private val agentRun get() = composition.agentRun
     private val d8Scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    // Retain the host Job across recovery remount, while serializing UI command state.
+    private val presentationActionScope = CoroutineScope(d8Scope.coroutineContext + Dispatchers.Main.immediate)
     private val d8ShutdownScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     @Volatile private var d8SyncTrigger: ActiveSyncCatchUpTrigger? = null
     @Volatile private var d8IsForeground = false
@@ -115,7 +117,7 @@ class MainActivity : ComponentActivity() {
                             conflictQueries = composition.conflictQueries,
                             syncConfigured = d8SyncTrigger != null,
                             securityServices = securityServices,
-                            applicationActionScope = d8Scope,
+                            applicationActionScope = presentationActionScope,
 
                             syncStoppedReason = syncStoppedReason,
                             onRetrySync = {
@@ -126,7 +128,7 @@ class MainActivity : ComponentActivity() {
                         D8StartupState.Activating -> D8StartupStatus("Connecting to your secure sync space…")
                         D8StartupState.Blocked -> Column {
                             D8StartupStatus("Sync setup is unavailable. Restore the device credential or check the configured account and server.")
-                            blockedSecurity?.let { dev.agenticscheduler.presentation.SecurityRecoveryPanel(it, d8Scope) }
+                            blockedSecurity?.let { dev.agenticscheduler.presentation.SecurityRecoveryPanel(it, presentationActionScope) }
                         }
                     }
                 }

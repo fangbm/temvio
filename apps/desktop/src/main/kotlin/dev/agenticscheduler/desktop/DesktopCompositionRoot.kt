@@ -12,6 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.platform.LocalWindowInfo
 import dev.agenticscheduler.application.editing.EventEditingService
@@ -125,6 +126,8 @@ internal fun androidx.compose.ui.window.ApplicationScope.DesktopCompositionRoot(
         )
     }
     val d8Scope = remember { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
+    // Root survives Ready/Activating remount; UI actions keep the Compose dispatcher.
+    val presentationActionScope = rememberCoroutineScope()
     val d8ShutdownScope = remember { CoroutineScope(SupervisorJob() + Dispatchers.IO) }
     val d8SyncTrigger = remember { mutableStateOf<ActiveSyncCatchUpTrigger?>(null) }
     suspend fun activateRuntime(configuration: ActiveSyncRuntimeConfiguration?) {
@@ -250,14 +253,14 @@ internal fun androidx.compose.ui.window.ApplicationScope.DesktopCompositionRoot(
                         conflictQueries = conflictQueries,
                         syncConfigured = activeSyncTrigger != null,
                         securityServices = securityServices,
-                        applicationActionScope = d8Scope,
+                        applicationActionScope = presentationActionScope,
 
                     )
                     D8StartupState.Activating -> D8StartupStatus("Connecting to your secure sync space…")
                     D8StartupState.Blocked -> Column {
                         D8StartupStatus("Sync setup is unavailable. Restore the device credential or check the configured account and server.")
                         blockedSecurity?.let { security ->
-                            dev.agenticscheduler.presentation.SecurityRecoveryPanel(security, d8Scope)
+                            dev.agenticscheduler.presentation.SecurityRecoveryPanel(security, presentationActionScope)
                         }
                     }
                 }

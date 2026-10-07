@@ -15,7 +15,7 @@
     "apps/android/src/androidTest/kotlin/dev/agenticscheduler/android/ProductWorkspaceInstrumentedTest.kt": "f7833c0bbc5cfeb3116c7afd5553a3c66c0603cea003c8099c94dc18ef18b0f1",
     "apps/android/src/main/kotlin/dev/agenticscheduler/android/AndroidApp.kt": "e73bce9f9af6936e99b9a89e02980b2018b98807c16928de3babab759c93c57e",
     "apps/desktop/src/main/kotlin/dev/agenticscheduler/desktop/DesktopApp.kt": "89bf920787eedc901412bf14cd9db928a0e9b5b963db9c653d9009348be17ff8",
-    "apps/desktop/src/test/kotlin/dev/agenticscheduler/desktop/ProductWorkspaceUiTest.kt": "837ccc51b63c48ca3a3494452b6e32fbcdd305fa5aa212e0da5eb1137d45c873",
+    "apps/desktop/src/test/kotlin/dev/agenticscheduler/desktop/ProductWorkspaceUiTest.kt": "178b99b998486eef92bc69d9e6414208409730e5c53bb16e85f0db2c0b674db0",
     "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/AcademicScreen.kt": "b043c7f0a25ccee93864394c1b0e02b1bffdbd988b98230ae69136ccaa63a6fc",
     "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/HistoryScreen.kt": "35c8dfcec920033d602f21c1768cf5cf81b3821d0d6116d685699ef982b35000",
     "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/HistoryScreenCoordinator.kt": "21449151d4603240d866dd4daedfd0aaea0c4263f3dc3d571a6f8b10ea9f3045",

@@ -124,7 +124,9 @@ not required to run the independently available explicit Retry path.
   input is transient, masked, cleared on submission/cancel and never logged,
   saved/restored, or used in screenshot fixtures.
 - Platform lifecycle scope owns explicit actions across route/activation remount;
-  closing the app cancels it. No UI automatic retry, request replay, background
+  command state uses the UI dispatcher (Android Main / Desktop root Compose
+  scope), independently of the D8 transport's Default dispatcher. Closing the
+  app cancels it. No UI automatic retry, request replay, background
   security approval or new network/crypto implementation.
 - Settings organizes session theme, shared profiles, Sync/Security and existing
   Provider link-out. No new durable preference or fake analytics. OD-012 stays
@@ -140,8 +142,8 @@ On Windows, JDK 17, isolated Gradle home, the following command passed:
 ./gradlew.bat --no-daemon --console=plain --gradle-user-home D:\codex\asp-d10-gradle-home :apps:desktop:test :shared:ui:desktopTest :shared:database:desktopTest --tests '*AggregateSnapshotConsistencyTest' --tests '*AcademicAuthoringIntegrationTest' :apps:android:assembleDebug :apps:android:assembleDebugAndroidTest
 ```
 
-- Desktop **78/78**: existing 49 plus 16 ProductWorkspacePersistence, 6
-  ProductSecurityWorkflow and 7 ProductWorkspaceUi tests. Real Application/Room
+- Desktop **79/79**: existing 49 plus 16 ProductWorkspacePersistence, 6
+  ProductSecurityWorkflow and 8 ProductWorkspaceUi tests. Real Application/Room
   preview/apply/reflow/Undo, retained restart history, read-only conflicts and
   mounted Compose controls are exercised. Task/Academic creation remains
   Unsupported Undo. An external Application resolution leaves the OPEN query
@@ -179,7 +181,9 @@ race (`IndexOutOfBoundsException: Index 5, size 5`). Its deferred structural
 inputs now retain one immutable composition frame. New lazy workspaces use the
 same rule. The original Academic form and refresh-barrier tests passed again;
 an additional History growth/refresh/scrolled-measurement regression passed.
-No Academic persistence, recurrence or authoring semantics changed.
+A gated post-commit Planner refresh also verifies root-owned UI actions survive
+child remount and a busy repeated Apply produces no second commit. No Academic
+persistence, recurrence or authoring semantics changed.
 
 Actual Compose evidence is kept separately in the bounded **44-candidate**
 [D10-03 capture manifest](fixtures/d10-03/screenshots/capture-manifest.json).
