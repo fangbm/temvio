@@ -1,4 +1,4 @@
-# D10-02F ¡ª Room aggregate snapshot consistency
+# D10-02F â€” Room aggregate snapshot consistency
 
 Status: **IMPLEMENTED / AWAITING REVIEW** (separate foundation PR; not D10-02 UI acceptance).
 Baseline: `feature/d9-02-agent-sync`, `19d6a0779b27ff2641ff0c9251c8017b256ba774` (merged D10-01).
@@ -8,7 +8,7 @@ Branch: `fix/d4-aggregate-observer-atomic-snapshots`. Date: 2026-10-07.
 
 Maintainer authorized this focused persistence correction after D10-02 exposed a
 latent gap in the [D4 committed aggregate observation contract](D4_PERSISTENCE.md)
-(¡ì¡ì26/38) and [PD-004/005/006/013](../PERSISTENCE_DECISIONS.md).
+(Â§26 and Â§38) and [PD-004/005/006/013](../PERSISTENCE_DECISIONS.md).
 Historical D4 acceptance remains historical evidence; its atomic-write tests did
 not prove multi-query read consistency under concurrent replacement. This task
 records the correction rather than rewriting that acceptance.
