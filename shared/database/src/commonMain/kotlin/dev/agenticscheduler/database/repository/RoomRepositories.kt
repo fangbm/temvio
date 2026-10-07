@@ -1,5 +1,6 @@
 package dev.agenticscheduler.database.repository
 
+import androidx.room3.withReadTransaction
 import androidx.room3.withWriteTransaction
 import dev.agenticscheduler.application.persistence.*
 import dev.agenticscheduler.database.AgenticSchedulerDatabase
@@ -11,7 +12,6 @@ import dev.agenticscheduler.domain.planning.PlanningProfile
 import dev.agenticscheduler.domain.task.*
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import dev.agenticscheduler.database.record.ChangeLogEntryRecord
 import dev.agenticscheduler.database.record.FocusBlockTombstoneRecord
@@ -579,8 +579,15 @@ class RoomTaskRepository(private val database: AgenticSchedulerDatabase) : TaskR
 }
 
 class RoomPlanningProfileRepository(private val database: AgenticSchedulerDatabase) : PlanningProfileRepository {
-    override fun observeAll(): Flow<kotlinx.collections.immutable.ImmutableList<PlanningProfile>> = combine(database.planningProfileDao().observeAll(), database.planningProfileDao().observeAllWindows()) { parents,windows -> parents.map { it.toDomain(windows.filter { window -> window.planningProfileId==it.id }) }.toImmutableList() }
-    override suspend fun get(id: PlanningProfileId) = database.planningProfileDao().get(id.value)?.let { it.toDomain(database.planningProfileDao().windows(it.id)) }
+    override fun observeAll(): Flow<kotlinx.collections.immutable.ImmutableList<PlanningProfile>> =
+        database.observeAggregateSnapshot("planning_profiles", "planning_profile_availability_windows") {
+            val parents = database.planningProfileDao().all()
+            val children = database.planningProfileDao().allChildren().groupBy { it.planningProfileId }
+            parents.map { it.toDomain(children[it.id].orEmpty()) }.toImmutableList()
+        }
+    override suspend fun get(id: PlanningProfileId) = database.withReadTransaction {
+        database.planningProfileDao().get(id.value)?.let { it.toDomain(database.planningProfileDao().windows(it.id)) }
+    }
     override suspend fun upsert(profile: PlanningProfile) = database.withWriteTransaction { database.planningProfileDao().upsert(profile.toRecord()); database.planningProfileDao().deleteWindows(profile.id.value); database.planningProfileDao().upsertWindows(profile.windowRecords()) }
 }
 
@@ -589,20 +596,41 @@ class RoomAcademicRepository(private val database: AgenticSchedulerDatabase) : A
     override suspend fun getAcademicYear(id: AcademicYearId) = database.academicYearDao().get(id.value)?.toDomain()
     override suspend fun upsertAcademicYear(value: AcademicYear) = database.academicYearDao().upsert(value.toRecord())
 
-    override fun observeSemesters() = combine(database.semesterDao().observeAll(), database.semesterDao().observeAllWeeks()) { parents, children -> parents.map { parent -> parent.toDomain(children.filter { it.semesterId == parent.id }) }.toImmutableList() }
-    override suspend fun getSemester(id: SemesterId) = database.semesterDao().get(id.value)?.let { it.toDomain(database.semesterDao().weeks(it.id)) }
+    override fun observeSemesters() =
+        database.observeAggregateSnapshot("semesters", "academic_weeks") {
+            val parents = database.semesterDao().all()
+            val children = database.semesterDao().allChildren().groupBy { it.semesterId }
+            parents.map { it.toDomain(children[it.id].orEmpty()) }.toImmutableList()
+        }
+    override suspend fun getSemester(id: SemesterId) = database.withReadTransaction {
+        database.semesterDao().get(id.value)?.let { it.toDomain(database.semesterDao().weeks(it.id)) }
+    }
     override suspend fun upsertSemester(value: Semester) = database.withWriteTransaction { database.semesterDao().upsert(value.toRecord()); database.semesterDao().deleteWeeks(value.id.value); database.semesterDao().upsertWeeks(value.weekRecords()) }
 
     override fun observeCourses() = database.courseDao().observeAll().map { it.map { row -> row.toDomain() }.toImmutableList() }
     override suspend fun getCourse(id: CourseId) = database.courseDao().get(id.value)?.toDomain()
     override suspend fun upsertCourse(value: Course) = database.courseDao().upsert(value.toRecord())
 
-    override fun observePeriodTemplates() = combine(database.periodTemplateDao().observeAll(), database.periodTemplateDao().observeAllPeriods()) { parents, children -> parents.map { parent -> parent.toDomain(children.filter { it.periodTemplateId == parent.id }) }.toImmutableList() }
-    override suspend fun getPeriodTemplate(id: PeriodTemplateId) = database.periodTemplateDao().get(id.value)?.let { it.toDomain(database.periodTemplateDao().periods(it.id)) }
+    override fun observePeriodTemplates() =
+        database.observeAggregateSnapshot("period_templates", "academic_periods") {
+            val parents = database.periodTemplateDao().all()
+            val children = database.periodTemplateDao().allChildren().groupBy { it.periodTemplateId }
+            parents.map { it.toDomain(children[it.id].orEmpty()) }.toImmutableList()
+        }
+    override suspend fun getPeriodTemplate(id: PeriodTemplateId) = database.withReadTransaction {
+        database.periodTemplateDao().get(id.value)?.let { it.toDomain(database.periodTemplateDao().periods(it.id)) }
+    }
     override suspend fun upsertPeriodTemplate(value: PeriodTemplate) = database.withWriteTransaction { database.periodTemplateDao().upsert(value.toRecord()); database.periodTemplateDao().deletePeriods(value.id.value); database.periodTemplateDao().upsertPeriods(value.periodRecords()) }
 
-    override fun observeCourseScheduleRules() = combine(database.courseScheduleRuleDao().observeAll(), database.courseScheduleRuleDao().observeAllWeeks()) { parents, children -> parents.map { parent -> parent.toDomain(children.filter { it.scheduleRuleId == parent.id }) }.toImmutableList() }
-    override suspend fun getCourseScheduleRule(id: CourseScheduleRuleId) = database.courseScheduleRuleDao().get(id.value)?.let { it.toDomain(database.courseScheduleRuleDao().weeks(it.id)) }
+    override fun observeCourseScheduleRules() =
+        database.observeAggregateSnapshot("course_schedule_rules", "course_rule_teaching_weeks") {
+            val parents = database.courseScheduleRuleDao().all()
+            val children = database.courseScheduleRuleDao().allChildren().groupBy { it.scheduleRuleId }
+            parents.map { it.toDomain(children[it.id].orEmpty()) }.toImmutableList()
+        }
+    override suspend fun getCourseScheduleRule(id: CourseScheduleRuleId) = database.withReadTransaction {
+        database.courseScheduleRuleDao().get(id.value)?.let { it.toDomain(database.courseScheduleRuleDao().weeks(it.id)) }
+    }
     override suspend fun upsertCourseScheduleRule(value: CourseScheduleRule) = database.withWriteTransaction { database.courseScheduleRuleDao().upsert(value.toRecord()); database.courseScheduleRuleDao().deleteWeeks(value.id.value); database.courseScheduleRuleDao().upsertWeeks(value.weekRecords()) }
 
     override fun observeAcademicHolidays() = database.academicHolidayDao().observeAll().map { it.map { row -> row.toDomain() }.toImmutableList() }
@@ -621,3 +649,12 @@ class RoomAcademicRepository(private val database: AgenticSchedulerDatabase) : A
     override suspend fun getExam(id: ExamId) = database.examDao().get(id.value)?.toDomain()
     override suspend fun upsertExam(value: Exam) = database.examDao().upsert(value.toRecord())
 }
+
+/** Invalidation is only a trigger; related queries and mapping share one committed snapshot.
+ * Room reuses an enclosing transaction, including an application-owned write transaction.
+ * Mapping failures intentionally propagate as persisted corruption (PD-006/PD-013).
+ */
+private fun <T> AgenticSchedulerDatabase.observeAggregateSnapshot(
+    vararg tables: String,
+    read: suspend () -> T,
+): Flow<T> = invalidationTracker.createFlow(*tables).map { withReadTransaction { read() } }

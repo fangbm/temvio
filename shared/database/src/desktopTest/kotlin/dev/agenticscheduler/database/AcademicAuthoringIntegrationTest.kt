@@ -15,6 +15,8 @@ import dev.agenticscheduler.domain.time.ZonedTimeRange
 import dev.agenticscheduler.sync.*
 import dev.agenticscheduler.planner.*
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.*
@@ -406,6 +408,54 @@ class AcademicAuthoringIntegrationTest {
         assertTrue(tasks.observeFocusBlocks().first().isEmpty(), "Preview never activates a plan.")
         assertTrue(RoomEventRepository(f.db).observeAll().first().isEmpty(), "CourseSession is not a stored Event.")
         assertEquals(5, f.journal.timeline().size, "Resolving sessions/planning does not author academic facts.")
+    } }
+
+    @Test fun `live conflict-aware Calendar survives atomic period replacement and reflects authored update`() = runBlocking { fixture { f ->
+        f.setup(); val course = f.course()
+        val template = success(f.service.createPeriodTemplate(templateInput))
+        success(f.service.createRule(ruleInput(course.id).copy(time = CourseTimeSpec.PeriodBased(template.id, AcademicPeriodNumber(1), AcademicPeriodNumber(3)))))
+        val query = ConflictAwareSourceFactReadService(RoomEventRepository(f.db), RoomTaskRepository(f.db), RoomPlanningProfileRepository(f.db), f.repo,
+            ActiveConflictAwareSourceFactQuery(ConflictAwareProjection(f.receive), space))
+        val emissions = Channel<CalendarProjectionResult>(Channel.UNLIMITED)
+        val collector = launch { query.observe(CalendarViewport(start, end, TimeZone.UTC)).collect { emissions.send(it) } }
+        try {
+            withTimeout(15_000) {
+                val old = emissions.receive()
+                assertTrue(old.issues.isEmpty()); assertEquals(2, old.items.size)
+                val periods = listOf(
+                    AcademicPeriod(AcademicPeriodNumber(1), LocalTime(10, 0), LocalTime(10, 45)),
+                    AcademicPeriod(AcademicPeriodNumber(3), LocalTime(11, 0), LocalTime(11, 45)),
+                    AcademicPeriod(AcademicPeriodNumber(4), LocalTime(12, 0), LocalTime(12, 45)),
+                ).toImmutableList()
+                val updated = success(f.service.updatePeriodTemplate(template.id, PeriodTemplateInput("Updated template", periods), template))
+                val facts = assertIs<ConflictAwareRead.Projected<AcademicAuthoringFacts>>(f.service.loadFacts()).value
+                assertEquals(listOf(updated), facts.periodTemplates)
+                var projection: CalendarProjectionResult
+                do {
+                    projection = emissions.receive()
+                    assertTrue(projection.issues.isEmpty())
+                    assertEquals(2, projection.items.size)
+                    assertTrue(projection.items.all { it is CalendarItem.Zoned })
+                } while ((projection.items.first() as CalendarItem.Zoned).originalRange.start != Instant.parse("2026-09-07T10:00:00Z"))
+                assertEquals(Instant.parse("2026-09-07T11:45:00Z"), (projection.items.first() as CalendarItem.Zoned).originalRange.endExclusive)
+                assertTrue(collector.isActive, "The original subscriber remains alive without UI refresh or resubscribe.")
+            }
+        } finally { collector.cancelAndJoin() }
+    } }
+
+    @Test fun `loadFacts after authored aggregate replacements returns complete children and committed metadata`() = runBlocking { fixture { f ->
+        f.setup(); val course = f.course()
+        val template = success(f.service.createPeriodTemplate(templateInput))
+        val rule = success(f.service.createRule(ruleInput(course.id)))
+        val updatedRule = success(f.service.updateRule(rule.id, ruleInput(course.id).copy(room = "New room", teachingWeeks = TeachingWeekSet.of(listOf(AcademicWeekNumber(1)))), rule))
+        val updatedTerm = success(f.service.updateSemester(f.term.id, termInput(f.year.id).copy(name = "New term", endDateExclusive = LocalDate(2026, 9, 14), academicWeeks = listOf(weeks.first()).toImmutableList()), f.term))
+        val updatedTemplate = success(f.service.updatePeriodTemplate(template.id, templateInput.copy(name = "New template", periods = listOf(template.periods.first()).toImmutableList()), template))
+        val facts = assertIs<ConflictAwareRead.Projected<AcademicAuthoringFacts>>(f.service.loadFacts())
+        assertEquals(listOf(updatedTerm), facts.value.semesters)
+        assertEquals(listOf(updatedTemplate), facts.value.periodTemplates)
+        assertEquals(listOf(updatedRule), facts.value.courseScheduleRules)
+        assertTrue(facts.syncConflictRefs.isEmpty())
+        assertEquals(f.journal.timeline().last().operation.orderedMutations.single().entityId, updatedTemplate.id.value)
     } }
 
     private class SequenceIds(private var next: Int = 1) : UuidV7Generator { override fun next() = id(next++) }
