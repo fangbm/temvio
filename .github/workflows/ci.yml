@@ -231,7 +231,9 @@ jobs:
           target: google_apis
           arch: x86_64
           script: |
-            ./gradlew :apps:android:connectedDebugAndroidTest --no-daemon
+            # The relay fixture test executes in agent-history-platform-e2e with its real enrolled peer.
+            # Without that fixture UTP reports its AssumptionViolatedException as failure, not skipped.
+            ./gradlew :apps:android:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.notClass=dev.agenticscheduler.android.D9PlatformRelayInstrumentedTest --no-daemon
             bash test-support/d10-02/capture-android.sh
             bash test-support/d10-03/capture-android.sh
             # Core Watch runtime/UI acceptance is required on the Wear job, never phone/fake platform.

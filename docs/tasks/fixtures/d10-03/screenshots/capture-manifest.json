@@ -12,13 +12,13 @@
   "nativeEvidence": "API35 Google APIs x86_64 emulator. Native system clock/chrome is not pixel deterministic. No physical-device or live relay security acceptance claimed.",
   "sourceHashNormalization": "UTF-8 text / no BOM / LF",
   "sourceHashes": {
-    "apps/android/src/androidTest/kotlin/dev/agenticscheduler/android/ProductWorkspaceInstrumentedTest.kt": "f7833c0bbc5cfeb3116c7afd5553a3c66c0603cea003c8099c94dc18ef18b0f1",
+    "apps/android/src/androidTest/kotlin/dev/agenticscheduler/android/ProductWorkspaceInstrumentedTest.kt": "fa3460817dd956c4c5f2335858768a332495c17e2fdcf288bedc8644a1c51b40",
     "apps/android/src/main/kotlin/dev/agenticscheduler/android/AndroidApp.kt": "e73bce9f9af6936e99b9a89e02980b2018b98807c16928de3babab759c93c57e",
     "apps/desktop/src/main/kotlin/dev/agenticscheduler/desktop/DesktopApp.kt": "89bf920787eedc901412bf14cd9db928a0e9b5b963db9c653d9009348be17ff8",
     "apps/desktop/src/test/kotlin/dev/agenticscheduler/desktop/ProductWorkspaceUiTest.kt": "178b99b998486eef92bc69d9e6414208409730e5c53bb16e85f0db2c0b674db0",
     "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/AcademicScreen.kt": "b043c7f0a25ccee93864394c1b0e02b1bffdbd988b98230ae69136ccaa63a6fc",
     "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/HistoryScreen.kt": "35c8dfcec920033d602f21c1768cf5cf81b3821d0d6116d685699ef982b35000",
-    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/HistoryScreenCoordinator.kt": "21449151d4603240d866dd4daedfd0aaea0c4263f3dc3d571a6f8b10ea9f3045",
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/HistoryScreenCoordinator.kt": "b55625e47d398cdd11daa72e6c85700f6e6c6cd6fce72bc301fe09bfcecf9a07",
     "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/PlannerWorkspaceCoordinator.kt": "39330c559aa7c14fcfcae374a96645e07d1c23566c084332cf0277619060903b",
     "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/PlannerWorkspaceScreen.kt": "ea90dff44225c0e9ca7f92f5fa436e29b6710e4e6bf565abd6762b3b6333e947",
     "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/SyncSecurityScreenCoordinator.kt": "cd99b19e9618098607a4389019ea8f12248e3d7ede998949634c91dbd4cfe2b7",
@@ -84,7 +84,7 @@
         1280,
         1000
       ],
-      "sha256": "fbf736c4aa03339d1db2dbfb098e94d0e8e6c0448d31bd74ac8c7e79fb49f5c3",
+      "sha256": "4a3fcb1e5aba0b4af50921714aadf3f55cb49c56b25856f949c5fcd6cfa266eb",
       "renderer": "Desktop Compose/Skia"
     },
     {
@@ -274,7 +274,7 @@
         360,
         800
       ],
-      "sha256": "b86706746cca7dc351d0ec9dd7ce4646042712e070dfb0a46d2a0505c9580de4",
+      "sha256": "8ce8307daa5494a37008a6162888558f368a299f1e03db9ed064c11685dcf54a",
       "renderer": "Android API35 native Compose + emulator chrome"
     },
     {
@@ -284,7 +284,7 @@
         360,
         800
       ],
-      "sha256": "1894eb4dcdf30ab925c5131e962a332adb4cc15dd2f732f91b332065689f5b77",
+      "sha256": "39bb6b052b130a59b689f16723656b63100e5581646163f91967a52700fc793d",
       "renderer": "Android API35 native Compose + emulator chrome"
     },
     {
@@ -294,7 +294,7 @@
         360,
         800
       ],
-      "sha256": "69101316bc1cc1e21ee01d405ec33c8085781e9642649a90e2b67f982e0d6f78",
+      "sha256": "639c052a5189b48db8a5f1e2a3d3de73f1d58e0d8a3ab47de44d05cc6c581195",
       "renderer": "Android API35 native Compose + emulator chrome"
     },
     {
@@ -304,7 +304,7 @@
         360,
         800
       ],
-      "sha256": "7323838d3922e0edcd45ca7e147220d4a10eddb7d1b74ffa4991c012cc15092b",
+      "sha256": "99f9fd3a97f8ba51015411bb81a1973c1ced32f68ad40a36017b5227a3525b80",
       "renderer": "Android API35 native Compose + emulator chrome"
     },
     {
@@ -314,7 +314,7 @@
         360,
         800
       ],
-      "sha256": "89010ee12f84fc04e17c30d9e582582958eae14b998a88ba1e023059cec013d5",
+      "sha256": "910ada4e728543c64cc4d6b638b8965e376b3f32961737b3954eec6fc8e693fd",
       "renderer": "Android API35 native Compose + emulator chrome"
     },
     {
@@ -324,7 +324,7 @@
         360,
         800
       ],
-      "sha256": "77abed05ce2632ac6d06e1f967e06a4da1d9eb5125cc9b2b55fcbf6570ef6c5d",
+      "sha256": "358d3da072b0c2ac4da87ed9315120ad0039ab3e140be5dc4ac0b64f193eaa3c",
       "renderer": "Android API35 native Compose + emulator chrome"
     },
     {
@@ -334,7 +334,7 @@
         360,
         800
       ],
-      "sha256": "51710aa35d2dd6f980b36b4ceaa2328607ec17a69c0954d2e139307b5550be62",
+      "sha256": "0bf6c94bc5b7c356c591afe26e55ec7f07e66bec5ae964e2ae24f2bc19ea494e",
       "renderer": "Android API35 native Compose + emulator chrome"
     },
     {
@@ -344,7 +344,7 @@
         360,
         800
       ],
-      "sha256": "fd5ae729b13f917543440b0d30b033e07e5ba08ab76a266ee5c9c3ff4972ab66",
+      "sha256": "3f2adcd9682bbb9d64d806d5a01235ff15d022616ab1c3f995634c4ea9f69bfb",
       "renderer": "Android API35 native Compose + emulator chrome"
     },
     {
@@ -354,7 +354,7 @@
         360,
         800
       ],
-      "sha256": "30766f099b1c5cf8072f58300a8adf05d8db559529319b51e65b7293e65f579a",
+      "sha256": "2140b5fb00507f945c392a8efb9770155b6661ba674f9d2a529740e4a3c7386a",
       "renderer": "Android API35 native Compose + emulator chrome"
     },
     {
@@ -364,7 +364,7 @@
         360,
         800
       ],
-      "sha256": "3b6108da858e5cf02187daaaf4848c52d1389fce3299c2a8feeadd610401de15",
+      "sha256": "d9afac93261962a783db52a4ad61fd84f04649c43014631b975b3c7559f05a64",
       "renderer": "Android API35 native Compose + emulator chrome"
     },
     {
@@ -374,7 +374,7 @@
         360,
         800
       ],
-      "sha256": "f650f896496aa174cd00e339f021ea8e887d029faad63c25406b519d981838c2",
+      "sha256": "5bc9111a1fe8522b995b2fb03e9b3a52ef0cdd7a2b79770a45296ba524822a25",
       "renderer": "Android API35 native Compose + emulator chrome"
     },
     {
@@ -384,7 +384,7 @@
         360,
         800
       ],
-      "sha256": "48e4ac672f5d60619caeea66b08276a83ca0a685bff8bc3d036a78513a2fce9c",
+      "sha256": "afe3d5a9f353c88f7c69ca65de5ed3d0c76944d638b81fe3164b72d6c007b147",
       "renderer": "Android API35 native Compose + emulator chrome"
     },
     {
@@ -394,7 +394,7 @@
         360,
         800
       ],
-      "sha256": "8177a7f9709158d0251b545162fd1b3099f792855e9a06e3fbebfafee1ee603b",
+      "sha256": "563b9061809bb28c7cc8022bef35f48c7ca8b5fa4e0422ec2aa4a6ae0b0b9238",
       "renderer": "Android API35 native Compose + emulator chrome"
     },
     {
@@ -404,7 +404,7 @@
         360,
         800
       ],
-      "sha256": "1179e4876fa00d1afc4cf933919406cc8c266fb47b08269ed5851e290a8cfe79",
+      "sha256": "005724f6b7945bfb101a111303fbc1e81f71dd0371fa27d6c4bbb9994f2db104",
       "renderer": "Android API35 native Compose + emulator chrome"
     },
     {
@@ -414,7 +414,7 @@
         1024,
         768
       ],
-      "sha256": "e0b48d8f02cfe6cc06d97f13d83889ecadc0825e81ffd61509c26a189866955b",
+      "sha256": "fd4ce7294a8844d2797196b2f257603a504c4e8733c1eafca9deae4e29bbd400",
       "renderer": "Android API35 native Compose + emulator chrome"
     },
     {
@@ -424,7 +424,7 @@
         360,
         800
       ],
-      "sha256": "85db91ed06ea7fb1e2f560049fb161501b304bce4d8589fe5ad24a9d573e6347",
+      "sha256": "589e8c7ad749e223ab82349cbde797cb525aae9b6f2e22e52e654902bc4bf83a",
       "renderer": "Android API35 native Compose + emulator chrome"
     },
     {
@@ -434,7 +434,7 @@
         800,
         360
       ],
-      "sha256": "cb9aefe540fe8f76caab1aa6fb5f7b197d3f549b18eecae66128fa20775529e4",
+      "sha256": "1f59b928c15fc4d8f920c4ccdf6ce45a12c1f3a29ea1998f77622a0187386523",
       "renderer": "Android API35 native Compose + emulator chrome"
     },
     {
@@ -444,7 +444,7 @@
         1024,
         768
       ],
-      "sha256": "458f06e9764c9334e037a4cfa01d6d228ad8704110cfdac5f7f6b3126bd47b14",
+      "sha256": "4d7ed6ac39f171f926768e95b5983370a04abf55110e7346c97a97572dd667e0",
       "renderer": "Android API35 native Compose + emulator chrome"
     },
     {
@@ -454,7 +454,7 @@
         360,
         800
       ],
-      "sha256": "f6a48c6a411e1315b890fc0c2b148d4d2325ec452d252bbc9eb423075e3a5a7c",
+      "sha256": "6ed54a21c84da6f0b111ccaf068557c91b5b8f73711244cec0f8e0445f904998",
       "renderer": "Android API35 native Compose + emulator chrome"
     },
     {
@@ -464,7 +464,7 @@
         800,
         360
       ],
-      "sha256": "b7084dc0711abb43163b45b5e980765145af8697346d569a78e7808cbdad3da8",
+      "sha256": "9b0ae8a330c62876b8ab41dc5648e4cc5504cc49ce6d580aafbefd06dbbcb9c4",
       "renderer": "Android API35 native Compose + emulator chrome"
     }
   ]

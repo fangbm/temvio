@@ -43,16 +43,25 @@ class HistoryScreenCoordinator(private val queries: HistoryQueryService, private
         val selected = detail ?: return@command
         if (!confirmUndo || selected.undo != UndoCapability.Available) return@command
         confirmUndo = false
-        message = when (val result = undo.undo(selected.mutation.operation.mutationId)) {
+        val result = undo.undo(selected.mutation.operation.mutationId)
+        message = when (result) {
             is UndoResult.Applied -> "Compensating mutation committed: ${result.mutationId.value}. Original History is retained."
             is UndoResult.Unsupported -> "Undo unsupported: ${result.reason}"
             is UndoResult.Conflict -> "Undo conflict: current facts changed. No child of the group was undone."
             is UndoResult.BlockedBySyncConflict -> "Undo blocked by open business sync conflict. No changes applied."
             UndoResult.NotFound -> "Mutation not found. No changes applied."
         }
-        loadFirstPage()
-        val original = queries.getMutation(selected.mutation.operation.mutationId)
-        detail = original?.let { HistoryDetail(it,queries.getDiff(it.operation.mutationId),undo.canUndo(it.operation.mutationId)) }
+        if(result is UndoResult.Applied) detail = null // Consume the submitted detail before post-commit reads.
+        try {
+            loadFirstPage()
+            val original = queries.getMutation(selected.mutation.operation.mutationId)
+            detail = original?.let { HistoryDetail(it,queries.getDiff(it.operation.mutationId),undo.canUndo(it.operation.mutationId)) }
+        } catch(cancelled: CancellationException) { throw cancelled }
+        catch(_: Exception) {
+            message = if(result is UndoResult.Applied)
+                "Compensating mutation committed: ${result.mutationId.value}. Original History retained. History refresh failed; refresh before another action."
+            else "$message History refresh unavailable; refresh before another action."
+        }
     }
     private suspend fun command(action: suspend () -> Unit) {
         if (busy) return

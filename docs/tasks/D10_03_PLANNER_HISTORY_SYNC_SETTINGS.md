@@ -142,7 +142,7 @@ On Windows, JDK 17, isolated Gradle home, the following command passed:
 ./gradlew.bat --no-daemon --console=plain --gradle-user-home D:\codex\asp-d10-gradle-home :apps:desktop:test :shared:ui:desktopTest :shared:database:desktopTest --tests '*AggregateSnapshotConsistencyTest' --tests '*AcademicAuthoringIntegrationTest' :apps:android:assembleDebug :apps:android:assembleDebugAndroidTest
 ```
 
-- Desktop **79/79**: existing 49 plus 16 ProductWorkspacePersistence, 6
+- Desktop **80/80**: existing 49 plus 17 ProductWorkspacePersistence, 6
   ProductSecurityWorkflow and 8 ProductWorkspaceUi tests. Real Application/Room
   preview/apply/reflow/Undo, retained restart history, read-only conflicts and
   mounted Compose controls are exercised. Task/Academic creation remains
@@ -160,6 +160,10 @@ On Windows, JDK 17, isolated Gradle home, the following command passed:
   Existing CoreScheduling/AppShell native regressions passed **9/9** on the same
   APK. Expanded More/preview Back passed separately at 1024×768; all seven capture
   configurations executed successfully.
+- Corrected CI-equivalent Android/UTP invocation executed **21/21**, zero
+  failures/errors/skips: Product 6, CoreScheduling 5, AppShell 4, consent/export 2,
+  Android Keystore 1 and credential-slot 3. Only the real relay fixture class is
+  excluded here; its dedicated enrolled-platform job remains required.
 - Security tests use the real platform manual composition, Ktor lifecycle
   boundary, RecoveryEnrollmentService/RevocationRotationService and Room. HTTP
   peer and platform secret persistence are deterministic doubles. They prove
@@ -172,6 +176,7 @@ Native command (use the owned test emulator serial):
 ```powershell
 adb -s emulator-5554 shell am instrument -w -r -e class dev.agenticscheduler.android.ProductWorkspaceInstrumentedTest dev.agenticscheduler.android.test/androidx.test.runner.AndroidJUnitRunner
 ./test-support/d10-03/capture-android.ps1 -Serial emulator-5554 -Sdk C:\ProgramData\Android
+./gradlew.bat :apps:android:connectedDebugAndroidTest '-Pandroid.testInstrumentationRunnerArguments.notClass=dev.agenticscheduler.android.D9PlatformRelayInstrumentedTest' --no-daemon
 ```
 
 ### Presentation regression and responsive evidence
@@ -182,7 +187,9 @@ inputs now retain one immutable composition frame. New lazy workspaces use the
 same rule. The original Academic form and refresh-barrier tests passed again;
 an additional History growth/refresh/scrolled-measurement regression passed.
 A gated post-commit Planner refresh also verifies root-owned UI actions survive
-child remount and a busy repeated Apply produces no second commit. No Academic
+child remount and a busy repeated Apply produces no second commit. An injected
+post-Undo read failure preserves the real committed compensation result and
+consumes the submitted detail; retry cannot duplicate it. No Academic
 persistence, recurrence or authoring semantics changed.
 
 Actual Compose evidence is kept separately in the bounded **44-candidate**
@@ -204,6 +211,17 @@ D10-01/02 screenshot files are unchanged.
 
 ### Delivery and remaining acceptance
 
+The first CI attempt exposed test-harness failures: an offscreen lazy Planner
+input was queried before composition; the no-fixture Android job ran the
+enrolled-relay-only test, which UTP classified as failure rather than skipped;
+and the historical consent test's old Unconfined Compose rule resumed a frame on
+Default instead of Android Main. Product instrumentation now scrolls the lazy
+workspace to each input before querying it. The ordinary Android job excludes
+only the fixture-dependent relay class, still required in the independent real
+`agent-history-platform-e2e` job. The consent test uses the v2 Standard rule; its
+assertions and production V3 controls are unchanged. No failure was relabeled
+as passing, and full CI must be rerun on the corrected exact head.
+
 [Draft PR #35](https://github.com/fangbm/temvio/pull/35) targets
 `feature/d9-02-agent-sync`. Full exact-head CI must execute build,
 desktop-windows, android-keystore, wear-keystore and agent-history-platform-e2e;
@@ -212,7 +230,7 @@ docs-only run is not full CI acceptance for this implementation.
 
 `git diff --check`, Markdown link/status checks, source ownership/diff fences and
 candidate hash checks are required before push. No DB migration or new production
-dependency. No changes to Domain/Application/Planner/D7/D8/D9, wire, crypto,
+dependency. No production changes to Domain/Application/Planner/D7/D8/D9, wire, crypto,
 server or Wear. OD-012 remains OPEN. D10-04/05/06 remain unstarted. FG-01/02
 require separately reviewed foundation work by explicit maintainer disposition;
 FG-03 pairing remains unavailable and FG-04 richer directional status is a future

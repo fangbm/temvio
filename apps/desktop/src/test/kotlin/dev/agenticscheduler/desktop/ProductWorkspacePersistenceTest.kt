@@ -78,6 +78,23 @@ class ProductWorkspacePersistenceTest {
         check(f.base.journal.timeline().last().operation.origin is MutationOrigin.Undo)
         check(h.message!!.startsWith("Compensating"));check(h.detail!!.changes.single().afterImageJson!!.contains("Updated notes"))
     } }
+    @Test fun committedUndoRemainsReportedAndConsumedWhenHistoryRefreshFails() = fixture {f -> runBlocking {
+        val task=f.base.tasks.observeTasks().first().single()
+        val update=f.base.taskEditor.update(UpdateTaskInput(task.id,"Before refresh failure",task.status,task.priority,2.hours,kotlin.time.Duration.ZERO,2.hours,null)) as EditingResult.Success
+        var failRead=false
+        val read=object:dev.agenticscheduler.application.persistence.HistoryRepository by f.base.journal {
+            override suspend fun timeline():List<dev.agenticscheduler.application.persistence.CommittedMutation> {
+                check(!failRead) {"Injected read failure after real commit"};return f.base.journal.timeline()
+            }
+        }
+        val h=HistoryScreenCoordinator(HistoryQueryService(read),f.undo)
+        h.select(update.mutationId!!.value);h.confirmUndo=true;failRead=true
+        val count=f.base.journal.timeline().size;h.undoSelected()
+        check(h.message!!.startsWith("Compensating mutation committed"));check(h.message!!.contains("refresh failed"))
+        check(h.detail==null);check(f.base.tasks.getTask(task.id)==task);check(f.base.journal.timeline().size==count+1)
+        h.confirmUndo=true;h.undoSelected();check(f.base.journal.timeline().size==count+1)
+        failRead=false;h.refresh();h.select(update.mutationId!!.value);check(h.detail!=null)
+    } }
     @Test fun changedTaskUndoFailsWithoutOverwrite() = fixture {f -> runBlocking {
         val task=f.base.tasks.observeTasks().first().single()
         suspend fun update(title:String)=f.base.taskEditor.update(UpdateTaskInput(task.id,title,task.status,task.priority,2.hours,kotlin.time.Duration.ZERO,2.hours,null)) as EditingResult.Success

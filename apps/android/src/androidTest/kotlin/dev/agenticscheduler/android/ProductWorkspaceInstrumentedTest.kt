@@ -29,9 +29,10 @@ class ProductWorkspaceInstrumentedTest {
         compose.onNodeWithText("Planner",substring=false).performScrollTo().performClick()
         compose.waitUntil(10000) {p.loaded}
         compose.onNodeWithText("Research hours",substring=false).performClick()
-        compose.onNodeWithTag("planner-reference").performTextReplacement(f.now.toString())
-        compose.onNodeWithTag("planner-horizon-start").performTextReplacement(f.now.toString())
-        compose.onNodeWithTag("planner-horizon-end").performTextReplacement("2026-10-06T17:00:00Z")
+        for((tag,value) in listOf("planner-reference" to f.now.toString(),"planner-horizon-start" to f.now.toString(),"planner-horizon-end" to "2026-10-06T17:00:00Z")) {
+            compose.onNodeWithTag("planner-workspace").performScrollToNode(hasTestTag(tag))
+            compose.onNodeWithTag(tag).performTextReplacement(value)
+        }
         compose.onNodeWithTag("planner-request-preview").performScrollTo().performClick()
         compose.waitUntil(10000) {p.preview is PlannerPreview.Applicable && !p.busy}
         compose.onNodeWithTag("planner-preview").assertExists();compose.waitForIdle()
