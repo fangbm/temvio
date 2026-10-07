@@ -1,0 +1,1064 @@
+{
+  "schemaVersion": 1,
+  "task": "D10-02",
+  "baseSha": "19d6a0779b27ff2641ff0c9251c8017b256ba774",
+  "fixture": "test-support/d10-02/D10CoreFixtureGraph.kt",
+  "date": "2026-10-06",
+  "now": "2026-10-06T08:00:00Z",
+  "displayTimeZone": "UTC",
+  "applicationData": "synthetic only; no real data/credentials/Provider network",
+  "generatedMatrix": {
+    "desktop": 50,
+    "android": 62
+  },
+  "captureBoundary": "Desktop captures real Compose scene including owned dialogs. Android captures full native display including test Activity system bars; status-bar clock is not frozen. No pixel equivalence asserted between renderers or across native system clocks. Candidates are not automatically accepted.",
+  "sourceHashes": {
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/AcademicPresentation.kt": "5b29911c55b88a2c3b1d5ee2ee186be0bf0525c61821d5745e50ea8fdfa006e6",
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/AcademicScreen.kt": "f1d4227b5930e59109ef403f74259a495461641ca8ca8c5dd2b6a206b9e3670a",
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/CalendarPresentation.kt": "ea3b31893f4ad05ff90a271a6537429aa6abbd5b11b43e76692684bf867dc7b2",
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/CoreSchedulingScreen.kt": "ab4484050189772e7d7ea790fcfe9db0289a7379e432d8c96a279f11c73b7677"
+  },
+  "candidates": [
+    {
+      "file": "desktop-1024x900-font100-light-today.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1024x900-font100-light-today.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1024,
+        900
+      ],
+      "bitmapPixels": [
+        1024,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "today",
+      "sha256": "3f84d7efb25f83b4f7f01debaaf70358b70c89614f68b3c281bbaab5d9404914",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1024x900-font100-dark-today.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1024x900-font100-dark-today.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1024,
+        900
+      ],
+      "bitmapPixels": [
+        1024,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "today",
+      "sha256": "9f7879d5e595a8adc2e69cf7465ff654e4f6cdb290c0da400c6be60b94300a3f",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1024x900-font100-light-calendar-day.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1024x900-font100-light-calendar-day.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1024,
+        900
+      ],
+      "bitmapPixels": [
+        1024,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "calendar-day",
+      "sha256": "b8d5b5ca1dcab4d3a2004f6be86ff95b3e7fb147b2ce5df4f24f6a01fab5797f",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1024x900-font100-dark-calendar-day.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1024x900-font100-dark-calendar-day.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1024,
+        900
+      ],
+      "bitmapPixels": [
+        1024,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "calendar-day",
+      "sha256": "ed287987a82dc9dca9c21d24dd57e18b1929c0b8876e9acd1ed0b45d5424d3a6",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1024x900-font100-light-calendar-week.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1024x900-font100-light-calendar-week.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1024,
+        900
+      ],
+      "bitmapPixels": [
+        1024,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "calendar-week",
+      "sha256": "27f79ccaf0f904f8856348b00afea546f64fd5e9d9b2eed63057c58798725560",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1024x900-font100-dark-calendar-week.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1024x900-font100-dark-calendar-week.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1024,
+        900
+      ],
+      "bitmapPixels": [
+        1024,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "calendar-week",
+      "sha256": "585a3e818147f19ab0974ee8c7c55336a105c009a1f197318605e9bebe66b0f1",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1024x900-font100-light-calendar-month.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1024x900-font100-light-calendar-month.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1024,
+        900
+      ],
+      "bitmapPixels": [
+        1024,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "calendar-month",
+      "sha256": "4e7545a341e20d77aff1b01d8f50f1396f3f2cb4b7b699a0f57eaee6c299da0a",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1024x900-font100-dark-calendar-month.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1024x900-font100-dark-calendar-month.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1024,
+        900
+      ],
+      "bitmapPixels": [
+        1024,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "calendar-month",
+      "sha256": "613b1a79610c3b20aae00f6200bf27b0e32c1b240d9a3d5a3710981dab70ca2f",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1024x900-font100-light-tasks.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1024x900-font100-light-tasks.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1024,
+        900
+      ],
+      "bitmapPixels": [
+        1024,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "tasks",
+      "sha256": "2fc935ed64d059f1f70c2c787fc65b21ab3273469fd747e17384eb5aad6ddadb",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1024x900-font100-dark-tasks.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1024x900-font100-dark-tasks.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1024,
+        900
+      ],
+      "bitmapPixels": [
+        1024,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "tasks",
+      "sha256": "1c2fb87e5b3826ce9e48b343ed2f0c3d7b7b6d72e5645c0f4528a0711ecf5f47",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1024x900-font100-light-course-detail.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1024x900-font100-light-course-detail.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1024,
+        900
+      ],
+      "bitmapPixels": [
+        1024,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "course-detail",
+      "sha256": "e25ec3d7ee9bfeb39e1c319b6bfb486387cc410827866f284298b1e64cd9b42b",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1024x900-font100-dark-course-detail.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1024x900-font100-dark-course-detail.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1024,
+        900
+      ],
+      "bitmapPixels": [
+        1024,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "course-detail",
+      "sha256": "f5f01c718ae6d55a626965ac589e822fbb0cacab7c3808439df1935c733916dc",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1024x900-font100-light-course-form.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1024x900-font100-light-course-form.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1024,
+        900
+      ],
+      "bitmapPixels": [
+        1024,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "course-form",
+      "sha256": "2d4e42df1cda1733d12ef9c1b1829c08adf44f9d5a0b65151f758985210f83a3",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1024x900-font100-dark-course-form.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1024x900-font100-dark-course-form.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1024,
+        900
+      ],
+      "bitmapPixels": [
+        1024,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "course-form",
+      "sha256": "dc873a3a84fe4e988c4605cadab2a00f934d8ae4d127306814676ee80e62e597",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1024x900-font100-light-rule-form.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1024x900-font100-light-rule-form.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1024,
+        900
+      ],
+      "bitmapPixels": [
+        1024,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "rule-form",
+      "sha256": "bb00ed098984208a4817bc8d06d6c98473755c84074884b7a8c8f384078163a4",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1024x900-font100-dark-rule-form.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1024x900-font100-dark-rule-form.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1024,
+        900
+      ],
+      "bitmapPixels": [
+        1024,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "rule-form",
+      "sha256": "3e3fc0145efa3f1ed710d575ddb6323edf36144d64ffa2fe414866bc648bb779",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1024x900-font100-light-exam-form.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1024x900-font100-light-exam-form.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1024,
+        900
+      ],
+      "bitmapPixels": [
+        1024,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "exam-form",
+      "sha256": "2790eae5195402eaa216eb8c5467327400d062041c341dbf3fdc8fb4a62fd7ca",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1024x900-font100-dark-exam-form.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1024x900-font100-dark-exam-form.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1024,
+        900
+      ],
+      "bitmapPixels": [
+        1024,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "exam-form",
+      "sha256": "eadafb2221f59e03b5ebf30c863e950cbd6738b57d0600608c0967217b364e9f",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-360x800-font100-light-today.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-360x800-font100-light-today.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        360,
+        800
+      ],
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "today",
+      "sha256": "296350621bd9c3b70face400b277e4e5de06f03ba325e6bbe631a0e5ea42bca2",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-360x800-font100-dark-today.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-360x800-font100-dark-today.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        360,
+        800
+      ],
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "today",
+      "sha256": "674de15a8c86714ff4ef177795425dd6f3a36a5f22588f0f1e4fe4be9f8f8b44",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-360x800-font100-light-calendar-day.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-360x800-font100-light-calendar-day.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        360,
+        800
+      ],
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "calendar-day",
+      "sha256": "c4545ed801739a57fa0b8d47191a2799b46e88ef077b07d534bbb1dd673c2a1b",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-360x800-font100-dark-calendar-day.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-360x800-font100-dark-calendar-day.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        360,
+        800
+      ],
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "calendar-day",
+      "sha256": "dc40d62ec034d0072d3ba44527a51744925e47f4411a1146113de92d25dca142",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-360x800-font100-light-calendar-week.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-360x800-font100-light-calendar-week.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        360,
+        800
+      ],
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "calendar-week",
+      "sha256": "ffdc7fea061835b62da42ae0beac5353ef54ebfa567147089b743fef46fbb3cc",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-360x800-font100-dark-calendar-week.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-360x800-font100-dark-calendar-week.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        360,
+        800
+      ],
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "calendar-week",
+      "sha256": "acdcd2c7922fbd8554152beca3eddd6b2420bfe7a4e945fb037b318383b9c905",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-360x800-font100-light-calendar-month.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-360x800-font100-light-calendar-month.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        360,
+        800
+      ],
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "calendar-month",
+      "sha256": "dd9092444f84d6c8e0b51ab6657b0f827dd9886ceaa779b59c5f82acd0ef4ebd",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-360x800-font100-dark-calendar-month.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-360x800-font100-dark-calendar-month.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        360,
+        800
+      ],
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "calendar-month",
+      "sha256": "64fcddddb745917ea317ba9f2b820b4c58c8dec79297ddddb59574e05d875b6d",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-360x800-font100-light-tasks.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-360x800-font100-light-tasks.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        360,
+        800
+      ],
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "tasks",
+      "sha256": "d5c10ff8dc8b009749c6b7275a05f7ca6ba72f25af465b5287ba4b47c79e0d77",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-360x800-font100-dark-tasks.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-360x800-font100-dark-tasks.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        360,
+        800
+      ],
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "tasks",
+      "sha256": "a5e65d425829fa8463b86a433ddf57861fb47a4fff301fef476d15bfe4fa8593",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-360x800-font100-light-course-detail.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-360x800-font100-light-course-detail.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        360,
+        800
+      ],
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "course-detail",
+      "sha256": "eb08ccf0ac78bb541b8852af6c20e83bf2d1ae8de3583ca1248ab7ad8bb1bb65",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-360x800-font100-dark-course-detail.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-360x800-font100-dark-course-detail.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        360,
+        800
+      ],
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "course-detail",
+      "sha256": "ff6f6007d8956d382268d6f62ffe9a93d2102b536a208dae8aa186ea28b66893",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-360x800-font100-light-course-form.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-360x800-font100-light-course-form.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        360,
+        800
+      ],
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "course-form",
+      "sha256": "47e789de9b2aa6ad549d4c402782b85c682b7f83564dd9bf984a1665b4223276",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-360x800-font100-dark-course-form.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-360x800-font100-dark-course-form.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        360,
+        800
+      ],
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "course-form",
+      "sha256": "d09adadd8eb962c766daa66ba8842a351eb980d97970c4eb16205064e6681a8f",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-360x800-font100-light-rule-form.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-360x800-font100-light-rule-form.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        360,
+        800
+      ],
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "rule-form",
+      "sha256": "ac292c9e3a91683516b2bdcbd35ead368e89ca0a181514e86ddb9726edc513f8",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-360x800-font100-dark-rule-form.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-360x800-font100-dark-rule-form.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        360,
+        800
+      ],
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "rule-form",
+      "sha256": "b63368005b13bb02622239558adea7c4a9b21bbfa14bcb7afe727b75a7b1f986",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-360x800-font100-light-exam-form.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-360x800-font100-light-exam-form.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        360,
+        800
+      ],
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "exam-form",
+      "sha256": "4a92e363663aab1af646acf462b01c515163ce40e9ccd7fed63104d0db549a75",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-360x800-font100-dark-exam-form.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-360x800-font100-dark-exam-form.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        360,
+        800
+      ],
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "exam-form",
+      "sha256": "8ee34b91d4c9a66a11353420cb2d125bd4e4cf965ded9aa0615874fa10be07b2",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1280x900-font100-light-course-detail.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1280x900-font100-light-course-detail.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1280,
+        900
+      ],
+      "bitmapPixels": [
+        1280,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "course-detail",
+      "sha256": "a0036b1d7595c111daac6e8ba1a031e98c2ae75d1bd3e84b6cd1d05f831c476a",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1280x900-font100-dark-course-detail.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1280x900-font100-dark-course-detail.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1280,
+        900
+      ],
+      "bitmapPixels": [
+        1280,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "course-detail",
+      "sha256": "64be56efef6fbbabc94a1af52ded5ded9999dc746b64b32ca1dac5e7e6bc9a46",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-1024x768-font100-light-course-detail.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-1024x768-font100-light-course-detail.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        1024,
+        768
+      ],
+      "bitmapPixels": [
+        1024,
+        768
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "course-detail",
+      "sha256": "eef1320599458dab70c3f562d073c0eb77baf9fbb52d82de706d7ce4e728e48f",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-1024x768-font100-dark-course-detail.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-1024x768-font100-dark-course-detail.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        1024,
+        768
+      ],
+      "bitmapPixels": [
+        1024,
+        768
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "course-detail",
+      "sha256": "b4b95fd46c3d96447c3d6d9bac6e2d3893e2bd902e53a219b545fd04662f977e",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-1024x768-font100-light-exam-detail.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-1024x768-font100-light-exam-detail.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        1024,
+        768
+      ],
+      "bitmapPixels": [
+        1024,
+        768
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "exam-detail",
+      "sha256": "03dfae04b703b82e59d3123b2523751f95b836edf8cc51195bf71c9ef28b3d3f",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-1024x768-font100-dark-exam-detail.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-1024x768-font100-dark-exam-detail.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        1024,
+        768
+      ],
+      "bitmapPixels": [
+        1024,
+        768
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "exam-detail",
+      "sha256": "219aa17c9975a4bdf39a21143ec5cc3ec3f8c3fb65df3b8e2a1e60f143a91d01",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-640x900-font200-light-semester-form.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-640x900-font200-light-semester-form.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        640,
+        900
+      ],
+      "bitmapPixels": [
+        640,
+        900
+      ],
+      "density": 1,
+      "fontScale": 2.0,
+      "theme": "light",
+      "case": "semester-form",
+      "sha256": "125d309cd3787110ce161fd0427ed32a4eb90601bbba4a149c458aab08165e7f",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-640x900-font200-dark-semester-form.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-640x900-font200-dark-semester-form.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        640,
+        900
+      ],
+      "bitmapPixels": [
+        640,
+        900
+      ],
+      "density": 1,
+      "fontScale": 2.0,
+      "theme": "dark",
+      "case": "semester-form",
+      "sha256": "be7b7820dba72feb91ef3a5100ceeb7503f627901407f4bba8992cff8d56bedf",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-360x800-font200-light-semester-form.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-360x800-font200-light-semester-form.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        360,
+        800
+      ],
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "density": 1,
+      "fontScale": 2.0,
+      "theme": "light",
+      "case": "semester-form",
+      "sha256": "6cfeb4251229aaa6980ba3686996588e74588b5fb66681c4467502adceb6869e",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-360x800-font200-dark-semester-form.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-360x800-font200-dark-semester-form.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        360,
+        800
+      ],
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "density": 1,
+      "fontScale": 2.0,
+      "theme": "dark",
+      "case": "semester-form",
+      "sha256": "6589c12ff439f66c65f2a68ada02e70124652964c4004b93134bb6a57166695a",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-800x360-font100-light-semester-form.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-800x360-font100-light-semester-form.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        800,
+        360
+      ],
+      "bitmapPixels": [
+        800,
+        360
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "semester-form",
+      "sha256": "5c34a3eb6febdb7488c011327796ea35e461fb29eb9e8d4300cb0eea624a0262",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "android-800x360-font100-dark-semester-form.png",
+      "generatedFrom": "build/d10-02/android-captures/d10-02-screenshots/android-800x360-font100-dark-semester-form.png",
+      "platform": "android",
+      "renderer": "Android API 35 x86_64 Google APIs emulator; native Compose; UiAutomation display",
+      "requestedWindowDp": [
+        800,
+        360
+      ],
+      "bitmapPixels": [
+        800,
+        360
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "semester-form",
+      "sha256": "66530033cb34b9fe86b23d018a5f2520a8ee5bc86477d2595839db2974359910",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1920x1080-font100-light-calendar-month.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1920x1080-font100-light-calendar-month.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1920,
+        1080
+      ],
+      "bitmapPixels": [
+        1920,
+        1080
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "calendar-month",
+      "sha256": "8e542b48d725071b2866a7d6cb59a7e4e57e335f29e4a2cc44585b23c0f82c49",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1920x1080-font100-dark-calendar-month.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1920x1080-font100-dark-calendar-month.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1920,
+        1080
+      ],
+      "bitmapPixels": [
+        1920,
+        1080
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "calendar-month",
+      "sha256": "cd735831f2d402346720347513d6defff9e94192808a5caf4be4544686a569df",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1024x900-font100-light-semester-form.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1024x900-font100-light-semester-form.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1024,
+        900
+      ],
+      "bitmapPixels": [
+        1024,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "light",
+      "case": "semester-form",
+      "sha256": "928fe6ef1e3cdda5e4ff5f685f56d52845ac2a5337edfc93db1eacf5c9350e44",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    },
+    {
+      "file": "desktop-1024x900-font100-dark-semester-form.png",
+      "generatedFrom": "apps/desktop/build/d10-02/screenshots/desktop-1024x900-font100-dark-semester-form.png",
+      "platform": "desktop",
+      "renderer": "Windows Skia Desktop Compose",
+      "requestedWindowDp": [
+        1024,
+        900
+      ],
+      "bitmapPixels": [
+        1024,
+        900
+      ],
+      "density": 1,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "case": "semester-form",
+      "sha256": "8a00ec39a63bcfcd1fc0c2344b7319940ffc5cdce45318a33b43707a12b4bcc0",
+      "reviewStatus": "CANDIDATE_AWAITING_HUMAN_REVIEW"
+    }
+  ],
+  "sourceHashNormalization": "UTF-8 text with LF line endings"
+}

@@ -181,7 +181,9 @@ jobs:
       - name: Verify Windows presentation and capture synthetic Compose fixtures
         run: .\gradlew.bat :shared:ui:desktopTest :apps:desktop:test --no-daemon
       - name: Check presentation ownership and Markdown status
-        run: python test-support/d10-02/check-boundaries.py --source-only
+        run: |
+            python test-support/d10-02/check-boundaries.py --source-only
+            python test-support/d10-02/check-candidates.py
       - name: Upload Windows presentation candidates and reports
         if: always()
         uses: actions/upload-artifact@v4

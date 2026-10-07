@@ -162,9 +162,74 @@ manifest are recorded after their last executions. Exact-head CI must execute
 all five existing jobs; cancellation/unallocated jobs do not count as passes.
 
 Earlier real failures are retained in the investigation: academic mixed aggregate
-snapshots, asynchronous form/save test synchronization, and Android Dialog
-PixelCopy capturing the background Activity. The latter capture issue is fixed
+snapshots, cancellation of the post-save refresh when the dialog unmounted, and
+Android Dialog PixelCopy capturing the background Activity. The UI lifecycle
+issue is fixed by keeping the app-mounted editor scope alive before its early
+return. A controllable delayed refresh test proves dialog disposal cannot cancel
+that post-commit load or claim a refreshed source prematurely. The latter capture issue is fixed
 in test code by asserting the intended semantic surface and capturing the actual
 Android display via UiAutomation. Native captures include system bars; their
 clock is platform state, not the synthetic application time or a pixel-repeat
 claim. No screenshots are manually drawn or bitmap-edited.
+
+## Final targeted evidence
+
+- Desktop: **49/49**, no failure/skip: Calendar presentation 11, Academic
+  presentation 14, core scheduling Compose UI 8, core editing Compose UI 6,
+  and 10 unchanged accepted tests. The eight scheduling tests include actual
+  Year/Semester/Template forms, separate Course/Rule commands, three Exam forms,
+  resize/discard and deterministic delayed post-commit refresh survival.
+- Shared design system: **3/3**, unchanged contrast/role/layout regressions.
+- Actual Android API 35 isolated emulator: **5/5** new core tests and **4/4**
+  unchanged shell tests, separately executed. Final core APK was tested again
+  directly with AndroidJUnitRunner. No physical-device acceptance claimed.
+- PixelCopy/semantics concurrency: new Android tests use the library's v2 rule
+  and assert intended form/selection before actual display capture. Existing
+  D10-01 test sources/candidate baselines are unchanged.
+
+The latest exact-head CI is published on [Draft PR #33](https://github.com/fangbm/temvio/pull/33/checks)
+and in the delivery report after all five jobs execute. This local evidence does
+not replace CI's Android/Wear Keystore or real PostgreSQL/platform tests.
+
+The foundation observer gap above remains open for scope clarification. It is
+not waived by a green build or by the UI lifecycle fix. No Room or Application
+implementation was changed to bypass the current reviewed boundary.
+
+## Screenshot candidate manifest
+
+[Capture manifest](fixtures/d10-02/screenshots/capture-manifest.json) contains
+**52** selected real-platform PNGs, bitmap dimensions, normalized source hashes,
+fixture inputs and SHA256. Generated matrix: 50 Desktop + 62 Android candidates.
+All eight native capture variants completed with `OK (1 test)` each. Capture and
+comparison write/read only the separate D10-02 candidate paths; no D10-01 history
+is rewritten and no automatic visual approval is performed.
+
+Representative inspected outputs include Desktop Light Today, Light Week, Dark
+Month, Dark wide Course detail, and narrow large-font Semester; Android Light
+Today/Week, Dark Month, Dark 1024 Course detail, 200% Semester and short-height
+Semester. The grid's dates and timed ranges remain distinct. 200%/short-height
+form actions remain visible with a scrollable body; selected detail uses the
+expanded pane only when usable. Android test Activity system-bar chrome is
+included in native display PNGs and is not product screen-reader acceptance.
+
+Examples: [Desktop Light Today](fixtures/d10-02/screenshots/desktop-1024x900-font100-light-today.png),
+[Desktop Dark Month](fixtures/d10-02/screenshots/desktop-1024x900-font100-dark-calendar-month.png),
+[Android Light Week](fixtures/d10-02/screenshots/android-360x800-font100-light-calendar-week.png),
+[Android expanded detail](fixtures/d10-02/screenshots/android-1024x768-font100-dark-course-detail.png),
+[Android 200% form](fixtures/d10-02/screenshots/android-360x800-font200-light-semester-form.png).
+
+## Delivery and remaining gates
+
+Draft [PR #33](https://github.com/fangbm/temvio/pull/33) targets
+`feature/d9-02-agent-sync` from the exact merged D10-01 baseline. Local complete
+build and final targeted suites passed; the post-save refresh regression also
+passed a forced repeated Desktop run. Final exact-head CI conclusions are
+reported separately after real execution. No migration/new dependency.
+
+**IN PROGRESS / FOUNDATION_GAP**: the pending atomic academic aggregate observer
+clarification prevents declaring complete D10-02 acceptance. No new frozen
+semantic decision is invented, no persistence bypass is added, and the gap is
+not relabeled as solved by UI refresh/error handling. OD-012 remains OPEN.
+D10-03+ views, D10-04 Agent redesign, D10-05 Wear redesign, D10-06 final motion/
+accessibility and all new Domain/Planner/Tool/sync/security capabilities remain
+outside this slice. Keep Draft; do not merge or begin the next slice.

@@ -12,6 +12,7 @@ import dev.agenticscheduler.fixtures.D10CoreFixtureGraph
 import dev.agenticscheduler.presentation.*
 import dev.agenticscheduler.sync.TaskPut
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
 import org.junit.Test
 import org.jetbrains.skia.Image
@@ -65,6 +66,42 @@ class CoreSchedulingUiTest {
         }
     }
 
+    @Test fun closingSavedFormDoesNotCancelItsAuthoritativeRefresh() = fixture { f ->
+        val entered=kotlinx.coroutines.CompletableDeferred<Unit>()
+        val release=kotlinx.coroutines.CompletableDeferred<Unit>()
+        var saved=false
+        val repository=object : dev.agenticscheduler.application.persistence.AcademicRepository by f.base.academics {
+            override suspend fun upsertAcademicYear(value: dev.agenticscheduler.domain.academic.AcademicYear) {
+                f.base.academics.upsertAcademicYear(value); saved=true
+            }
+            override fun observeAcademicYears() = kotlinx.coroutines.flow.flow {
+                if (saved) { entered.complete(Unit); release.await() }
+                emitAll(f.base.academics.observeAcademicYears())
+            }
+        }
+        val service=dev.agenticscheduler.application.academic.AcademicAuthoringService(repository,f.base.ids,f.base.mutations,
+            dev.agenticscheduler.application.history.NoActiveSyncSpaceWritePolicy,dev.agenticscheduler.application.history.NoActiveSyncSpaceSourceFactQuery)
+        val c=AcademicScreenCoordinator(service,f.base.eventEditor)
+        val count=runBlocking { f.base.journal.timeline().size }
+        runDesktopComposeUiTest(width=1280,height=1100) {
+            val nav=DesktopNavigation().also { it.open(DesktopDestination.COURSES) }
+            setContent { app(f,nav,academic=c) }
+            waitUntil(timeoutMillis=10000) { c.facts!=null }
+            onNodeWithText("AcademicYear",substring=false).performClick(); onNodeWithText("New AcademicYear").performClick()
+            onNodeWithText("Name",substring=false).performTextInput("Refresh-survives year")
+            onNodeWithText("Start date (YYYY-MM-DD)").performTextInput("2027-09-01")
+            onNodeWithText("End exclusive date").performTextInput("2028-09-01")
+            onNodeWithText("Save",substring=false).performClick()
+            waitUntil(timeoutMillis=10000) { entered.isCompleted }
+            waitForIdle(); onNodeWithText("New AcademicYear",substring=false).assertExists()
+            check(c.draft==null && c.loading && c.saving) { "Dialog disposal cancelled post-commit refresh" }
+            onNodeWithText("Saved · refreshing source facts…").performScrollTo().assertExists()
+            onNodeWithText("Saved · authoritative source facts loaded").assertDoesNotExist()
+            runBlocking { check(f.base.journal.timeline().size==count+1) }
+            runOnIdle { release.complete(Unit) }
+            waitUntil(timeoutMillis=10000) { !c.loading && !c.saving && c.facts?.academicYears?.any { it.name=="Refresh-survives year" }==true }
+        }
+    }
     @Test fun courseSaveThenRuleSaveAreIndependentRealUiCommands() = fixture { f ->
         val c = AcademicScreenCoordinator(f.authoring,f.base.eventEditor)
         val count = runBlocking { f.base.journal.timeline().size }
@@ -77,7 +114,6 @@ class CoreSchedulingUiTest {
             onNodeWithText("Semester: Choose").performClick(); onNodeWithText("Autumn semester",substring=false).performClick()
             onNodeWithText("Save",substring=false).performClick(); waitUntil(timeoutMillis=10000) { c.draft == null && !c.saving && !c.loading }
             runBlocking { check(f.base.journal.timeline().size == count+1); check(f.base.academics.observeCourseScheduleRules().first().size == 2) }
-            println("After save selected=${c.selected}; courses=${c.facts?.courses}; saving=${c.saving}; loading=${c.loading}; error=${c.technicalError}")
             try { waitUntil(timeoutMillis=10000) { onAllNodesWithText("New CourseScheduleRule",substring=false).fetchSemanticsNodes().isNotEmpty() } }
             catch (failure: Throwable) {
                 println("Post-save selected=${c.selected}; read=${c.read}; saving=${c.saving}; loading=${c.loading}; technical=${c.technicalError}")

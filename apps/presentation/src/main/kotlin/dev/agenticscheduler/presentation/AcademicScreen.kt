@@ -67,7 +67,13 @@ fun AcademicScreen(coordinator: AcademicScreenCoordinator, initialKind: Academic
                     ActionButton(role = ActionRole.TERTIARY, onClick = { coordinator.selected = record }, modifier = Modifier.testTag("academic-select-${record.id}")) { Text("View ${record.kind.label}") }
                 }
             }
-            if (coordinator.lastCommittedMutationId != null) item { Text("Saved · authoritative source facts refreshed", style = MaterialTheme.typography.bodySmall) }
+            if (coordinator.lastCommittedMutationId != null) item {
+                Text(when {
+                    coordinator.loading || coordinator.saving -> "Saved · refreshing source facts…"
+                    coordinator.read is ConflictAwareRead.Projected -> "Saved · authoritative source facts loaded"
+                    else -> "Saved · source refresh unavailable; retry explicitly."
+                }, style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }
@@ -139,9 +145,11 @@ private fun AcademicDetail(record: AcademicRecord, coordinator: AcademicScreenCo
 
 @Composable
 fun AcademicEditor(coordinator: AcademicScreenCoordinator) {
+    // Keep the post-commit refresh alive after the dialog closes. This scope is
+    // still owned by the app-mounted editor, never a global/background write path.
+    val scope = rememberCoroutineScope()
     val draft = coordinator.draft ?: return
     val facts = coordinator.facts
-    val scope = rememberCoroutineScope()
     var discard by remember(draft.before, draft.kind) { mutableStateOf(false) }
     val dismiss: () -> Unit = { if (!coordinator.saving) { if (coordinator.dirty) discard = true else coordinator.closeDraft() } }
     fun change(value: AcademicDraft) { if (!coordinator.saving) coordinator.draft = value }
