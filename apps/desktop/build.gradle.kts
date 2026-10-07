@@ -29,6 +29,8 @@ dependencies {
 }
 
 sourceSets.test { kotlin.srcDir(rootProject.file("test-support/d10-01")) }
+sourceSets.main { kotlin.srcDir(rootProject.file("apps/presentation/src/main/kotlin")) }
+sourceSets.test { kotlin.srcDir(rootProject.file("test-support/d10-02")) }
 
 compose.desktop {
     application {
