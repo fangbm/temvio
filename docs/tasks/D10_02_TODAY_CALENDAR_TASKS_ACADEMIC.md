@@ -1,7 +1,12 @@
 # D10-02 — Today / Calendar / Tasks / Academic
 
-Status: IN PROGRESS. Exact baseline: `19d6a0779b27ff2641ff0c9251c8017b256ba774`
-(merged D10-01 / PR #32). Branch: `feature/d10-02-core-scheduling-academic`.
+Status: **IMPLEMENTED / AWAITING REVIEW**.
+Current integrated baseline: `60d2670f063357177a8e222db7ccbcc679bc0d92`
+(accepted D10-02F / PR #34). Original D10-01 baseline:
+`19d6a0779b27ff2641ff0c9251c8017b256ba774` (PR #32).
+Branch: `feature/d10-02-core-scheduling-academic`.
+Normal merge/sync commit: `9a6ff734336016434fd96dd7dc7e50c371cf17bc`.
+Existing D10-02 implementation history is preserved.
 
 ## Contract
 
@@ -54,35 +59,34 @@ zone/theme/font/viewport, never production data. Candidates are not auto-approve
 Targeted tests, actual native evidence, responsive inspection and exact-head full
 CI are recorded here at delivery; none is claimed before execution.
 
-## FOUNDATION_GAP — atomic academic aggregate observation
+## Foundation dependency — RESOLVED / MERGED
 
-User interaction: save an explicit Semester or CourseScheduleRule while the
-authoritative Calendar subscription remains active.
+D10-02 originally discovered mixed parent/child Room aggregate snapshots while
+saving an explicit Semester or CourseScheduleRule with the authoritative Calendar
+subscription active. Separately invalidated queries could reconstruct a newly
+committed parent with prior children, terminating Domain mapping despite an
+atomic successful write. Initial tests reproduced Semester and Rule failures.
+The original UI technical-error/explicit-refresh behavior did not solve that gap.
 
-Existing API inspected: `ConflictAwareSourceFactReadService.observe()` consumes
-`RoomAcademicRepository.observeSemesters/observePeriodTemplates/observeCourseScheduleRules`.
-The repository combines separately observed parent and child table snapshots.
+The maintainer authorized and accepted the separate
+[D10-02F persistence correction](D10_02F_ROOM_AGGREGATE_SNAPSHOT_FIX.md):
+[PR #34](https://github.com/fangbm/temvio/pull/34), merged as
+`60d2670f063357177a8e222db7ccbcc679bc0d92`.
+Dependency status: **RESOLVED / MERGED**.
+Invalidation is trigger-only; Semester, PeriodTemplate, CourseScheduleRule and
+PlanningProfile parent/child reconstruction and corresponding point reads share
+one `withReadTransaction`. Persisted corruption still fails visibly.
+D10-02 integrates that accepted implementation unchanged through the normal merge
+above; it does not reimplement persistence or add a UI workaround.
 
-Why insufficient: real Compose/Room save tests observed a newly committed parent
-paired with the prior child list. Domain mapping rejects the mixed snapshot as
-missing AcademicWeeks/TeachingWeeks, terminating the Calendar stream. The write
-transaction and committed data remain intact. UI must not fabricate children,
-relax Domain validation, poll or fall back to raw facts.
+Post-integration acceptance reruns the real Application + Room Calendar
+subscription/authoring update and complete `loadFacts()` regressions, alongside
+`AggregateSnapshotConsistencyTest` and `AcademicAuthoringIntegrationTest`.
+Presentation mocks and an old green CI run do not close this dependency.
 
-Minimal requested foundation: retain the exact existing repository/Application
-contracts and emit each academic aggregate from one SQLite read transaction,
-driven by parent/child invalidation; add creation/update observation regressions.
-No schema, Domain, D7/D8, wire or merge change. Maintainer clarification requested;
-this persistence change has not been made. Independent presentation work continues.
-
-The UI surfaces technical read failures and an explicit refresh action. This
-contains the crash; it is **not** evidence that aggregate observation is fixed.
-Initial tests reproduced both Semester and Rule mapping failures. Acceptance
-status remains IN PROGRESS pending this foundation decision; passing UI tests do
-not close this persistence gap.
-
-No other FOUNDATION_GAP / BLOCKED_BY_DECISION identified during the current audit.
-Final accessibility/motion acceptance remains D10-06. Later product surfaces remain
+Remaining FOUNDATION_GAP: **none**. Remaining BLOCKED_BY_DECISION for D10-02:
+**none**. OD-012 remains OPEN as an independent production gate. Final
+accessibility/motion acceptance remains D10-06; later product surfaces remain
 outside this slice.
 
 ## Core workflows and interaction boundaries
@@ -154,7 +158,7 @@ python test-support/d10-02/check-candidates.py --compare-generated
 git diff --check
 ```
 
-Full local `build` passed. Domain 42, Planner 67, Sync 55, Agent 48, Database 157,
+Pre-integration local `build` passed. Domain 42, Planner 67, Sync 55, Agent 48, Database 157,
 Wear JVM 60, Application 213 cases (193 passed / 20 existing platform-gated skips),
 and server 44 cases (27 passed / 17 PostgreSQL-gated skips). Skips are not passes
 or platform/PostgreSQL acceptance. Final Desktop/native counts and screenshot
@@ -191,9 +195,48 @@ The latest exact-head CI is published on [Draft PR #33](https://github.com/fangb
 and in the delivery report after all five jobs execute. This local evidence does
 not replace CI's Android/Wear Keystore or real PostgreSQL/platform tests.
 
-The foundation observer gap above remains open for scope clarification. It is
-not waived by a green build or by the UI lifecycle fix. No Room or Application
-implementation was changed to bypass the current reviewed boundary.
+The historical foundation gap is resolved by merged D10-02F, not waived by a
+green build or UI lifecycle/error handling. The updated-base PR comparison
+excludes the accepted foundation code, with no Room/Application bypass.
+
+## Post-integration verification — accepted D10-02F base
+
+The normal merge above integrates PR #34 without modifying its implementation.
+The following suites were actually rerun against that integrated source:
+
+- `AggregateSnapshotConsistencyTest`: **13/13**, no failures or skips.
+- `AcademicAuthoringIntegrationTest`: **37/37**, no failures or skips.
+  This includes the real Application + Room active Calendar subscription during
+  legitimate aggregate authoring: subscriber survives, final projection reflects
+  the committed replacement, and `loadFacts()` returns complete committed facts.
+  These are persistence/integration regressions, not presentation mocks.
+- Desktop: **49/49**; shared UI: **3/3**, no failures or skips.
+- Android API 35 isolated emulator, direct AndroidJUnitRunner:
+  core **5/5**, shell **4/4**, both successful after rebuilding/installing APKs.
+  This is real emulator instrumentation, not physical-device acceptance.
+
+```powershell
+.\gradlew.bat --gradle-user-home D:\codex\asp-d10-gradle-home :shared:database:desktopTest --rerun --tests '*AggregateSnapshotConsistencyTest' --tests '*AcademicAuthoringIntegrationTest' :apps:desktop:test --rerun :shared:ui:desktopTest --rerun :apps:android:assembleDebug :apps:android:assembleDebugAndroidTest --no-daemon --console=plain
+C:\ProgramData\Android\platform-tools\adb.exe -s emulator-5554 shell am instrument -w -r -e class dev.agenticscheduler.android.CoreSchedulingInstrumentedTest dev.agenticscheduler.android.test/androidx.test.runner.AndroidJUnitRunner
+C:\ProgramData\Android\platform-tools\adb.exe -s emulator-5554 shell am instrument -w -r -e class dev.agenticscheduler.android.AppShellInstrumentedTest dev.agenticscheduler.android.test/androidx.test.runner.AndroidJUnitRunner
+python test-support/d10-02/check-boundaries.py
+python test-support/d10-02/check-candidates.py --compare-generated
+git diff --check
+```
+
+All **52** existing candidate hashes/dimensions and all four normalized manifest
+source hashes pass verification. Fresh Desktop test rendering matches the selected
+Desktop PNGs byte for byte. Android matrix archives/candidates remain unchanged;
+native functional tests reran, but the full Android capture matrix was not
+regenerated or claimed pixel-identical to its historical platform clock.
+No committed screenshot, capture manifest or D10-01 visual baseline changed.
+
+Comparison against the updated base `60d2670f063357177a8e222db7ccbcc679bc0d92`
+contains **80 D10-02-owned files**, excluding the accepted foundation correction.
+Presentation/test/fixture sources remain identical to the pre-integration head;
+only this task document and the roadmap receive status/evidence closure edits.
+The new exact-head full CI is linked in PR #33 checks and the final delivery after
+all five jobs actually execute; the pre-integration run is not current evidence.
 
 ## Screenshot candidate manifest
 
@@ -221,15 +264,15 @@ Examples: [Desktop Light Today](fixtures/d10-02/screenshots/desktop-1024x900-fon
 ## Delivery and remaining gates
 
 Draft [PR #33](https://github.com/fangbm/temvio/pull/33) targets
-`feature/d9-02-agent-sync` from the exact merged D10-01 baseline. Local complete
+`feature/d9-02-agent-sync` from the current merged D10-02F baseline. Local complete
 build and final targeted suites passed; the post-save refresh regression also
 passed a forced repeated Desktop run. Final exact-head CI conclusions are
 reported separately after real execution. No migration/new dependency.
 
-**IN PROGRESS / FOUNDATION_GAP**: the pending atomic academic aggregate observer
-clarification prevents declaring complete D10-02 acceptance. No new frozen
-semantic decision is invented, no persistence bypass is added, and the gap is
-not relabeled as solved by UI refresh/error handling. OD-012 remains OPEN.
+**IMPLEMENTED / AWAITING REVIEW**: D10-02F dependency is RESOLVED / MERGED via
+PR #34 / `60d2670f063357177a8e222db7ccbcc679bc0d92`. No remaining FOUNDATION_GAP
+or D10-02 BLOCKED_BY_DECISION. No new frozen semantic decision or persistence
+bypass is added. D10-02 is neither MERGED nor COMPLETE; OD-012 remains OPEN.
 D10-03+ views, D10-04 Agent redesign, D10-05 Wear redesign, D10-06 final motion/
 accessibility and all new Domain/Planner/Tool/sync/security capabilities remain
 outside this slice. Keep Draft; do not merge or begin the next slice.
