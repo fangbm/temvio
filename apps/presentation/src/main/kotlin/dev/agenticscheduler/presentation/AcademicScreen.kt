@@ -27,34 +27,42 @@ fun AcademicScreen(coordinator: AcademicScreenCoordinator, initialKind: Academic
         coordinator.requestedCourse?.let { id -> coordinator.selected = coordinator.facts?.courses?.firstOrNull { it.id == id }?.let { AcademicRecord.Subject(it) }; coordinator.requestedCourse = null }
         coordinator.requestedExam?.let { id -> coordinator.selected = coordinator.facts?.exams?.firstOrNull { it.id == id }?.let { AcademicRecord.Assessment(it) }; coordinator.requestedExam = null }
     }
-    val records = coordinator.facts?.records(kind).orEmpty() // One immutable frame.
-    val selected = coordinator.selected?.let { old -> coordinator.facts?.records(kind)?.firstOrNull { it.id == old.id && it.kind == old.kind } }
+    // Deferred lazy intervals must retain the same frame for item count and measurement.
+    val facts = coordinator.facts
+    val loading = coordinator.loading
+    val saving = coordinator.saving
+    val read = coordinator.read
+    val technicalError = coordinator.technicalError
+    val committedId = coordinator.lastCommittedMutationId
+    val currentKind = kind
+    val records = facts?.records(currentKind).orEmpty()
+    val selected = coordinator.selected?.let { old -> facts?.records(currentKind)?.firstOrNull { it.id == old.id && it.kind == old.kind } }
     AdaptiveDetailWorkspace(selected != null, { coordinator.selected = null }, {
         selected?.let { AcademicDetail(it, coordinator) }
     }) {
-        LazyColumn(Modifier.fillMaxSize().padding(horizontal = 20.dp).testTag(if (coordinator.loading) "academic-loading" else "academic-ready"),
+        LazyColumn(Modifier.fillMaxSize().padding(horizontal = 20.dp).testTag(if (loading) "academic-loading" else "academic-ready"),
             contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item { SectionHeading(if (initialKind == AcademicKind.EXAM) "Exams" else "Courses & academic setup", "Explicit source facts. Sessions are derived, never authored here.") }
             item {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(AcademicKind.COURSE, AcademicKind.EXAM, AcademicKind.YEAR, AcademicKind.SEMESTER, AcademicKind.TEMPLATE).forEach { choice ->
-                        NavigationControl(choice.label, kind == choice, { kind = choice; coordinator.selected = null })
+                        NavigationControl(choice.label, currentKind == choice, { kind = choice; coordinator.selected = null })
                     }
                 }
             }
             item { FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ActionButton(onClick = { coordinator.create(kind) }, enabled = coordinator.facts != null && !coordinator.loading) { Text("New ${kind.label}") }
-                ActionButton(role = ActionRole.TERTIARY, onClick = { scope.launch { coordinator.refresh() } }, enabled = !coordinator.loading) { Text("Refresh academic facts") }
+                ActionButton(onClick = { coordinator.create(currentKind) }, enabled = facts != null && !loading) { Text("New ${currentKind.label}") }
+                ActionButton(role = ActionRole.TERTIARY, onClick = { scope.launch { coordinator.refresh() } }, enabled = !loading) { Text("Refresh academic facts") }
             } }
-            if (coordinator.loading) item { StatusMessage("Loading", "Reading authoritative academic source facts…") }
-            coordinator.technicalError?.let { error -> item { StatusMessage("Load error", error) } }
-            when (val read = coordinator.read) {
-                is ConflictAwareRead.Unprojectable -> item { StatusMessage("Sync conflict · unavailable", "${read.reason}. Facts withheld; resolve ${read.conflictIds.joinToString()} before authoring.") }
-                is ConflictAwareRead.Projected -> if (read.syncConflictRefs.isNotEmpty()) item { StatusMessage("Provisional academic facts", "OPEN Sync conflicts: ${read.syncConflictRefs.joinToString { "${it.entityKind}: ${it.conflictIds.joinToString()}" }}. Ordinary Save cannot resolve them.") }
+            if (loading) item { StatusMessage("Loading", "Reading authoritative academic source facts…") }
+            technicalError?.let { error -> item { StatusMessage("Load error", error) } }
+            when (val frameRead = read) {
+                is ConflictAwareRead.Unprojectable -> item { StatusMessage("Sync conflict · unavailable", "${frameRead.reason}. Facts withheld; resolve ${frameRead.conflictIds.joinToString()} before authoring.") }
+                is ConflictAwareRead.Projected -> if (frameRead.syncConflictRefs.isNotEmpty()) item { StatusMessage("Provisional academic facts", "OPEN Sync conflicts: ${frameRead.syncConflictRefs.joinToString { "${it.entityKind}: ${it.conflictIds.joinToString()}" }}. Ordinary Save cannot resolve them.") }
                 null -> Unit
             }
-            if (!coordinator.loading && records.isEmpty() && coordinator.facts != null) item {
-                StatusMessage("No ${kind.label} records", when (kind) {
+            if (!loading && records.isEmpty() && facts != null) item {
+                StatusMessage("No ${currentKind.label} records", when (currentKind) {
                     AcademicKind.COURSE -> "Create an AcademicYear and Semester with explicit weeks, then save a Course. Rules are saved separately."
                     AcademicKind.EXAM -> "Choose a saved Semester. Unscheduled, DateOnly and Exact are distinct choices."
                     else -> "Create explicit setup facts. No default academic graph is generated."
@@ -67,10 +75,10 @@ fun AcademicScreen(coordinator: AcademicScreenCoordinator, initialKind: Academic
                     ActionButton(role = ActionRole.TERTIARY, onClick = { coordinator.selected = record }, modifier = Modifier.testTag("academic-select-${record.id}")) { Text("View ${record.kind.label}") }
                 }
             }
-            if (coordinator.lastCommittedMutationId != null) item {
+            if (committedId != null) item {
                 Text(when {
-                    coordinator.loading || coordinator.saving -> "Saved · refreshing source facts…"
-                    coordinator.read is ConflictAwareRead.Projected -> "Saved · authoritative source facts loaded"
+                    loading || saving -> "Saved · refreshing source facts…"
+                    read is ConflictAwareRead.Projected -> "Saved · authoritative source facts loaded"
                     else -> "Saved · source refresh unavailable; retry explicitly."
                 }, style = MaterialTheme.typography.bodySmall)
             }

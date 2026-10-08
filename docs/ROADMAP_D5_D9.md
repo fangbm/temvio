@@ -1,8 +1,8 @@
 # Agentic Scheduler — Reviewed Roadmap D5–D10 + Post-project Hackathon
 
 > Status: **Roadmap Baseline — individual Task Specs remain authoritative**  
-> Baseline: D5-01 complete; D5-02 implemented/build-verified; D6 complete; D6.5 build/Desktop-verified/Android-surface-and-dialog-touch-verified (full input pending); D7 complete; D8 complete through production runtime closure; D9-01 complete/merged; D9-02 complete/merged (PR #24 `6583e61`); D9-03-00 frozen/merged `82f4c62`; D9-03-01 merged `37b6759`; D9-03-02 merged `dcd3e3c`; D9-03-03 COMPLETE / MERGED PR #28 `27092ba`; D9-03 COMPLETE; D9 COMPLETE — IMPLEMENTATION + ACCEPTANCE PASS; D9 final closure merged `378630c`; OD-012 OPEN — independent production release gate; OD-059 resolved; D10-00 FROZEN / MAINTAINER APPROVED / MERGED `f8efbde`; D10-00A MERGED `dfb9652`; D10-01 MERGED PR #32 `19d6a077`; D10-02 IMPLEMENTED / AWAITING REVIEW; post-project DGX Spark hackathon fork planned
-> Date: 2026-10-07 (D10-02 implementation)
+> Baseline: D5-01 complete; D5-02 implemented/build-verified; D6 complete; D6.5 build/Desktop-verified/Android-surface-and-dialog-touch-verified (full input pending); D7 complete; D8 complete through production runtime closure; D9-01 complete/merged; D9-02 complete/merged (PR #24 `6583e61`); D9-03-00 frozen/merged `82f4c62`; D9-03-01 merged `37b6759`; D9-03-02 merged `dcd3e3c`; D9-03-03 COMPLETE / MERGED PR #28 `27092ba`; D9-03 COMPLETE; D9 COMPLETE — IMPLEMENTATION + ACCEPTANCE PASS; D9 final closure merged `378630c`; OD-012 OPEN — independent production release gate; OD-059 resolved; D10-00 FROZEN / MAINTAINER APPROVED / MERGED `f8efbde`; D10-00A MERGED `dfb9652`; D10-01 MERGED PR #32 `19d6a077`; D10-02 MERGED PR #33 `cda86a81`; D10-03 IMPLEMENTED / AWAITING REVIEW; post-project DGX Spark hackathon fork planned
+> Date: 2026-10-08 (D10-03 optimistic profile editor integration)
 
 ---
 
@@ -31,7 +31,8 @@ D10-00 Product / IA / UI architecture          FROZEN / MAINTAINER APPROVED / ME
 D10-00A Academic Authoring Foundation          MERGED PR #31 / dfb9652 — Application foundation only
  ↓
 D10-01 Design System + App Shell               MERGED PR #32 / 19d6a077 — accepted foundation
-D10-02 Today / Calendar / Tasks / Academic      IMPLEMENTED / AWAITING REVIEW — independent UI slice
+D10-02 Today / Calendar / Tasks / Academic      MERGED PR #33 `cda86a81`
+D10-03 Planner / History / Sync / Settings     IMPLEMENTED / AWAITING REVIEW — optimistic profile editor integrated
  ↓
 DGX-H   DGX Spark Server-Agent Hackathon Fork   OPTIONAL — ONLY AFTER MAIN PRODUCT COMPLETION
 ```
@@ -290,14 +291,22 @@ does not approve production-sensitive-data release or implicitly resolve OD-012.
 # D10 — Final Product UI / UX
 
 Status: **D10-00 FROZEN / MAINTAINER APPROVED / MERGED `f8efbde`; D10-00A MERGED
-`dfb9652`; D10-01 MERGED PR #32 `19d6a077`; D10-02 IMPLEMENTED / AWAITING REVIEW; D10-03+ unstarted**.
+`dfb9652`; D10-01 MERGED PR #32 `19d6a077`; D10-02 MERGED PR #33 `cda86a81`; D10-03 IMPLEMENTED / AWAITING REVIEW; D10-04+ unstarted**.
 
 D10-02 originally exposed a Room aggregate observation FOUNDATION_GAP. The
 separate [D10-02F correction](tasks/D10_02F_ROOM_AGGREGATE_SNAPSHOT_FIX.md) is
 **RESOLVED / MERGED** via [PR #34](https://github.com/fangbm/temvio/pull/34),
 `60d2670f063357177a8e222db7ccbcc679bc0d92`. D10-02 integrates that authoritative
 foundation, with no remaining FOUNDATION_GAP / BLOCKED_BY_DECISION for this slice.
-D10-02 remains awaiting review; it is not MERGED or COMPLETE. OD-012 remains OPEN.
+D10-02 is MERGED PR #33 at `cda86a815d21fe4a501b79a92074962001a54039`.
+D10-03F PlanningProfile optimistic Save is **MERGED PR #36** at
+`74e20e555c9037ff62dda95ab67e3e0e455b0aa1`.
+D10-03 is [IMPLEMENTED / AWAITING REVIEW](tasks/D10_03_PLANNER_HISTORY_SYNC_SETTINGS.md):
+the canonical Planner / Settings editor consumes the optimistic ordinary User
+Save; FG-01 is resolved. FG-02 typed conflict candidates and FG-03 complete pairing
+orchestration are DEFERRED / NON-BLOCKING. FG-04 richer directional progress is
+DEFERRED / NON-BLOCKING OPTIONAL CAPABILITY. OD-012 OPEN remains independent.
+D10-04+ unstarted.
 
 D10 turns the completed product capabilities from D5-D9 into the final coherent cross-platform product experience. It is the first milestone whose acceptance explicitly includes final visual language and complete product-level interaction polish.
 
@@ -328,8 +337,8 @@ repository CI and maintainer review, within the accepted slice order.
 D10-00   Product / IA / UI architecture freeze        MAINTAINER APPROVED / MERGED f8efbde (docs only)
 D10-00A  Academic Authoring Foundation                MERGED PR #31 / dfb9652; separately reviewed
 D10-01   Design System + App Shell                   MERGED PR #32 / 19d6a077; accepted foundation
-D10-02   Today / Calendar / Tasks / Academic          IMPLEMENTED / AWAITING REVIEW; D10-02F dependency resolved/merged
-D10-03   Planner / History / Sync / Settings          after shell and relevant projections
+D10-02   Today / Calendar / Tasks / Academic          MERGED PR #33 cda86a81; D10-02F resolved/merged
+D10-03   Planner / History / Sync / Settings          IMPLEMENTED / AWAITING REVIEW; FG-01 resolved via PR #36
 D10-04   Agent Product Surface                       after shell and context/preview surfaces
 D10-05   Wear Final UX                               after tokens and reviewed Wear graph
 D10-06   Accessibility / Visual Regression / Final Acceptance

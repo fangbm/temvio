@@ -37,3 +37,5 @@ compose.desktop {
         mainClass = "dev.agenticscheduler.desktop.MainKt"
     }
 }
+
+sourceSets.test { kotlin.srcDir(rootProject.file("test-support/d10-03")) }

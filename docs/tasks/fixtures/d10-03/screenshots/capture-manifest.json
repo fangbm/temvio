@@ -1,0 +1,896 @@
+{
+  "baseSha": "74e20e555c9037ff62dda95ab67e3e0e455b0aa1",
+  "status": "CANDIDATES / AWAITING MAINTAINER VISUAL REVIEW",
+  "containsRealSecrets": false,
+  "referenceInstant": "2026-10-06T08:00:00Z",
+  "displayTimeZone": "UTC",
+  "fixture": "Deterministic synthetic Application + Room business facts. Blank recovery input; typed synthetic directory for confirmation only. No Provider request or security rotation from captures.",
+  "generatedMatrix": {
+    "desktop": 74,
+    "android": 92
+  },
+  "nativeEvidence": "API35 Google APIs x86_64 emulator. Native system clock/chrome is not pixel deterministic. No physical-device or live relay security acceptance claimed.",
+  "sourceHashNormalization": "UTF-8 text / no BOM / LF",
+  "sourceHashes": {
+    "apps/android/src/androidTest/kotlin/dev/agenticscheduler/android/ProductWorkspaceInstrumentedTest.kt": "b5da6b9e3b461d37e9cd99767cace4d0e1c0841e8aa69190fea350b63ff36fca",
+    "apps/android/src/main/kotlin/dev/agenticscheduler/android/AndroidApp.kt": "d62307ba12bd7a547f686dd970f0d214b1d38cb249cd584ca183ed00b2ed2d49",
+    "apps/desktop/src/main/kotlin/dev/agenticscheduler/desktop/DesktopApp.kt": "5240973aabe5de8b35c404089fd8f098a0e795cdfceb62ee39ac43c3c4bfece8",
+    "apps/desktop/src/test/kotlin/dev/agenticscheduler/desktop/ProductWorkspaceUiTest.kt": "69afb028d639ad36deb21fdba9b63fafaa98e292d5da3be2829c3fe775b2dbee",
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/AcademicScreen.kt": "b043c7f0a25ccee93864394c1b0e02b1bffdbd988b98230ae69136ccaa63a6fc",
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/HistoryScreen.kt": "35c8dfcec920033d602f21c1768cf5cf81b3821d0d6116d685699ef982b35000",
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/HistoryScreenCoordinator.kt": "b55625e47d398cdd11daa72e6c85700f6e6c6cd6fce72bc301fe09bfcecf9a07",
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/PlannerWorkspaceCoordinator.kt": "4f0ba647fdedcb9b801044860f09f61551b07ce1387221e2753758dc22109984",
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/PlannerWorkspaceScreen.kt": "165f952e4f143596c8e22b33ad816b0f4e5b53a1543ee2969cc8b2a5027d152b",
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/SyncSecurityScreenCoordinator.kt": "cd99b19e9618098607a4389019ea8f12248e3d7ede998949634c91dbd4cfe2b7",
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/SyncSettingsScreens.kt": "0cdbd26c6ab1ced9b32ddb39783596f5507540db2392b19e5db75944ba3c4014",
+    "test-support/d10-03/D10ProductFixtureGraph.kt": "c7c6d5cfacb90978ad8d94661c67053bed787336c65ef578330df6793973d383",
+    "test-support/d10-03/D10SecurityFixtureStore.kt": "0a63febf67fcedd023e1bcb43db262df64f11caa1303da0bc0d2668b9891c5be",
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/PlanningProfileDraft.kt": "06dfdc52809b3470ac633a66e8791821d9a677df90e749e7e01105e83a541225",
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/PlanningProfileEditor.kt": "59fd139ab0e8f207463e055654a3b46838f4f0e9bf3ffd154416fd895788af4a",
+    "apps/desktop/src/test/kotlin/dev/agenticscheduler/desktop/PlanningProfileWorkspaceTest.kt": "fff575cff795a1c2c9ea1b0120852ecd4ae29521291a75a5320e687aab174a5c"
+  },
+  "candidates": [
+    {
+      "file": "desktop-1280x1000-font100-light-planner-input.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-light-planner-input.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "3369eb1aabbed64d26ee2f4512ac60706c9d3294e0278f5ec41a1c8ba89b7fd6",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-light-planner-preview.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-light-planner-preview.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "01f1db71eba764dffd1e2cb985d529c5bdd70ebaf73ae6bd8253e41aad00e8a0",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-light-planner-stale.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-light-planner-stale.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "3befc3ec706dd96cd96def87cc3590b31bec9392cfa17c08ff690b0002c330fc",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-light-history-detail.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-light-history-detail.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "7634f2fc7430fb081bfe4d075e763d8f8976a248f13d53cfeb38d0dae87540e4",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-light-history-timeline.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-light-history-timeline.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "3a9479a2d1d1fef61e24f44667dd786dccb849cd456d12477e937264caf1ccf6",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-light-sync-conflict.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-light-sync-conflict.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "dd1c826d7defb4dee0342fd7676ac939e710f09a3b42aa92340e677cacda70d0",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-light-sync-stopped.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-light-sync-stopped.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "0c73bc960941cbcf74d40a3fe8956a8a61b3cab3a69e187e2e795acf3350ad2d",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-light-settings.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-light-settings.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "8f24925f02e5277f610e89a9ee2a77d1f2b343008413dafb197963f7c97ac018",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-light-revoke-confirmation.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-light-revoke-confirmation.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "c9a6647a9a6e8c8558488127e17c3473be5f54f551ccbe182455dafe41ea19bb",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-dark-planner-input.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-dark-planner-input.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "7888ecd691c87f8a85d7225c924d0320c906041c2c23040fd0251ab0068aa77b",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-dark-planner-preview.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-dark-planner-preview.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "117ee237eb1adca13492cc4ce7f61119bd6b897c7b23c31421c4f448b338288f",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-dark-planner-stale.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-dark-planner-stale.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "ccb3c6b379617884261737c90d53c71e70b7267631c33c223e1f8599f46d5fbb",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-dark-history-detail.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-dark-history-detail.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "8b78a6f987692685539ef78e62f9786f89aa6028bdcd3b1cc9abcdc875695524",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-dark-history-timeline.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-dark-history-timeline.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "a41601f02b05fbf85c228d8ffd34fcc1d67ff4bcbb5ba30edfa496f355b358d1",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-dark-sync-conflict.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-dark-sync-conflict.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "92b7b81aae6dc170d7a4b0c6c4ff711359bf583c5b59cb2dc41847ebca6e832a",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-dark-sync-stopped.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-dark-sync-stopped.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "e67174492334a36362a975f0c53edc5d89a87f7bec7493d3933c384f01325e5e",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-dark-settings.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-dark-settings.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "21edc55f82ffb0ed7e2aff46c104dcbc14d0ea4569817346db6ecbd9c4358a78",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-dark-revoke-confirmation.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-dark-revoke-confirmation.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "22da112921e147d4e4e7d546808df16987c603f1a0a1df3040e7c5bb3f3c8f7d",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1920x1080-font100-light-history-detail.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1920x1080-font100-light-history-detail.png",
+      "bitmapPixels": [
+        1920,
+        1080
+      ],
+      "sha256": "028b17dca617b941f533d69d707d84ee95c204fdddd4de452cd57c0c7f48f8b7",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font200-light-planner-preview.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font200-light-planner-preview.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "7b317996edfbf2a9fe100a6a4cdb66f5e4ae968a7299a2ac2cc35e6de529181b",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-640x720-font100-light-planner-preview.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-640x720-font100-light-planner-preview.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "09394834c8f2d2e8252430c14e682385d2d313cf4bd6af7abe29f0bc8fe381f8",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1920x1080-font100-dark-history-detail.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1920x1080-font100-dark-history-detail.png",
+      "bitmapPixels": [
+        1920,
+        1080
+      ],
+      "sha256": "2bb64fac3321fbe426be9f52295945907605051f484bdc63918f62a44ab90a5d",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font200-dark-planner-preview.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font200-dark-planner-preview.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "6b9f7f2426d6f16d100575076e0c009ef1c409876ef34552ce648e20bc959141",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-640x720-font100-dark-planner-preview.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-640x720-font100-dark-planner-preview.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "4234ba4051f95014704c9627bd70b3e2dd47fc80f115b5d8e3e9a9b44f022c52",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "android-360x800-font100-light-planner-preview.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font100-light-planner-preview.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "af9ff08df4135f03456e94a4659ce082607614ed3ef45674b1303fe7d3ed4818",
+      "renderer": "Android API35 native Compose + emulator chrome"
+    },
+    {
+      "file": "android-360x800-font100-light-history-detail.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font100-light-history-detail.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "369ef3caabb1b8284aa3f3c207600a26dd88d969069c708909a797fc84f12afe",
+      "renderer": "Android API35 native Compose + emulator chrome"
+    },
+    {
+      "file": "android-360x800-font100-light-history-timeline.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font100-light-history-timeline.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "9f3795f777a5ec94b75eb2cab5a71da1d54cc63efac1cc1547c0c4efedf4c74e",
+      "renderer": "Android API35 native Compose + emulator chrome"
+    },
+    {
+      "file": "android-360x800-font100-light-sync-conflict.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font100-light-sync-conflict.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "f70f968e4611b7ddb860747ed2ae3e00b57b4813b7ddd3567e8dd32778074ad6",
+      "renderer": "Android API35 native Compose + emulator chrome"
+    },
+    {
+      "file": "android-360x800-font100-light-sync-stopped.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font100-light-sync-stopped.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "2fe8e259ff080ef7e838082012f19d5f051f116f9638b510fc49c66d5c2e024c",
+      "renderer": "Android API35 native Compose + emulator chrome"
+    },
+    {
+      "file": "android-360x800-font100-light-settings.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font100-light-settings.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "c0956da2442fd6269037dd36c90c2265f7a92f66d2689be8baaccd38ed5a4b11",
+      "renderer": "Android API35 native Compose + emulator chrome"
+    },
+    {
+      "file": "android-360x800-font100-light-revoke-confirmation.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font100-light-revoke-confirmation.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "74fea7e14bfbe176d1d05df46bab4383407ccf5cac8237ee2e73a108005b5139",
+      "renderer": "Android API35 native Compose + emulator chrome"
+    },
+    {
+      "file": "android-360x800-font100-dark-planner-preview.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font100-dark-planner-preview.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "a60687aa1f6342c774d8992d3917d3d24286604787b312e3e84ac021780f2e1a",
+      "renderer": "Android API35 native Compose + emulator chrome"
+    },
+    {
+      "file": "android-360x800-font100-dark-history-detail.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font100-dark-history-detail.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "e791dcae0c4cc80ee2da266832d5419f3eb6cc55b9cb221a30cb0460ab1ca623",
+      "renderer": "Android API35 native Compose + emulator chrome"
+    },
+    {
+      "file": "android-360x800-font100-dark-history-timeline.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font100-dark-history-timeline.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "f589b6a5439436f85ff49b1365fad3f467325dfa538cf5c3b0212d38e2303452",
+      "renderer": "Android API35 native Compose + emulator chrome"
+    },
+    {
+      "file": "android-360x800-font100-dark-sync-conflict.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font100-dark-sync-conflict.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "dcddc2fc2b75d5d9c4713d8fbc8070c78c7c460a5336d2224cd3af8aa2769955",
+      "renderer": "Android API35 native Compose + emulator chrome"
+    },
+    {
+      "file": "android-360x800-font100-dark-sync-stopped.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font100-dark-sync-stopped.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "7f70bf6378e4b1cbaea247518c422309a76bfef9e833e0db00a7781014dfae47",
+      "renderer": "Android API35 native Compose + emulator chrome"
+    },
+    {
+      "file": "android-360x800-font100-dark-settings.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font100-dark-settings.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "b76b3c5a2c049a798fff6bd658def92af3795577c1e476474585d3163d69f4ab",
+      "renderer": "Android API35 native Compose + emulator chrome"
+    },
+    {
+      "file": "android-360x800-font100-dark-revoke-confirmation.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font100-dark-revoke-confirmation.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "40e4e20be889503fe57d8b433fa6c5ffe1968abdf1dbc198efd415bbd9e9dc5a",
+      "renderer": "Android API35 native Compose + emulator chrome"
+    },
+    {
+      "file": "android-1024x768-font100-light-planner-preview.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-1024x768-font100-light-planner-preview.png",
+      "bitmapPixels": [
+        1024,
+        768
+      ],
+      "sha256": "05c073771988ed8a098ee21aad4ae54233a48df443eeb174e2d1b7452bebd992",
+      "renderer": "Android API35 native Compose + emulator chrome"
+    },
+    {
+      "file": "android-360x800-font200-light-planner-preview.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font200-light-planner-preview.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "b22b989b4115e4f535c4463d6c85ddbf142a9a3b727f7be47a3bb12fe9b145f3",
+      "renderer": "Android API35 native Compose + emulator chrome"
+    },
+    {
+      "file": "android-800x360-font100-light-settings.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-800x360-font100-light-settings.png",
+      "bitmapPixels": [
+        800,
+        360
+      ],
+      "sha256": "690aeb21ecd6ca16846e57c695ca1fd8ab982889e9e88a62f3227c2572311dac",
+      "renderer": "Android API35 native Compose + emulator chrome"
+    },
+    {
+      "file": "android-1024x768-font100-dark-planner-preview.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-1024x768-font100-dark-planner-preview.png",
+      "bitmapPixels": [
+        1024,
+        768
+      ],
+      "sha256": "8e8a82990eb1dbc847e7b4a2ab1d3ccb4a9caf752ab34a27503885d113f83796",
+      "renderer": "Android API35 native Compose + emulator chrome"
+    },
+    {
+      "file": "android-360x800-font200-dark-planner-preview.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font200-dark-planner-preview.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "0678e9c330e9fa38499844a35ed33c43a79be326da64b84a3adb79b699ab1e45",
+      "renderer": "Android API35 native Compose + emulator chrome"
+    },
+    {
+      "file": "android-800x360-font100-dark-settings.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-800x360-font100-dark-settings.png",
+      "bitmapPixels": [
+        800,
+        360
+      ],
+      "sha256": "eb93b7c569db1dc05b968cfb732ec451755feafda5271ace2481899089118931",
+      "renderer": "Android API35 native Compose + emulator chrome"
+    },
+    {
+      "file": "desktop-1280x1000-font100-dark-profile-configured.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-dark-profile-configured.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "7888ecd691c87f8a85d7225c924d0320c906041c2c23040fd0251ab0068aa77b",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-dark-profile-editor.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-dark-profile-editor.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "93cb0dcbb613d49ecb2d1ed0977bf05a54abf786a8009fd56b98384590d52733",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-dark-profile-policy.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-dark-profile-policy.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "0cdf473cbf11d41bdb2a464dfc966038fcde7476b8d801b8db22c86ed7c5bcf6",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-dark-profile-stale.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-dark-profile-stale.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "712c08efa2994ad2ea5db3612f5cb6868ee504c03fe9e43573fe728d182f0b5a",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-light-profile-configured.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-light-profile-configured.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "3369eb1aabbed64d26ee2f4512ac60706c9d3294e0278f5ec41a1c8ba89b7fd6",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-light-profile-editor.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-light-profile-editor.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "f1804ba028fec6fd11407dd3133be8eaa23a533e85f42f2c7f50b35143ba00e1",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-light-profile-policy.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-light-profile-policy.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "7dcece0c6ad789a24e128f6634ec3a460da1ec634592aaf869c373480d59729f",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-1280x1000-font100-light-profile-stale.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-1280x1000-font100-light-profile-stale.png",
+      "bitmapPixels": [
+        1280,
+        1000
+      ],
+      "sha256": "a6149dbba0375020cab1f670bcf8fe3e020bd25e6dd789c3bd5614fcff6da4f5",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-640x480-font200-dark-profile-configured.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-640x480-font200-dark-profile-configured.png",
+      "bitmapPixels": [
+        640,
+        480
+      ],
+      "sha256": "9e41ad634747d11bb9e33497966bf7a0218896c030376c54d305ff64d34c4a85",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-640x480-font200-dark-profile-editor.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-640x480-font200-dark-profile-editor.png",
+      "bitmapPixels": [
+        640,
+        480
+      ],
+      "sha256": "3d4a6ec8b1be35207b7fb75fdc6a772d28c6423b7dc4e9198a91d5a780f85123",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-640x480-font200-dark-profile-policy.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-640x480-font200-dark-profile-policy.png",
+      "bitmapPixels": [
+        640,
+        480
+      ],
+      "sha256": "cc2aa60060d080d8d8cb2a886060710b1bcbed40005cc559eb7fec616809b2be",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-640x480-font200-dark-profile-stale.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-640x480-font200-dark-profile-stale.png",
+      "bitmapPixels": [
+        640,
+        480
+      ],
+      "sha256": "7ca42bc903e581b2ad223c3f7b335910e2de8eec0518c973c8bb4edea9af7093",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-640x480-font200-light-profile-configured.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-640x480-font200-light-profile-configured.png",
+      "bitmapPixels": [
+        640,
+        480
+      ],
+      "sha256": "9ba131c83ed81a599213e2136dafe8a9dcac7ac38fcd9e44c067a7cd66d63119",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-640x480-font200-light-profile-editor.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-640x480-font200-light-profile-editor.png",
+      "bitmapPixels": [
+        640,
+        480
+      ],
+      "sha256": "77f3b03a9c12ad817bcd54bad9163014d4746ca1689f4402653adf480641ee11",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-640x480-font200-light-profile-policy.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-640x480-font200-light-profile-policy.png",
+      "bitmapPixels": [
+        640,
+        480
+      ],
+      "sha256": "b677ca6b4e51647e10076b9d8cb6f0488b4df2b1e79d0d23c84ca7ba8cbce219",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-640x480-font200-light-profile-stale.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-640x480-font200-light-profile-stale.png",
+      "bitmapPixels": [
+        640,
+        480
+      ],
+      "sha256": "d1b6c2381a5b5e9a118a8de60b2483a2e62ebcb6af963905dbf8571cc1a74ffb",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-640x720-font100-dark-profile-configured.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-640x720-font100-dark-profile-configured.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "90a2ee65ec27ad5a2f7d024f3e6973a70014643b5f2481f540eca924ca65f507",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-640x720-font100-dark-profile-editor.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-640x720-font100-dark-profile-editor.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "61b96540c47ff88255d85cbb01df87f961de0bfdc5d0e2bf0c7b5664c4be2234",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-640x720-font100-dark-profile-policy.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-640x720-font100-dark-profile-policy.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "cd3862bd690a51483b2751244de4c9e85652a30f248ab9a69781c11639278e86",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-640x720-font100-dark-profile-stale.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-640x720-font100-dark-profile-stale.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "6b3cf702e70155878908ee368ff4c744cc1cc1aa6fb7a7a8bb5a102191fa947a",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-640x720-font100-light-profile-configured.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-640x720-font100-light-profile-configured.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "bc4effd145abc0bd036e2f250238bf777a62020b78eba6ad8a2f7055484ad35d",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-640x720-font100-light-profile-editor.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-640x720-font100-light-profile-editor.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "cbd2b193e5049ce53aa6ee2b5686a62fadf6fb590e3cbb8d4b6b4bacfa802694",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-640x720-font100-light-profile-policy.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-640x720-font100-light-profile-policy.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "180d0cd59dd9696d6fa5d90a1e57109997bc90d28622eeb00d03e1b4902e22d9",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "desktop-640x720-font100-light-profile-stale.png",
+      "generatedFrom": "apps/desktop/build/d10-03/screenshots/desktop-640x720-font100-light-profile-stale.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "fa281815d901045495a8d493d1a78c64e3102381e7110bec772fee620e64ae0b",
+      "renderer": "Desktop Compose/Skia"
+    },
+    {
+      "file": "android-360x800-font100-dark-profile-configured.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font100-dark-profile-configured.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "a7f74d8cab3dbd835622ec5af0a53876fbf660549641d4214fe855d0a4fdcd02",
+      "renderer": "Android Compose/native emulator"
+    },
+    {
+      "file": "android-360x800-font100-dark-profile-editor.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font100-dark-profile-editor.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "597c276c690783dddc54d9786df77b8ac97d939e6dc263b64fa66b88218fb7df",
+      "renderer": "Android Compose/native emulator"
+    },
+    {
+      "file": "android-360x800-font100-dark-profile-policy.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font100-dark-profile-policy.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "31683392713b5bfaabc1f4c346aa0ff0cc227aa5e6fcefe1e3c82fec2822c41d",
+      "renderer": "Android Compose/native emulator"
+    },
+    {
+      "file": "android-360x800-font100-light-profile-configured.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font100-light-profile-configured.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "55b7e9a9034be15d111d28b5c14a4ad5ad2254755dccd475c7a287f800fcc7bb",
+      "renderer": "Android Compose/native emulator"
+    },
+    {
+      "file": "android-360x800-font100-light-profile-editor.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font100-light-profile-editor.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "b86f8d9f64bac1a9044002dec62d8eecaae31b596e38abcd8e9eb81370fb8bd6",
+      "renderer": "Android Compose/native emulator"
+    },
+    {
+      "file": "android-360x800-font100-light-profile-policy.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font100-light-profile-policy.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "c8f3592c75953c5a46f368a0bda5e342f724507a9a377aa8c94752af23bf9093",
+      "renderer": "Android Compose/native emulator"
+    },
+    {
+      "file": "android-360x800-font200-dark-profile-configured.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font200-dark-profile-configured.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "d49ebe5ab9d9bf29a3a2a80fc5eabe35ba6091f22e0c0ae604e51a11a8c61094",
+      "renderer": "Android Compose/native emulator"
+    },
+    {
+      "file": "android-360x800-font200-dark-profile-editor.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font200-dark-profile-editor.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "7436e2a53646c5ccb9edcc454a48104c396551c1e32286c9cb40f4f6f4dbd346",
+      "renderer": "Android Compose/native emulator"
+    },
+    {
+      "file": "android-360x800-font200-dark-profile-policy.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font200-dark-profile-policy.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "b2a512213e559f1ec837d8dac37bb57b240b668074a56c5466338668c1097c1b",
+      "renderer": "Android Compose/native emulator"
+    },
+    {
+      "file": "android-360x800-font200-light-profile-configured.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font200-light-profile-configured.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "041c6921c5e7787e6f37cd109fad03d9e6cac17866382f3c10a9a125cc3e5924",
+      "renderer": "Android Compose/native emulator"
+    },
+    {
+      "file": "android-360x800-font200-light-profile-editor.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font200-light-profile-editor.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "1f15ff858d044f5e91588708380529e2fd6a5aedfe5fc78700145563f5d7fc6c",
+      "renderer": "Android Compose/native emulator"
+    },
+    {
+      "file": "android-360x800-font200-light-profile-policy.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-360x800-font200-light-profile-policy.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "02ff1500ce512b1a5814cd5bd81b15bb4d934c7035e4e497f4d05abeb0b4e94c",
+      "renderer": "Android Compose/native emulator"
+    },
+    {
+      "file": "android-800x360-font100-dark-profile-configured.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-800x360-font100-dark-profile-configured.png",
+      "bitmapPixels": [
+        800,
+        360
+      ],
+      "sha256": "97a0e12d952c0a05e62b1519f57d7f0fba2ee6c82cdcfdc247998a87b1ab7115",
+      "renderer": "Android Compose/native emulator"
+    },
+    {
+      "file": "android-800x360-font100-dark-profile-editor.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-800x360-font100-dark-profile-editor.png",
+      "bitmapPixels": [
+        800,
+        360
+      ],
+      "sha256": "8e73039be7a04b3648ab50cb9ecedd2af3f8b2d9bd6542c946dac00df16f4d7a",
+      "renderer": "Android Compose/native emulator"
+    },
+    {
+      "file": "android-800x360-font100-dark-profile-policy.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-800x360-font100-dark-profile-policy.png",
+      "bitmapPixels": [
+        800,
+        360
+      ],
+      "sha256": "f8f373f8fa52d20f24a05055133e7580ec0b8b2452964ec6b1d322c869eccd08",
+      "renderer": "Android Compose/native emulator"
+    },
+    {
+      "file": "android-800x360-font100-light-profile-configured.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-800x360-font100-light-profile-configured.png",
+      "bitmapPixels": [
+        800,
+        360
+      ],
+      "sha256": "62a4520db39497aa5ce67366b1fbbecf3e7f310729b741610fd57a2c57ff0088",
+      "renderer": "Android Compose/native emulator"
+    },
+    {
+      "file": "android-800x360-font100-light-profile-editor.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-800x360-font100-light-profile-editor.png",
+      "bitmapPixels": [
+        800,
+        360
+      ],
+      "sha256": "c995be69d47c3e2bd078b0bdbdfd69df59fb6f22bc2f425b9cee08e56ccd3830",
+      "renderer": "Android Compose/native emulator"
+    },
+    {
+      "file": "android-800x360-font100-light-profile-policy.png",
+      "generatedFrom": "build/d10-03/android-captures/d10-03-screenshots/android-800x360-font100-light-profile-policy.png",
+      "bitmapPixels": [
+        800,
+        360
+      ],
+      "sha256": "0be7b0868eff7d71eb1fde95c5e3a3722bf6c459082e012ceaaefb3325b87030",
+      "renderer": "Android Compose/native emulator"
+    }
+  ],
+  "originalBaselineSha": "cda86a815d21fe4a501b79a92074962001a54039",
+  "profileFollowUp": "FG-01 resolved through merged PR #36; real shared editor/coordinator with immutable opening snapshot. Updated affected D10-03 candidates only. D10-01/02 references unchanged."
+}

@@ -12,6 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.platform.LocalWindowInfo
 import dev.agenticscheduler.application.editing.EventEditingService
@@ -125,13 +126,14 @@ internal fun androidx.compose.ui.window.ApplicationScope.DesktopCompositionRoot(
         )
     }
     val d8Scope = remember { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
+    // Root survives Ready/Activating remount; UI actions keep the Compose dispatcher.
+    val presentationActionScope = rememberCoroutineScope()
     val d8ShutdownScope = remember { CoroutineScope(SupervisorJob() + Dispatchers.IO) }
     val d8SyncTrigger = remember { mutableStateOf<ActiveSyncCatchUpTrigger?>(null) }
-    LaunchedEffect(Unit) {
-        val configuration = startupConfiguration.getOrElse {
-            startupState.value = D8StartupState.Blocked
-            return@LaunchedEffect
-        }
+    suspend fun activateRuntime(configuration: ActiveSyncRuntimeConfiguration?) {
+        d8SyncTrigger.value?.close()
+        d8SyncTrigger.value = null
+        startupState.value = D8StartupState.Activating
         try {
             val creation = configuration?.let { d8Runtime.activate(it) }
                 ?: d8Runtime.activateWithoutConfiguration()
@@ -147,19 +149,16 @@ internal fun androidx.compose.ui.window.ApplicationScope.DesktopCompositionRoot(
                     trigger.start()
                     startupState.value = D8StartupState.Ready
                 }
-                is ActiveSyncRuntimeCreation.ActiveEnrollmentOffline -> startupState.value = D8StartupState.Ready
+                is ActiveSyncRuntimeCreation.ActiveEnrollmentOffline,
                 ActiveSyncRuntimeCreation.NoEnrollment -> startupState.value = D8StartupState.Ready
-                is ActiveSyncRuntimeCreation.MultipleActiveEnrollments -> startupState.value = D8StartupState.Blocked
-                ActiveSyncRuntimeCreation.EnrollmentNotActive,
-                is ActiveSyncRuntimeCreation.ActiveEnrollmentAccountMismatch,
-                is ActiveSyncRuntimeCreation.MissingDeviceCredential,
-                -> startupState.value = D8StartupState.Blocked
+                else -> startupState.value = D8StartupState.Blocked
             }
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (_: Throwable) {
-            startupState.value = D8StartupState.Blocked
-        }
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { startupState.value = D8StartupState.Blocked }
+    }
+    LaunchedEffect(Unit) {
+        if (startupConfiguration.isSuccess) activateRuntime(startupConfiguration.getOrNull())
+        else startupState.value = D8StartupState.Blocked
     }
     val reads = remember(events, tasks, profiles, academics, d8Runtime) {
         ConflictAwareSourceFactReadService(events, tasks, profiles, academics, d8Runtime.sourceFacts)
@@ -171,11 +170,22 @@ internal fun androidx.compose.ui.window.ApplicationScope.DesktopCompositionRoot(
     val academicService = remember(academics, ids, mutations, d8Runtime) { dev.agenticscheduler.application.academic.AcademicAuthoringService(academics, ids, mutations, d8Runtime.writePolicy, d8Runtime.sourceFacts) }
     val eventEditor = remember(events, ids, mutations, d8Runtime) { EventEditingService(events, ids, mutations, d8Runtime.writePolicy) }
     val taskEditor = remember(tasks, ids, mutations, d8Runtime) { TaskEditingService(tasks, ids, mutations, d8Runtime.writePolicy) }
+    val history = remember(journal) { HistoryQueryService(journal) }
+    val undo = remember(mutations,journal,events,tasks,profiles,d8Runtime) { UndoService(mutations,journal,events,tasks,profiles,d8Runtime.writePolicy) }
+    val conflictQueries = remember(database) { dev.agenticscheduler.application.history.SyncConflictQueryService(dev.agenticscheduler.database.repository.RoomSyncReceiveRepository(database)) }
     val providerProbes = remember { ProviderProbePresentation() }
     val agentHttpClient = remember { HttpClient(CIO) }
+    val securityServices = remember(database, secureStore, agentHttpClient) {
+        startupConfiguration.getOrNull()?.let { configuration ->
+            desktopSecurityWorkflows(database, secureStore, agentHttpClient, ids, configuration) {
+                activateRuntime(configuration)
+                check(startupState.value == D8StartupState.Ready && d8SyncTrigger.value != null)
+            }
+        }
+    }
+    val blockedSecurity = remember(securityServices) { securityServices?.let { dev.agenticscheduler.presentation.SecurityWorkflowCoordinator(it) } }
+
     val agentRunService = remember(database, agentState, agentHttpClient, secureStore, reads, planner, profileSettings, eventEditor, taskEditor, mutations, journal, ids, d8Runtime) {
-        val history = HistoryQueryService(journal)
-        val undo = UndoService(mutations, journal, events, tasks, profiles, d8Runtime.writePolicy)
         val provider = OpenAiCompatibleProvider(agentHttpClient, SecretStoreProviderCredentialResolver(secureStore))
         AgentRunService(
             state = agentState,
@@ -238,9 +248,21 @@ internal fun androidx.compose.ui.window.ApplicationScope.DesktopCompositionRoot(
                         conversationSettings = conversationSettings,
                         providerProbes = providerProbes,
                         academicService = academicService,
+                        historyQueries = history,
+                        undoService = undo,
+                        conflictQueries = conflictQueries,
+                        syncConfigured = activeSyncTrigger != null,
+                        securityServices = securityServices,
+                        applicationActionScope = presentationActionScope,
+
                     )
                     D8StartupState.Activating -> D8StartupStatus("Connecting to your secure sync space…")
-                    D8StartupState.Blocked -> D8StartupStatus("Sync setup is unavailable. Restore the device credential or check the configured account and server.")
+                    D8StartupState.Blocked -> Column {
+                        D8StartupStatus("Sync setup is unavailable. Restore the device credential or check the configured account and server.")
+                        blockedSecurity?.let { security ->
+                            dev.agenticscheduler.presentation.SecurityRecoveryPanel(security, presentationActionScope)
+                        }
+                    }
                 }
             }
         }
