@@ -75,6 +75,7 @@ internal fun DesktopApp(
     plannerWorkspaceSession: PlannerWorkspaceCoordinator? = null,
     historySession: HistoryScreenCoordinator? = null,
     syncSession: SyncSecurityScreenCoordinator? = null,
+    agentWorkspaceSession: AgentWorkspaceCoordinator? = null,
 ) {
     val schedule = scheduleSession ?: remember(reads) {
         val zone = TimeZone.currentSystemDefault()
@@ -99,14 +100,16 @@ internal fun DesktopApp(
     val taskRead = remember(reads, core.refreshRevision) { core.observe("Tasks", schedule.tasks()) }.collectAsState(initial = null).value
     val focusRead = remember(reads, core.refreshRevision) { core.observe("FocusBlocks", schedule.focusBlocks()) }.collectAsState(initial = null).value
     val focusBlocks = (focusRead as? ConflictAwareRead.Projected)?.value.orEmpty().toImmutableList()
-    val agentCoordinator = remember(agentState, agentRunService) { DesktopAgentScreenCoordinator(agentState, agentRunService) }
+    val agentCoordinator = agentWorkspaceSession ?: remember(agentState, agentRunService,secureStore) { AgentWorkspaceCoordinator(agentState, agentRunService, secureStore) }
     val featureScope = applicationActionScope ?: rememberCoroutineScope()
     val plannerWorkspace = plannerWorkspaceSession ?: remember(reads,dogfoodPlanner,profileSettings) { PlannerWorkspaceCoordinator(reads,dogfoodPlanner,profileSettings) }
     val historyScreen = historySession ?: if(historyQueries != null && undoService != null) remember(historyQueries,undoService) { HistoryScreenCoordinator(historyQueries,undoService) } else null
     val syncScreen = syncSession ?: conflictQueries?.let { remember(enrollments,it,agentState) { SyncSecurityScreenCoordinator(enrollments,it,agentState) } }
     val securityScreen = securityServices?.let {remember(it) {SecurityWorkflowCoordinator(it)}}
     var settingsSection by remember {mutableStateOf(SettingsSection.GENERAL)}
-    agentCoordinator.scope = featureScope
+    val openProvider:()->Unit = {settingsSection=SettingsSection.PROVIDER; navigation.open(DesktopDestination.SETTINGS)}
+    val probeObservation = providerProbes?.observation
+    LaunchedEffect(probeObservation,agentCoordinator.providerLabel) {agentCoordinator.observeProbe(probeObservation?.first,probeObservation?.second)}
     val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
     var darkOverride by remember { mutableStateOf(initialDark) }
     val dark = darkOverride ?: systemDark
@@ -127,17 +130,21 @@ internal fun DesktopApp(
                 PlannerWorkspaceScreen(plannerWorkspace,featureScope)
             } else if (destination == DesktopDestination.HISTORY && historyScreen != null) {
                 HistoryScreen(historyScreen,featureScope)
+            } else if (destination == DesktopDestination.AGENT) {
+                AgentWorkspaceScreen(agentCoordinator,featureScope,openProvider,
+                    {settingsSection=SettingsSection.AGENT_PERMISSIONS; navigation.open(DesktopDestination.SETTINGS)},
+                    {settingsSection=SettingsSection.SYNC_SECURITY; navigation.open(DesktopDestination.SETTINGS)})
             } else if (destination == DesktopDestination.SETTINGS) {
                 SettingsHub(settingsSection,{settingsSection=it},dark,{darkOverride=!dark},
                     planning={PlanningProfiles(plannerWorkspace,featureScope);NewProfileDialogHost(plannerWorkspace,featureScope)},
                     sync={syncScreen?.let {SyncSecurityScreen(it,featureScope,SyncRuntimeDisplay(syncConfigured,syncStoppedReason),onRetrySync,{DesktopConversationSyncControls(conversationSettings)},securityScreen)}},
-                    onProvider={navigation.open(DesktopDestination.AGENT); agentCoordinator.providerDialog.value=true})
+                    onProvider=openProvider,permissions={AgentPermissionSettings(agentCoordinator,featureScope)},
+                    provider={DesktopProviderPanel(agentState,secureStore,ids,featureScope)})
             } else {
             LazyColumn(Modifier.fillMaxSize().padding(horizontal = 20.dp).testTag(if (projectionRead == null) "schedule-loading" else "schedule-ready"),
                 contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (projectionRead == null && destination in listOf(DesktopDestination.TODAY, DesktopDestination.CALENDAR)) item { StatusMessage("Loading", "Reading authoritative local source facts…") }
                 else when (destination) {
-                    DesktopDestination.AGENT -> item(key = "agent") { AgentCommandPanel(agentRunService, agentState, secureStore, enrollments, ids, agentCoordinator, providerProbes) }
                     else -> item { StatusMessage("${destination.label}", "This view is not available yet. Your existing data remains unchanged.") }
                 }
             }

@@ -17,11 +17,12 @@ import dev.agenticscheduler.ui.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-enum class SettingsSection { GENERAL, PLANNING, SYNC_SECURITY, PROVIDER }
+enum class SettingsSection { GENERAL, PLANNING, SYNC_SECURITY, PROVIDER, AGENT_PERMISSIONS }
 
 @Composable
 fun SettingsHub(section:SettingsSection,onSection:(SettingsSection)->Unit,dark:Boolean,onTheme:()->Unit,
-    planning:@Composable ()->Unit,sync:@Composable ()->Unit,onProvider:()->Unit) {
+    planning:@Composable ()->Unit,sync:@Composable ()->Unit,onProvider:()->Unit,
+    permissions:@Composable ()->Unit = {},provider:@Composable ()->Unit = {}) {
     Column(Modifier.fillMaxSize().testTag("settings-hub")) {
         FlowRow(Modifier.padding(horizontal=20.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             SettingsSection.entries.forEach {s -> NavigationControl(s.name.lowercase().replace('_',' '),section==s,{ if(s==SettingsSection.PROVIDER) onProvider() else onSection(s) }) }
@@ -33,11 +34,13 @@ fun SettingsHub(section:SettingsSection,onSection:(SettingsSection)->Unit,dark:B
                 item {SectionHeading("Planning", "Explicit profiles and session-local previews");ActionButton({onSection(SettingsSection.PLANNING)},role=ActionRole.TERTIARY) {Text("Open planning profiles")}}
                 item {SectionHeading("Sync & Security", "Enrollment, problems and explicit actions");ActionButton({onSection(SettingsSection.SYNC_SECURITY)},role=ActionRole.TERTIARY) {Text("Open Sync / Security")}}
                 item {SectionHeading("Agent / Provider", "Existing Provider and local Agent controls");ActionButton(onProvider,role=ActionRole.TERTIARY) {Text("Open Provider settings")}}
+                item {ActionButton({onSection(SettingsSection.AGENT_PERMISSIONS)},role=ActionRole.TERTIARY) {Text("Agent permissions")}}
                 item {SectionHeading("About", "Planner / History / Sync remain application-owned");Text("Local database at-rest protection: OD-012 remains an OPEN production gate. Secure transport does not imply encrypted local SQLite.")}
             }
             SettingsSection.PLANNING -> Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {planning()}
             SettingsSection.SYNC_SECURITY -> sync()
-            SettingsSection.PROVIDER -> Unit // Route is platform-owned; no credential state copied here.
+            SettingsSection.PROVIDER -> provider() // Platform-owned settings composition; no credential state copied here.
+            SettingsSection.AGENT_PERMISSIONS -> permissions()
         }
     }
 }

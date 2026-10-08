@@ -167,6 +167,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Verify immutable D10-03 evidence against its accepted source.
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -185,7 +187,9 @@ jobs:
             python test-support/d10-02/check-boundaries.py --source-only
             python test-support/d10-02/check-candidates.py
             python test-support/d10-03/check-boundaries.py --source-only
-            python test-support/d10-03/check-candidates.py
+            python test-support/d10-03/check-candidates.py --source-revision cdc8504527cc636f5d2932b7e00785f4be9ecaad
+            python test-support/d10-04/check-boundaries.py
+            python test-support/d10-04/check-candidates.py
       - name: Upload Windows presentation candidates and reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -195,6 +199,7 @@ jobs:
             apps/desktop/build/d10-01/screenshots/*.png
             apps/desktop/build/d10-02/screenshots/*.png
             apps/desktop/build/d10-03/screenshots/*.png
+            apps/desktop/build/d10-04/screenshots/*.png
             apps/desktop/build/test-results/test/*.xml
             shared/ui/build/test-results/desktopTest/*.xml
           if-no-files-found: warn
@@ -236,6 +241,7 @@ jobs:
             ./gradlew :apps:android:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.notClass=dev.agenticscheduler.android.D9PlatformRelayInstrumentedTest --no-daemon
             bash test-support/d10-02/capture-android.sh
             bash test-support/d10-03/capture-android.sh
+            bash test-support/d10-04/capture-android.sh
             # Core Watch runtime/UI acceptance is required on the Wear job, never phone/fake platform.
             ./gradlew :apps:wear:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.agenticscheduler.wear.WearKeystoreSecureStoreInstrumentedTest --no-daemon
             mkdir -p apps/wear/build/phone-platform-reports/keystore
@@ -256,6 +262,7 @@ jobs:
             apps/android/build/outputs/androidTest-results/connected/**/TEST-*.xml
             build/d10-02/android-captures/**
             build/d10-03/android-captures/**
+            build/d10-04/android-captures/**
             apps/wear/build/outputs/androidTest-results/connected/**/TEST-*.xml
             apps/wear/build/phone-platform-reports/**/TEST-*.xml
             apps/wear/build/d90302-platform-evidence.txt
