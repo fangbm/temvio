@@ -263,18 +263,28 @@ class PlanningProfileSettingsService(
         return execution?.value ?: requireNotNull(result)
     }
 
-    suspend fun save(profile: PlanningProfile): PlanningProfileSettingsResult {
+    /** Ordinary User updates compare the editor snapshot inside the write transaction. */
+    suspend fun save(
+        profile: PlanningProfile,
+        expectedBefore: PlanningProfile,
+    ): PlanningProfileSettingsResult {
         var result: PlanningProfileSettingsResult? = null
         val execution = mutations.executeIfAny(MutationOrigin.User) {
             val before = profiles.get(profile.id)
-            val proposed = PlanningProfilePut(before?.toSemanticImage(), profile.toSemanticImage())
-            val blocks = conflictWritePolicy.blocks(listOf(proposed))
-            result = if (blocks.isEmpty()) {
-                profiles.upsert(profile)
-                record(proposed)
-                PlanningProfileSettingsResult.Success(profile)
+            result = if (before == null) {
+                PlanningProfileSettingsResult.NotFound
+            } else if (before != expectedBefore) {
+                PlanningProfileSettingsResult.Stale
             } else {
-                PlanningProfileSettingsResult.BlockedBySyncConflict(blocks.toImmutableList())
+                val proposed = PlanningProfilePut(before.toSemanticImage(), profile.toSemanticImage())
+                val blocks = conflictWritePolicy.blocks(listOf(proposed))
+                if (blocks.isNotEmpty()) {
+                    PlanningProfileSettingsResult.BlockedBySyncConflict(blocks.toImmutableList())
+                } else {
+                    profiles.upsert(profile)
+                    record(proposed)
+                    PlanningProfileSettingsResult.Success(profile)
+                }
             }
             requireNotNull(result)
         }

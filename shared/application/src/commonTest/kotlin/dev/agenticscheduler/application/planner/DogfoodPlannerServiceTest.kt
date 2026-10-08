@@ -165,7 +165,7 @@ class DogfoodPlannerServiceTest {
             NoActiveSyncSpaceWritePolicy,
         )
         val created = assertIs<PlanningProfileSettingsResult.Success>(settings.createUnconfigured("Draft")).profile
-        val saved = assertIs<PlanningProfileSettingsResult.Success>(settings.save(created.copy(name = "Ready"))).profile
+        val saved = assertIs<PlanningProfileSettingsResult.Success>(settings.save(created.copy(name = "Ready"), created)).profile
         assertEquals(saved, profiles.get(saved.id))
         assertEquals(2, journal.mutations.size)
         val puts = journal.mutations.map { it.operation.orderedMutations.single() as dev.agenticscheduler.sync.PlanningProfilePut }
