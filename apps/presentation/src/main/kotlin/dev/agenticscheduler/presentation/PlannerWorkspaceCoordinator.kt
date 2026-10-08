@@ -49,6 +49,78 @@ class PlannerWorkspaceCoordinator(
     var createName by mutableStateOf<String?>(null)
     var discardProfileRequested by mutableStateOf(false)
 
+    var profileEditor by mutableStateOf<PlanningProfileEditSession?>(null); private set
+    var profileResult by mutableStateOf<PlanningProfileSettingsResult?>(null); private set
+    var profileFeedback by mutableStateOf<String?>(null); private set
+    var discardEditRequested by mutableStateOf(false); private set
+    var reloadEditRequested by mutableStateOf(false); private set
+    var lastCommittedProfile by mutableStateOf<PlanningProfile?>(null); private set
+
+    fun openProfileEditor(profile: PlanningProfile) {
+        if (busy || profileEditor != null) return
+        profileEditor = PlanningProfileEditSession(profile)
+        profileResult = null
+        profileFeedback = null
+    }
+
+    fun updateProfileDraft(next: PlanningProfileDraft) {
+        if (busy) return
+        val session = profileEditor ?: return
+        // Configured -> Unconfigured is deliberately not an editor capability.
+        if (session.expectedBefore.configuration is dev.agenticscheduler.domain.planning.PlanningProfileConfiguration.Configured && !next.configured) return
+        profileEditor = session.copy(draft = next)
+    }
+
+    fun requestCloseProfileEditor() {
+        if (busy) return
+        if (profileEditor?.dirty == true) discardEditRequested = true else closeProfileEditor()
+    }
+    fun keepProfileDraft() { discardEditRequested = false; reloadEditRequested = false }
+    fun discardProfileDraft() { if (!busy) closeProfileEditor() }
+    private fun closeProfileEditor() {
+        profileEditor = null; discardEditRequested = false; reloadEditRequested = false
+        profileFeedback = null; profileResult = null
+    }
+
+    fun requestReloadProfileFromUser() { if (!busy && profileEditor != null) reloadEditRequested = true }
+    suspend fun confirmReloadProfileFromUser() = command {
+        if (!reloadEditRequested) return@command
+        reloadEditRequested = false
+        val id = profileEditor?.expectedBefore?.id ?: return@command
+        loadSources()
+        val fresh = profiles.firstOrNull { it.id == id }
+        if (fresh == null) {
+            profileFeedback = "Current profile is missing or unavailable. Draft retained; no identity was recreated."
+        } else {
+            profileEditor = PlanningProfileEditSession(fresh)
+            profileResult = null
+            profileFeedback = "Current profile reloaded. Previous draft discarded by your explicit choice."
+        }
+    }
+
+    suspend fun saveProfileFromUser() = command {
+        val session = profileEditor ?: return@command
+        val proposed = try { session.draft.toProfile(session.expectedBefore.id) }
+        catch (invalid: IllegalArgumentException) { profileFeedback = invalid.message; return@command }
+        val result = settings.save(proposed, session.expectedBefore)
+        profileResult = result
+        when (result) {
+            is PlanningProfileSettingsResult.Success -> {
+                lastCommittedProfile = result.profile
+                profileEditor = null
+                discardEditRequested = false; reloadEditRequested = false
+                profiles = profiles.map { if (it.id == result.profile.id) result.profile else it }
+                draft = draft.copy(profileId = result.profile.id)
+                message = "Planning profile saved. Schedule unchanged; no Planner Preview or Apply was run."
+                try { loadSources() } catch (cancelled: CancellationException) { throw cancelled }
+                catch (_: Exception) { message = "Planning profile committed. Source refresh failed; refresh before planning." }
+            }
+            PlanningProfileSettingsResult.Stale -> profileFeedback = "Profile changed since editing began. Draft retained; reload current profile explicitly before retrying."
+            PlanningProfileSettingsResult.NotFound -> profileFeedback = "Profile no longer exists. Draft retained; it cannot recreate this identity."
+            is PlanningProfileSettingsResult.BlockedBySyncConflict -> profileFeedback = "Save blocked by an open business sync conflict. Draft retained; no changes committed."
+        }
+    }
+
     suspend fun refresh() = command { loadSources() }
 
     private suspend fun loadSources() {

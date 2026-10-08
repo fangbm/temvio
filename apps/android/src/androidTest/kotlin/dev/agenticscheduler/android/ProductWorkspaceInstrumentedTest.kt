@@ -93,6 +93,78 @@ class ProductWorkspaceInstrumentedTest {
         compose.onNodeWithText("Discard draft",substring=false).performClick()
         runBlocking {check(f.base.journal.timeline().size==count)};check(f.base.providerRequests==0)
     }
+    @Test fun nativeCanonicalProfileConfigureFromSettingsSavesUserMutationOnly() = fixture {f,_ ->
+        val p=f.workspace();val count=runBlocking {f.base.journal.timeline().size}
+        compose.setContent {app(f,AndroidNavigation().also {it.open(AndroidDestination.SETTINGS)},p)}
+        compose.onNodeWithText("Open planning profiles",substring=false).performScrollTo().performClick()
+        compose.waitUntil(10000) {p.loaded}
+        compose.onNodeWithText("Explicit draft profile",substring=false).performClick()
+        compose.onNodeWithTag("profile-edit-open").performScrollTo().performClick()
+        compose.onNodeWithTag("profile-configure").performClick()
+        for((tag,value) in listOf("profile-edit-zone" to "UTC","profile-edit-minimum" to "25m","profile-edit-preferred" to "50m","profile-edit-maximum" to "90m")) {
+            compose.onNodeWithTag(tag).performScrollTo().performTextReplacement(value)
+        }
+        compose.onNodeWithText("Visible only - does not block planning",substring=false).performScrollTo().performClick()
+        compose.onNodeWithTag("profile-edit-save").performClick()
+        compose.waitUntil(10000) {p.profileEditor==null && !p.busy}
+        runBlocking {
+            check(f.base.profiles.get(f.unconfigured.id)!!.configuration is dev.agenticscheduler.domain.planning.PlanningProfileConfiguration.Configured)
+            check(f.base.journal.timeline().size==count+1)
+            check(f.base.journal.timeline().last().operation.origin==dev.agenticscheduler.sync.MutationOrigin.User)
+            check(f.base.tasks.observeFocusBlocks().first().isEmpty())
+        }
+        check(p.preview==null);check(f.base.providerRequests==0)
+    }
+    @Test fun nativeProfileBackRequiresDiscardAndStaleReloadIsExplicit() = fixture {f,_ ->
+        val p=f.workspace();runBlocking {p.refresh();p.openProfileEditor(f.configured)}
+        val nav=AndroidNavigation().also {it.open(AndroidDestination.PLANNER)}
+        compose.setContent {app(f,nav,p)}
+        compose.onNodeWithTag("profile-edit-name").performTextReplacement("Unsaved native C")
+        back();if(!p.discardEditRequested) back()
+        compose.onNodeWithText("Keep editing",substring=false).performClick()
+        compose.runOnIdle {check(p.profileEditor!!.draft.name=="Unsaved native C");check(nav.current==AndroidDestination.PLANNER)}
+        runBlocking {f.profileSettings.save(f.configured.copy(name="Concurrent B"),f.configured)}
+        val count=runBlocking {f.base.journal.timeline().size}
+        compose.onNodeWithTag("profile-edit-save").performClick()
+        compose.waitUntil(10000) {p.profileResult==PlanningProfileSettingsResult.Stale && !p.busy}
+        compose.onNodeWithTag("profile-reload").performScrollTo().performClick()
+        compose.onNodeWithText("Discard draft and reload",substring=false).performClick()
+        compose.waitUntil(10000) {p.profileEditor!!.draft.name=="Concurrent B" && !p.busy}
+        compose.onNodeWithText("Cancel editing",substring=false).performClick()
+        compose.runOnIdle {check(p.profileEditor==null);check(nav.current==AndroidDestination.PLANNER)}
+        runBlocking {check(f.base.journal.timeline().size==count)}
+    }
+    @Test fun nativeConfiguredProfileEditFromPlannerCommitsAndRefreshesSelection() = fixture {f,_ ->
+        val p=f.workspace();val count=runBlocking {f.base.journal.timeline().size}
+        compose.setContent {app(f,AndroidNavigation().also {it.open(AndroidDestination.PLANNER)},p)}
+        compose.waitUntil(10000) {p.loaded};compose.onNodeWithText("Research hours",substring=false).performClick()
+        compose.onNodeWithTag("profile-edit-open").performScrollTo().performClick()
+        compose.onNodeWithTag("profile-edit-name").performTextReplacement("Native edited profile")
+        compose.onNodeWithTag("profile-edit-save").performClick()
+        compose.waitUntil(10000) {p.profileEditor==null && !p.busy}
+        compose.runOnIdle {check(p.profiles.single {it.id==f.configured.id}==p.lastCommittedProfile);check(p.draft.profileId==f.configured.id)}
+        runBlocking {check(f.base.journal.timeline().size==count+1);check(f.base.profiles.get(f.configured.id)!!.name=="Native edited profile")}
+    }
+    @Test fun actualAndroidPlanningProfileScreenshotCandidates() = fixture {f,context ->
+        val p=f.workspace();runBlocking {p.refresh();p.draft=f.request()}
+        val nav=AndroidNavigation().also {it.open(AndroidDestination.PLANNER)}
+        var dark by mutableStateOf(false)
+        compose.setContent {key(dark) {app(f,nav,p,dark=dark)}}
+        val config=context.resources.configuration
+        val out=File(context.getExternalFilesDir(null),"d10-03-screenshots").also {it.mkdirs()}
+        for(theme in listOf(false,true)) for(case in listOf("profile-editor","profile-policy","profile-configured")) {
+            compose.runOnIdle {
+                p.discardProfileDraft();dark=theme
+                if(case!="profile-configured") p.openProfileEditor(f.configured)
+            }
+            compose.waitForIdle()
+            if(case=="profile-policy") compose.onNodeWithText("Block the whole local day",substring=false).performScrollTo()
+            val instrumentation=InstrumentationRegistry.getInstrumentation();instrumentation.waitForIdleSync()
+            val bitmap=checkNotNull(instrumentation.uiAutomation.takeScreenshot())
+            File(out,"android-${config.screenWidthDp}x${config.screenHeightDp}-font${(config.fontScale*100).toInt()}-${if(theme) "dark" else "light"}-$case.png").outputStream().use {check(bitmap.compress(Bitmap.CompressFormat.PNG,100,it))};bitmap.recycle()
+            check(f.base.providerRequests==0)
+        }
+    }
     @Test fun actualAndroidD10ProductScreenshotCandidates() = fixture {f,context ->
         val p=f.workspace();val h=f.history();val s=f.sync();val nav=AndroidNavigation()
         runBlocking {p.refresh();p.draft=f.request();h.refresh();f.enroll();f.profileConflict();s.refresh()}
@@ -110,6 +182,8 @@ class ProductWorkspaceInstrumentedTest {
         }
         val out=File(context.getExternalFilesDir(null),"d10-03-screenshots").also {it.mkdirs()}
         for(theme in listOf(false,true)) for(case in cases) {
+            compose.waitForIdle()
+            compose.waitUntil(10000) {!p.busy && !h.busy && !s.busy}
             runBlocking {
                 p.cancelPreview();h.closeDetail();s.closeDetail()
                 if(case=="planner-preview") p.requestPreview()
@@ -118,7 +192,9 @@ class ProductWorkspaceInstrumentedTest {
             }
             compose.runOnIdle {dark=theme;stopped=if(case=="sync-stopped") "HTTP_401" else null;nav.open(when {case.startsWith("planner")->AndroidDestination.PLANNER;case.startsWith("history")->AndroidDestination.HISTORY;case.startsWith("sync") || case=="revoke-confirmation"->AndroidDestination.SYNC_SECURITY;else->AndroidDestination.SETTINGS})}
             val tag=when {case=="planner-input"->"planner-workspace";case.startsWith("planner")->"planner-preview";case=="history-timeline"->"history-timeline";case.startsWith("history")->"history-detail";case=="sync-conflict"->"business-conflict-detail";case=="sync-stopped" || case=="revoke-confirmation"->"sync-security";else->"settings-hub"}
-            compose.waitUntil(10000) {compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty()};compose.waitForIdle()
+            try {compose.waitUntil(10000) {compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty()}}
+            catch (failure:AssertionError) {throw AssertionError("Capture $case / dark=$theme: preview=${p.preview}, busy=${p.busy}, result=${p.message}",failure)}
+            compose.waitForIdle()
             if(case=="revoke-confirmation") {
                 compose.onNodeWithTag("sync-security").performScrollToNode(hasText("Load active devices",substring=false))
                 compose.onNodeWithText("Load active devices",substring=false).performClick()

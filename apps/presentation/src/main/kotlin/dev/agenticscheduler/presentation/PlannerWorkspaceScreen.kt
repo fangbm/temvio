@@ -120,7 +120,7 @@ fun PlanningProfiles(coordinator: PlannerWorkspaceCoordinator, scope: CoroutineS
                 PlanningProfileConfiguration.Unconfigured -> Text("Unconfigured · automatic scheduling is unavailable.")
                 is PlanningProfileConfiguration.Configured -> {
                     Text("${c.timeZone.id} · min ${c.minimumFocusBlock}, preferred ${c.preferredFocusBlock}, max ${c.maximumFocusBlock}")
-                    Text("All-day Event policy · ${c.allDayEventPolicy}")
+                    Text("All-day Event policy · ${allDayPolicyLabel(c.allDayEventPolicy)}")
                     c.weeklyAvailability.forEach { Text("${it.dayOfWeek} ${it.start}–${it.endExclusive}") }
                     if(c.weeklyAvailability.isEmpty()) Text("No automatic scheduling availability.")
                 }
@@ -130,7 +130,11 @@ fun PlanningProfiles(coordinator: PlannerWorkspaceCoordinator, scope: CoroutineS
             ActionButton({coordinator.createName=""},enabled=!coordinator.busy,role=ActionRole.SECONDARY) {Text("New Unconfigured profile")}
             ActionButton({scope.launch {coordinator.refresh()}},enabled=!coordinator.busy,role=ActionRole.TERTIARY) {Text("Refresh source facts")}
         }
-        Text("Profile editing is awaiting the reviewed concurrent-save foundation. Stored configuration remains unchanged.",style=MaterialTheme.typography.bodySmall)
+        coordinator.profiles.firstOrNull { it.id == coordinator.draft.profileId }?.let { profile ->
+            ActionButton({ coordinator.openProfileEditor(profile) }, enabled = !coordinator.busy,
+                role = ActionRole.SECONDARY, modifier = Modifier.testTag("profile-edit-open")) { Text("Edit selected profile") }
+        }
+        coordinator.message?.let { Text(it, style=MaterialTheme.typography.bodySmall) }
     }
 }
 

@@ -12,6 +12,9 @@ for variant in '360 800 1' '480 900 1' '600 960 1' '840 900 1' '1024 768 1' '800
   result="$output/${width}x${height}-font${font}.txt"
   adb shell am instrument -w -r -e class 'dev.agenticscheduler.android.ProductWorkspaceInstrumentedTest#actualAndroidD10ProductScreenshotCandidates' 'dev.agenticscheduler.android.test/androidx.test.runner.AndroidJUnitRunner' | tee "$result"
   grep -q 'OK (1 test)' "$result"
+  profile_result="$output/${width}x${height}-font${font}-profiles.txt"
+  adb shell am instrument -w -r -e class 'dev.agenticscheduler.android.ProductWorkspaceInstrumentedTest#actualAndroidPlanningProfileScreenshotCandidates' 'dev.agenticscheduler.android.test/androidx.test.runner.AndroidJUnitRunner' | tee "$profile_result"
+  grep -q 'OK (1 test)' "$profile_result"
 done
 adb shell wm size 1024x768
 adb shell settings put system font_scale 1

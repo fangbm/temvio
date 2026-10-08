@@ -1,8 +1,9 @@
 # D10-03 — Planner / History / Sync / Settings
 
-Status: **IN PROGRESS / FOUNDATION_GAP**. Baseline: `cda86a815d21fe4a501b79a92074962001a54039`
-(accepted D10-02 / PR #33); D10-02F `60d2670f063357177a8e222db7ccbcc679bc0d92`
-is already authoritative. Branch: `feature/d10-03-planner-history-sync-settings`.
+Status: **D10-03 IMPLEMENTED / AWAITING REVIEW**. Updated baseline:
+`74e20e555c9037ff62dda95ab67e3e0e455b0aa1` (merged foundation PR #36).
+D10-02 / PR #33 and D10-02F remain authoritative. Normal merge/sync commit:
+`ad4a22e861be7eea501997882ae2efec57f4c56e`; no history rewrite. Branch: `feature/d10-03-planner-history-sync-settings`.
 Target: `feature/d9-02-agent-sync`. Keep Draft; do not merge or start D10-04/05/06.
 
 ## Authority and scope
@@ -27,25 +28,39 @@ security bypass. OD-012 remains OPEN. No Wear redesign or D10-04+ implementation
 
 ### FG-01 — ordinary PlanningProfile optimistic Save
 
-FOUNDATION_GAP.
+**RESOLVED / MERGED FOUNDATION PR #36**, merge commit
+`74e20e555c9037ff62dda95ab67e3e0e455b0aa1`.
 
-User interaction: save an edited profile without overwriting concurrent changes.
-Existing API inspected: `PlanningProfileSettingsService.createUnconfigured`,
-`previewSave`, `save`, `saveAgent`; `PlanningProfileSettingsResult`.
-Why insufficient: ordinary `save(profile)` unconditionally rebases on the current
-row and does not compare the user's before-image inside the write transaction.
-Only `saveAgent` accepts `expectedBefore`, and its Agent origin/authorization is
-inappropriate for ordinary Settings. A UI preflight read cannot close that race.
-Minimal requested foundation: a separately reviewed ordinary-user Save overload
-with exact expected-before checked inside MutationCoordinator, preserving typed
-Success/Stale/NotFound/BlockedBySyncConflict and D7 User origin. No new schema,
-mutation vocabulary, default or Undo support.
-Until authorized, configuration drafts cannot use unsafe Save or Agent Save.
-Explicit Unconfigured creation and existing profile selection remain independent.
+Historically discovered here: ordinary one-argument Save could overwrite a newer
+profile. The separately reviewed foundation removed that API. The canonical shared
+Planner / Settings editor now calls `PlanningProfileSettingsService.save(proposed,
+expectedBefore)` with its immutable editor-opening snapshot. The exact comparison
+occurs inside MutationCoordinator; User origin, typed results and existing D8
+write policy remain authoritative. It never calls Agent Save.
+
+### Canonical profile edit session
+
+- One root-owned coordinator/Compose editor serves Planner and Settings -> Planning.
+  Source refresh, navigation, theme and layout changes retain the opening snapshot
+  and draft; none initiates Save, Preview or Apply.
+- Name and Unconfigured state are editable. Explicit Configure opens blank required
+  fields; no timezone, duration, availability or policy defaults are invented.
+  Configured profiles can be edited, but cannot be downgraded to Unconfigured here.
+- Structured availability rows have explicit weekday/start/exclusive-end inputs,
+  add/remove controls and Domain construction validation. Durations accept explicit
+  units (`25m`, `1h`, including sub-minute precision) and are never clamped/reordered.
+  All-day policy exposes the two existing enum meanings with readable labels.
+- Success retains the returned committed profile, consumes the editor and refreshes
+  authoritative selection. A failed post-commit refresh reports the committed write
+  honestly. Stale/NotFound/BlockedBySyncConflict keep the draft; no overwrite,
+  recreation, force-save or optimistic snapshot replacement occurs.
+- Cancel/Back/close on a dirty editor asks for explicit discard. Reload current
+  profile asks for explicit draft discard, loads current facts and starts a new
+  snapshot only after confirmation. No automatic three-way merge.
 
 ### FG-02 — typed business conflict candidate selection
 
-FOUNDATION_GAP.
+**DEFERRED / NON-BLOCKING**.
 
 User interaction: select/combine candidate semantic values to resolve a D8 conflict.
 Existing API inspected: `SyncConflictQueryService.listOpen/get`,
@@ -61,14 +76,15 @@ available; no fake Resolve/dismiss or manual status update.
 
 ### Maintainer disposition
 
-The maintainer explicitly chose: **record FG-01/FG-02 in this PR; foundation
-separately reviewed**. No ordinary profile Save/SaveAgent shortcut and no UI
-candidate JSON decoding are authorized. These paths remain unavailable. The
-whole D10-03 slice is not marked IMPLEMENTED or COMPLETE.
+The original discovery was recorded for separate foundation review. FG-01 is
+now resolved by merged PR #36 and consumed by the actual product editor. FG-02,
+FG-03 and FG-04 are intentionally deferred, non-blocking capability boundaries;
+no candidate JSON decoding, pairing protocol or new directional status API is
+implemented in presentation. D10-03 has no remaining `BLOCKED_BY_DECISION`.
 
 ### FG-03 — complete typed pairing workflow
 
-FOUNDATION_GAP. User interaction: request/admit or approve a new device after
+**DEFERRED / NON-BLOCKING**. User interaction: request/admit or approve a new device after
 explicit SAS comparison. `LocalEnrollmentRequestService` safely stages identity;
 `PairingApprovalService.approve` returns a typed approved envelope;
 `PairingRecipientAdmissionService.admit` consumes an authenticated envelope.
@@ -84,6 +100,8 @@ the existing complete services independently.
 
 ### FG-04 — richer directional progress (optional status capability)
 
+**DEFERRED / NON-BLOCKING OPTIONAL CAPABILITY**.
+
 `ActiveSyncCatchUpTrigger` exposes terminal `stoppedReason` and explicit
 `retryNow`, but no observable latest per-direction result/held queue snapshot.
 The screen reports the real configured trigger and stopped reason only. It does
@@ -97,7 +115,7 @@ not required to run the independently available explicit Retry path.
   Instant, finite horizon; Local Reflow affected blocks/disrupted ranges/search
   window. Existing DogfoodPlannerService builds authoritative snapshots and
   determines all placements, legality and issues. No Provider request or write
-  occurs during Preview. Read-only profile configuration and explicit
+  occurs during Preview. Optimistic profile editing and explicit
   Unconfigured creation are shared between Planner and Settings.
 - Session PlanBranch, readable proposed FocusBlock changes, issues and criteria;
   wide list/preview panes and narrow/large-font modal detail. Apply delegates to
@@ -134,7 +152,54 @@ not required to run the independently available explicit Retry path.
 
 ## Verification and delivery
 
-### Executed local evidence
+### FG-01 integration acceptance rerun (2026-10-08)
+
+Normal base merge `ad4a22e861be7eea501997882ae2efec57f4c56e` incorporates
+foundation PR #36 without rewriting PR #35 history. The old exact-head run
+`37642517178` remains historical only; the new final exact-head run is reported
+on PR #35 after all five jobs actually execute.
+
+```powershell
+./gradlew.bat :apps:desktop:test :shared:ui:desktopTest --rerun :shared:application:desktopTest --rerun --tests '*PlanningProfileSettingsServiceTest' :shared:database:desktopTest --rerun --tests '*PlanningProfileOptimisticSaveIntegrationTest' --tests '*AggregateSnapshotConsistencyTest' --tests '*AcademicAuthoringIntegrationTest' :apps:android:assembleDebug :apps:android:assembleDebugAndroidTest --no-daemon --console=plain --gradle-user-home D:\codex\asp-d10-gradle-home
+adb -s emulator-5562 shell am instrument -w -r -e class dev.agenticscheduler.android.ProductWorkspaceInstrumentedTest,dev.agenticscheduler.android.CoreSchedulingInstrumentedTest,dev.agenticscheduler.android.AppShellInstrumentedTest,dev.agenticscheduler.android.AgentConversationSyncControlsInstrumentedTest dev.agenticscheduler.android.test/androidx.test.runner.AndroidJUnitRunner
+./test-support/d10-03/capture-android.ps1 -Serial emulator-5562 -Sdk C:\ProgramData\Android
+git diff --check
+python test-support/d10-03/check-boundaries.py
+python test-support/d10-03/check-candidates.py --compare-generated
+```
+
+- Full Desktop **106/106**, zero failures/errors/skips. Canonical profile
+  coordinator **18/18** uses actual PlanningProfileSettingsService,
+  MutationCoordinator and Room. Mounted shared Compose tests cover both entry
+  routes, Stale draft retention/confirmed Reload, dirty cancel, theme/font/route
+  recomposition no-write, structured weekday/time add/remove/edit, exact `30s`
+  duration and explicit all-day policy persistence. Existing Planner, History,
+  Undo and six security workflow regressions remain green.
+- Foundation ordinary Save **8/8**; targeted Room **51/51** (optimistic stale
+  integration **1**, aggregate snapshot **13**, academic authoring **37**).
+  Legacy Desktop dialog **3/3** remains in the full Desktop suite. Shared UI **3/3**.
+  Unsafe ordinary overload absent; foundation `saveAgent` and explicit
+  `createUnconfigured` remain unchanged, with no Application production diff.
+- Android native **21/21**, zero failures/errors/skips: ProductWorkspace **10**,
+  CoreScheduling **5**, AppShell **4**, consent/export **2**. Explicit configure
+  from Settings, configured edit from Planner, native dirty Back and stale Reload
+  execute real Application/Room writes; no Planner or Provider is invoked by Save.
+  APKs installed and tested via `am instrument` on the isolated API35 emulator,
+  not inferred from compilation. Seven Light/Dark capture configurations and
+  expanded native Back also execute; CI independently owns UTP/platform evidence.
+- A fixture formerly created a configured profile using the removed blind Save.
+  It now creates an explicit Unconfigured identity and configures it through
+  optimistic User Save. The Unsupported Undo UI regression deliberately selects
+  a creation record rather than assuming the newest record is creation. Android
+  capture waits for coordinator refresh to finish before preparing each case;
+  no product semantics or assertions were weakened.
+- Only affected D10-03 candidates are refreshed/added: actual Desktop/Android
+  profile editor, configured summary, policies and Desktop stale state, including
+  Light/Dark/200%/narrow-short layouts. D10-01/02 historical images are unchanged.
+  Fixtures contain no secrets; native clock/chrome is acceptance evidence, not
+  a byte-deterministic platform golden. Visual maintainer approval remains pending.
+
+### Historical pre-foundation local evidence
 
 On Windows, JDK 17, isolated Gradle home, the following command passed:
 
@@ -192,9 +257,10 @@ post-Undo read failure preserves the real committed compensation result and
 consumes the submitted detail; retry cannot duplicate it. No Academic
 persistence, recurrence or authoring semantics changed.
 
-Actual Compose evidence is kept separately in the bounded **44-candidate**
+Actual Compose evidence is kept separately in the bounded **86-candidate**
 [D10-03 capture manifest](fixtures/d10-03/screenshots/capture-manifest.json).
-The generated matrix contains 50 Desktop and 50 Android candidates: Light/Dark,
+The original generated matrix contained 50 Desktop and 50 Android candidates;
+the profile follow-up adds 24 Desktop and 42 Android candidates: Light/Dark,
 Desktop 640/1024/1280/1440/1920 widths; Android 360/480/600/840/1024 widths,
 800×360 short height, and 200% font. Wide detail panes become owned scrollable
 dialogs at narrow/short/large-font sizes. Native Back closes detail before More.
@@ -231,9 +297,7 @@ docs-only run is not full CI acceptance for this implementation.
 `git diff --check`, Markdown link/status checks, source ownership/diff fences and
 candidate hash checks are required before push. No DB migration or new production
 dependency. No production changes to Domain/Application/Planner/D7/D8/D9, wire, crypto,
-server or Wear. OD-012 remains OPEN. D10-04/05/06 remain unstarted. FG-01/02
-require separately reviewed foundation work by explicit maintainer disposition;
-FG-03 pairing remains unavailable and FG-04 richer directional status is a future
-typed read capability. No new `BLOCKED_BY_DECISION` choice was guessed. The whole
-slice remains **IN PROGRESS / FOUNDATION_GAP**, awaiting review of the independent
-paths rather than claiming semantic completion.
+server or Wear. OD-012 remains OPEN. D10-04/05/06 remain unstarted. FG-01 is resolved by merged PR #36 and the canonical optimistic editor. FG-02/03
+remain deferred/non-blocking; FG-04 is a deferred/non-blocking optional status
+capability. No new `BLOCKED_BY_DECISION` choice was guessed. The slice is
+**D10-03 IMPLEMENTED / AWAITING REVIEW**, not COMPLETE or MERGED.

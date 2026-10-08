@@ -14,6 +14,6 @@ for item in manifest['candidates']:
 for name,expected in manifest['sourceHashes'].items():
     content=(root/name).read_text(encoding='utf-8-sig').replace('\r\n','\n')
     assert hashlib.sha256(content.encode()).hexdigest()==expected,name
-assert manifest['baseSha']=='cda86a815d21fe4a501b79a92074962001a54039'
+assert manifest['baseSha']=='74e20e555c9037ff62dda95ab67e3e0e455b0aa1'
 assert manifest['containsRealSecrets'] is False
 print(f"{len(manifest['candidates'])} D10-03 real Compose candidate hashes/dimensions + source hashes PASS; visual maintainer approval remains pending")

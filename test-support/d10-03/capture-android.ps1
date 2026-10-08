@@ -20,6 +20,9 @@ try {
         $result = & $adb -s $Serial shell am instrument -w -r -e class 'dev.agenticscheduler.android.ProductWorkspaceInstrumentedTest#actualAndroidD10ProductScreenshotCandidates' 'dev.agenticscheduler.android.test/androidx.test.runner.AndroidJUnitRunner'
         $result | Set-Content (Join-Path $taskOutput "${width}x${height}-font$font.txt")
         if ($LASTEXITCODE -or ($result -join "`n") -notmatch 'OK \(1 test\)') { throw "Capture failed at ${width}x${height}, font $font." }
+        $profileResult = & $adb -s $Serial shell am instrument -w -r -e class 'dev.agenticscheduler.android.ProductWorkspaceInstrumentedTest#actualAndroidPlanningProfileScreenshotCandidates' 'dev.agenticscheduler.android.test/androidx.test.runner.AndroidJUnitRunner'
+        $profileResult | Set-Content (Join-Path $taskOutput "${width}x${height}-font$font-profiles.txt")
+        if ($LASTEXITCODE -or ($profileResult -join "`n") -notmatch 'OK \(1 test\)') { throw "Profile capture failed at ${width}x${height}, font $font." }
     }
     # Expanded native Back ownership is functional evidence, distinct from capture success.
     & $adb -s $Serial shell wm size '1024x768'

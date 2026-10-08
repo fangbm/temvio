@@ -153,6 +153,7 @@ internal fun AndroidApp(
     androidx.activity.compose.BackHandler(navigation.current == AndroidDestination.PLANNER && plannerWorkspace.preview != null) {plannerWorkspace.cancelPreview()}
     androidx.activity.compose.BackHandler(navigation.current == AndroidDestination.HISTORY && historyScreen?.detail != null) {historyScreen?.closeDetail()}
     androidx.activity.compose.BackHandler(navigation.current in listOf(AndroidDestination.SYNC_SECURITY,AndroidDestination.SETTINGS) && syncScreen?.selected != null) {syncScreen?.closeDetail()}
+    PlanningProfileEditorHost(plannerWorkspace,featureScope)
     academic?.let { AcademicEditor(it) }
     if (creatingEvent) EventEditorDialog(null, selectedDate, displayTimeZone, eventEditor, { creatingEvent = false }, { creatingEvent = false })
     editingEvent?.let { event -> EventEditorDialog(event, selectedDate, displayTimeZone, eventEditor, { editingEvent = null; core.detailRevision++ }, { editingEvent = null }, onReload = {

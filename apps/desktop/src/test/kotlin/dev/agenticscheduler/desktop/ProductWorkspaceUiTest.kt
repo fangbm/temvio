@@ -74,7 +74,7 @@ class ProductWorkspaceUiTest {
         }
     }
     @Test fun historyDetailShowsUnsupportedAndTypedDiffWithoutAutomaticUndo() = fixture {f ->
-        val h=f.history();runBlocking {h.refresh();h.select(h.rows.first().operation.mutationId)}
+        val h=f.history();runBlocking {h.refresh();h.select(h.rows.first { row -> row.operation.orderedMutations.any { it is dev.agenticscheduler.sync.PlanningProfilePut && it.before == null } }.operation.mutationId)}
         val count=runBlocking {f.base.journal.timeline().size}
         runDesktopComposeUiTest(width=1280,height=1000) {
             setContent {app(f,DesktopNavigation().also {it.open(DesktopDestination.HISTORY)},history=h)}
@@ -152,6 +152,115 @@ class ProductWorkspaceUiTest {
             waitForIdle();runBlocking {check(f.base.journal.timeline().size==count+1)}
         }
     }
+    @Test fun canonicalProfileEditorSavesFromPlannerAndSettingsWithSameUserContract() {
+        for (route in listOf(DesktopDestination.PLANNER, DesktopDestination.SETTINGS)) fixture { f ->
+            val c=f.workspace();val nav=DesktopNavigation().also {it.open(route)}
+            val count=runBlocking {f.base.journal.timeline().size}
+            runDesktopComposeUiTest(width=1280,height=1000) {
+                setContent {app(f,nav,c)}
+                if(route==DesktopDestination.SETTINGS) onNodeWithText("Open planning profiles").performClick()
+                waitUntil(timeoutMillis=10000) {c.loaded};onNodeWithText("Research hours",substring=false).performClick()
+                onNodeWithTag("profile-edit-open").performScrollTo().performClick()
+                onNodeWithTag("profile-edit-name").performTextReplacement("Product edited hours")
+                onNodeWithTag("profile-edit-save").performClick()
+                waitUntil(timeoutMillis=10000) {c.profileEditor==null && !c.busy}
+                runBlocking {
+                    check(f.base.journal.timeline().size==count+1)
+                    check(f.base.journal.timeline().last().operation.origin==dev.agenticscheduler.sync.MutationOrigin.User)
+                    check(f.base.profiles.get(f.configured.id)!!.name=="Product edited hours")
+                    check(f.base.tasks.observeFocusBlocks().first().isEmpty())
+                }
+                check(c.preview==null);check(c.profiles.single {it.id==f.configured.id}==c.lastCommittedProfile)
+            }
+        }
+    }
+    @Test fun mountedEditorStaleKeepsDraftAndReloadRequiresConfirmation() = fixture {f ->
+        val c=f.workspace();runBlocking {c.refresh();c.openProfileEditor(f.configured)}
+        runDesktopComposeUiTest(width=640,height=720) {
+            setContent {app(f,DesktopNavigation().also {it.open(DesktopDestination.PLANNER)},c)}
+            onNodeWithTag("profile-edit-name").performTextReplacement("My unsaved C")
+            runBlocking {f.profileSettings.save(f.configured.copy(name="Concurrent B"),f.configured)}
+            val count=runBlocking {f.base.journal.timeline().size}
+            onNodeWithTag("profile-edit-save").performClick()
+            waitUntil(timeoutMillis=10000) {c.profileResult==PlanningProfileSettingsResult.Stale && !c.busy}
+            runOnIdle {check(c.profileEditor!!.draft.name=="My unsaved C");check(c.profileEditor!!.expectedBefore==f.configured)}
+            onNodeWithTag("profile-reload").performScrollTo().performClick()
+            onNodeWithText("Keep editing",substring=false).performClick()
+            runOnIdle {check(c.profileEditor!!.draft.name=="My unsaved C")}
+            onNodeWithTag("profile-reload").performClick();onNodeWithText("Discard draft and reload",substring=false).performClick()
+            waitUntil(timeoutMillis=10000) {c.profileEditor!!.draft.name=="Concurrent B" && !c.busy}
+            runBlocking {check(f.base.journal.timeline().size==count)}
+        }
+    }
+    @Test fun mountedDirtyEditorSurvivesThemeDensityNavigationAndCloseWithoutSave() = fixture {f ->
+        val c=f.workspace();runBlocking {c.refresh();c.openProfileEditor(f.configured)}
+        val nav=DesktopNavigation().also {it.open(DesktopDestination.PLANNER)}
+        var dark by mutableStateOf(false);var font by mutableStateOf(1f)
+        val count=runBlocking {f.base.journal.timeline().size}
+        runDesktopComposeUiTest(width=640,height=720) {
+            setContent {CompositionLocalProvider(LocalDensity provides Density(1f,font)) {app(f,nav,c,dark=dark)}}
+            onNodeWithTag("profile-edit-name").performTextReplacement("Unsaved appearance-independent draft")
+            val session=c.profileEditor
+            runOnIdle {dark=true;font=2f;nav.open(DesktopDestination.SETTINGS)};waitForIdle()
+            runOnIdle {check(c.profileEditor==session)}
+            onNodeWithText("Cancel editing",substring=false).performClick()
+            onNodeWithText("Keep editing",substring=false).performClick()
+            runOnIdle {check(c.profileEditor==session)}
+            onNodeWithText("Cancel editing",substring=false).performClick();onNodeWithText("Discard draft",substring=false).performClick()
+            runOnIdle {check(c.profileEditor==null)}
+            runBlocking {check(f.base.journal.timeline().size==count)}
+        }
+    }
+    @Test fun structuredAvailabilityAndPoliciesAreActuallyEditedThroughCompose() = fixture {f ->
+        val c=f.workspace();runBlocking {c.refresh();c.openProfileEditor(f.configured)}
+        runDesktopComposeUiTest(width=1280,height=1000) {
+            setContent {app(f,DesktopNavigation().also {it.open(DesktopDestination.SETTINGS)},c)}
+            onNodeWithText("Remove window 1",substring=false).performScrollTo().performClick()
+            onNodeWithTag("profile-add-window").performScrollTo().performClick()
+            onNodeWithText("Wednesday",substring=false).performScrollTo().performClick()
+            onNodeWithTag("profile-window-0-start").performScrollTo().performTextReplacement("10:30")
+            onNodeWithTag("profile-window-0-end").performScrollTo().performTextReplacement("14:00")
+            onNodeWithTag("profile-edit-minimum").performScrollTo().performTextReplacement("30s")
+            onNodeWithTag("profile-edit-preferred").performScrollTo().performTextReplacement("40m")
+            onNodeWithTag("profile-edit-maximum").performScrollTo().performTextReplacement("2h")
+            onNodeWithText("Block the whole local day",substring=false).performScrollTo().performClick()
+            onNodeWithTag("profile-edit-save").performClick()
+            waitUntil(timeoutMillis=10000) {c.profileEditor==null && !c.busy}
+            runBlocking {
+                val config=f.base.profiles.get(f.configured.id)!!.configuration as dev.agenticscheduler.domain.planning.PlanningProfileConfiguration.Configured
+                check(config.weeklyAvailability.single().dayOfWeek==kotlinx.datetime.DayOfWeek.WEDNESDAY)
+                check(config.weeklyAvailability.single().start==kotlinx.datetime.LocalTime(10,30))
+                check(config.weeklyAvailability.single().endExclusive==kotlinx.datetime.LocalTime(14,0))
+                check(config.minimumFocusBlock==kotlin.time.Duration.parse("30s"))
+                check(config.preferredFocusBlock==kotlin.time.Duration.parse("40m"))
+                check(config.maximumFocusBlock==kotlin.time.Duration.parse("2h"))
+                check(config.allDayEventPolicy==dev.agenticscheduler.domain.planning.AllDayEventPolicy.BLOCK_WHOLE_LOCAL_DAY)
+            }
+        }
+    }
+    @Test fun actualDesktopPlanningProfileScreenshotCandidates() {
+        val out=File("build/d10-03/screenshots").also {it.mkdirs()}
+        for((width,height,font) in listOf(Triple(1280,1000,1f),Triple(640,720,1f),Triple(640,480,2f)))
+            for(dark in listOf(false,true)) for(case in listOf("profile-editor","profile-policy","profile-configured","profile-stale")) fixture {f ->
+                val c=f.workspace();runBlocking {
+                    c.refresh();c.draft=f.request()
+                    if(case!="profile-configured") c.openProfileEditor(f.configured)
+                    if(case=="profile-stale") {
+                        c.updateProfileDraft(c.profileEditor!!.draft.copy(name="Unsaved study hours"))
+                        f.profileSettings.save(f.configured.copy(name="Concurrent research hours"),f.configured);c.saveProfileFromUser()
+                    }
+                }
+                runDesktopComposeUiTest(width=width,height=height) {
+                    setContent {CompositionLocalProvider(LocalDensity provides Density(1f,font)) {app(f,DesktopNavigation().also {it.open(DesktopDestination.PLANNER)},c,dark=dark)}}
+                    if(case=="profile-policy") onNodeWithText("Block the whole local day",substring=false).performScrollTo()
+                    if(case=="profile-stale") onNodeWithText("Profile changed since editing began.",substring=true).performScrollTo()
+                    waitForIdle()
+                    val target=if(case=="profile-configured") onAllNodes(isRoot()).onFirst() else onAllNodes(isRoot()).onLast()
+                    val file=File(out,"desktop-${width}x$height-font${(font*100).toInt()}-${if(dark) "dark" else "light"}-$case.png")
+                    Image.makeFromBitmap(target.captureToImage().asSkiaBitmap()).encodeToData(EncodedImageFormat.PNG)!!.use {file.writeBytes(it.bytes)}
+                }
+            }
+    }
     @Test fun actualDesktopD10ProductScreenshotCandidates() {
         val out=File("build/d10-03/screenshots").also {it.mkdirs()}
         val variants=listOf(Triple(640,720,1f),Triple(1024,900,1f),Triple(1280,1000,1f),Triple(1440,1000,1f),Triple(1920,1080,1f),Triple(1280,1000,2f))
@@ -165,7 +274,7 @@ class ProductWorkspaceUiTest {
                 runBlocking {
                     p.refresh();p.draft=f.request()
                     if(case.startsWith("planner") && case!="planner-input") p.requestPreview()
-                    if(case=="planner-stale") {f.profileSettings.save(f.configured.copy(name="Changed profile fact"));p.apply(f.now)}
+                    if(case=="planner-stale") {f.profileSettings.save(f.configured.copy(name="Changed profile fact"), f.configured);p.apply(f.now)}
                     h.refresh();if(case=="history-detail") h.select(h.rows.first().operation.mutationId)
                     if(case=="sync-conflict" || case=="revoke-confirmation") {f.enroll();val conflict=f.profileConflict();s.refresh();if(case=="sync-conflict") s.inspect(conflict.conflictId)}
                 }

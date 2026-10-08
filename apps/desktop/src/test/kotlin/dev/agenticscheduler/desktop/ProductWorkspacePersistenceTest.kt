@@ -135,7 +135,7 @@ class ProductWorkspacePersistenceTest {
         check(f.base.journal.timeline().size==count);check(f.base.tasks.observeFocusBlocks().first()==listOf(block))
     } }
     @Test fun profileUndoRechecksOpenD8ConflictInsideApplicationCommand() = fixture {f -> runBlocking {
-        f.profileSettings.save(f.configured.copy(name="Edited research hours"))
+        f.profileSettings.save(f.configured.copy(name="Edited research hours"), f.configured)
         val operation=f.base.journal.timeline().last().operation
         f.profileConflict()
         val h=f.history();h.select(operation.mutationId);check(h.detail!!.undo==UndoCapability.Available)

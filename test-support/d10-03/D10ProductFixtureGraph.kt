@@ -34,11 +34,11 @@ class D10ProductFixtureGraph(val db: AgenticSchedulerDatabase) {
     suspend fun seed() {
         base.seed()
         unconfigured = (profileSettings.createUnconfigured("Explicit draft profile") as PlanningProfileSettingsResult.Success).profile
-        configured = unconfigured.copy(name="Research hours",configuration=PlanningProfileConfiguration.Configured(
+        val opening = (profileSettings.createUnconfigured("Research hours") as PlanningProfileSettingsResult.Success).profile
+        configured = opening.copy(configuration=PlanningProfileConfiguration.Configured(
             base.zone,listOf(WeeklyAvailabilityWindow(DayOfWeek.TUESDAY,LocalTime(9,0),LocalTime(17,0))).toImmutableList(),
             25.minutes,50.minutes,90.minutes,AllDayEventPolicy.NON_BLOCKING))
-        configured = configured.copy(id=PlanningProfileId(base.ids.next()))
-        check(profileSettings.save(configured) is PlanningProfileSettingsResult.Success)
+        check(profileSettings.save(configured, opening) is PlanningProfileSettingsResult.Success)
     }
     fun workspace() = PlannerWorkspaceCoordinator(reads,planner,profileSettings)
     fun history() = HistoryScreenCoordinator(queries,undo)

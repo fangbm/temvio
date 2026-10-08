@@ -143,6 +143,7 @@ internal fun DesktopApp(
             }
             }
         }
+    PlanningProfileEditorHost(plannerWorkspace,featureScope)
     academic?.let { AcademicEditor(it) }
     if (creatingEvent) EventEditorDialog(null, selectedDate, displayTimeZone, eventEditor, { creatingEvent = false }, { creatingEvent = false })
     editingEvent?.let { event -> EventEditorDialog(event, selectedDate, displayTimeZone, eventEditor, { editingEvent = null; core.detailRevision++ }, { editingEvent = null }, onReload = {
