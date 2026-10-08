@@ -162,6 +162,7 @@ Executed locally on Windows / JDK17 / Android API35 Google APIs x86_64:
 | Existing AgentPersistenceTest + AgentRunIntegrationTest | 9/9 + 14/14 |
 | Native Android AgentWorkspaceInstrumentedTest | 7/7 |
 | Combined native ProductWorkspace + AgentWorkspace at CI default phone dimensions/density | 10/10 + 7/7 |
+| Complete Android CI instrumentation set (relay fixture excluded as in CI) | 32/32 |
 
 Commands:
 
@@ -212,6 +213,17 @@ before clicking, retaining zero-schema/zero-Tool/zero-action checks in chat-only
 The final combined suite passed 17/17 and complete Desktop rerun passed 140/140.
 The superseded run is not final acceptance evidence; new exact-head full CI is
 mandatory. No History/Undo production semantics were changed.
+
+Run `37774776480` on `1962fc6f195fe1a4c8180c20c2e2147f26b6a8ef`
+passed build/Windows/Wear/platform E2E, but exposed a second existing screenshot
+harness race: opening the PlanningProfile editor during theme-remount refresh
+was rejected by its existing busy guard. The test now settles refresh before
+opening the editor and asserts command acceptance; all six Light/Dark scenes,
+policy scroll and zero-Provider-request assertions remain. Five consecutive
+native repetitions passed, followed by the complete Android CI instrumentation
+set at default phone dimensions/density: 32/32. No Planner production behavior
+or historical screenshot/manifest changed. This superseded run is not final
+acceptance evidence.
 
 Exact-head full CI remains required before delivery: all five jobs must actually
 execute/pass (build, desktop-windows, android-keystore, wear-keystore,

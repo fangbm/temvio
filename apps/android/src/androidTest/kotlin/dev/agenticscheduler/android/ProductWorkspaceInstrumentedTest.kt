@@ -159,9 +159,16 @@ class ProductWorkspaceInstrumentedTest {
         val config=context.resources.configuration
         val out=File(context.getExternalFilesDir(null),"d10-03-screenshots").also {it.mkdirs()}
         for(theme in listOf(false,true)) for(case in listOf("profile-editor","profile-policy","profile-configured")) {
+            // Theme remount starts a real refresh; settle it before issuing guarded editor commands.
+            compose.runOnIdle { dark=theme }
+            compose.waitForIdle()
+            compose.waitUntil(10000) { p.loaded && !p.busy }
             compose.runOnIdle {
-                p.discardProfileDraft();dark=theme
-                if(case!="profile-configured") p.openProfileEditor(f.configured)
+                p.discardProfileDraft()
+                if(case!="profile-configured") {
+                    p.openProfileEditor(f.configured)
+                    check(p.profileEditor!=null) { "Screenshot editor command was not accepted" }
+                }
             }
             compose.waitForIdle()
             if(case=="profile-policy") compose.onNodeWithText("Block the whole local day",substring=false).performScrollTo()
