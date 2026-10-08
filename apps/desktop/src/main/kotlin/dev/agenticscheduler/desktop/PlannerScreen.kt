@@ -24,6 +24,7 @@ import dev.agenticscheduler.application.planner.DogfoodPlannerService
 import dev.agenticscheduler.application.planner.PlanBranchApplyResult
 import dev.agenticscheduler.application.planner.PlannerPreview
 import dev.agenticscheduler.application.planner.PlanningProfileSettingsService
+import dev.agenticscheduler.application.planner.PlanningProfileSettingsResult
 import dev.agenticscheduler.domain.event.Event
 import dev.agenticscheduler.domain.id.FocusBlockId
 import dev.agenticscheduler.domain.planning.AllDayEventPolicy
@@ -129,6 +130,14 @@ internal fun PlanningProfileDialog(existing: PlanningProfile?, settings: Plannin
     var allDayPolicy by remember(existing) { mutableStateOf(configured?.allDayEventPolicy) }
     var error by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
+    val handleSaveResult: (PlanningProfileSettingsResult) -> Unit = { result ->
+        when (result) {
+            is PlanningProfileSettingsResult.Success -> onSaved()
+            PlanningProfileSettingsResult.Stale -> error = "Profile changed since this editor opened. Draft retained; close and reopen explicitly to reload."
+            PlanningProfileSettingsResult.NotFound -> error = "Profile no longer exists. Draft retained."
+            is PlanningProfileSettingsResult.BlockedBySyncConflict -> error = "Profile intersects an unresolved sync conflict. Draft retained; resolve before saving."
+        }
+    }
     val initialDraft = remember(existing) { listOf(name, timeZone, minimum, preferred, maximum, windows, allDayPolicy) }
     var discardRequested by remember { mutableStateOf(false) }
     val requestDismiss: () -> Unit = { if (listOf(name, timeZone, minimum, preferred, maximum, windows, allDayPolicy) != initialDraft) discardRequested = true else onDismiss() }
@@ -148,11 +157,11 @@ internal fun PlanningProfileDialog(existing: PlanningProfile?, settings: Plannin
             error?.let { Text(it) }
         } },
         confirmButton = { Button(onClick = {
-            if (existing == null) scope.launch { runCatching { settings.createUnconfigured(name) }.onSuccess { onSaved() }.onFailure { error = it.message } }
+            if (existing == null) scope.launch { runCatching { settings.createUnconfigured(name) }.onSuccess(handleSaveResult).onFailure { error = it.message } }
             else {
                 val configuration = parseConfiguration(timeZone, minimum, preferred, maximum, windows, allDayPolicy)
                 if (configuration == null) error = "Enter a valid timezone, ordered positive durations, non-overlapping availability, and choose an all-day policy."
-                else scope.launch { runCatching { settings.save(existing.copy(name = name, configuration = configuration)) }.onSuccess { onSaved() }.onFailure { error = it.message } }
+                else scope.launch { runCatching { settings.save(existing.copy(name = name, configuration = configuration), expectedBefore = existing) }.onSuccess(handleSaveResult).onFailure { error = it.message } }
             }
         }) { Text(if (existing == null) "Create" else "Save") } },
         dismissButton = { Button(onClick = requestDismiss) { Text("Cancel") } },
