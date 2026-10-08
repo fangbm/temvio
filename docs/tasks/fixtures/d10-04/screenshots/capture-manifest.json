@@ -6,13 +6,13 @@
   "nativeEvidence": "Actual Desktop Compose/Skia + Android API35 Google APIs x86_64 emulator. Native clock/chrome is not deterministic; no physical-device claim.",
   "sourceHashNormalization": "UTF-8 text / no BOM / LF",
   "sourceHashes": {
-    "apps/android/src/androidTest/kotlin/dev/agenticscheduler/android/AgentWorkspaceInstrumentedTest.kt": "491c1703b43572756eb4903bc448776be104f7b2d5648bf7eba2ec3dcae900d5",
+    "apps/android/src/androidTest/kotlin/dev/agenticscheduler/android/AgentWorkspaceInstrumentedTest.kt": "05ac0feafa9a2567181e1d0a7537c836c8528e892089621c577c525e868ffc46",
     "apps/android/src/main/kotlin/dev/agenticscheduler/android/AndroidApp.kt": "1faa9f4a3927d83f5e3e0f4eea929670467d108cda90e5767caa502944f1cf19",
     "apps/desktop/src/main/kotlin/dev/agenticscheduler/desktop/DesktopApp.kt": "972311db06070d592ca21c538ab6b7b2fe407fbf0aab9f493fc5034ddf1d9e67",
-    "apps/desktop/src/test/kotlin/dev/agenticscheduler/desktop/AgentWorkspaceUiTest.kt": "f899a2a390792a7177590dcb29c97161e93fa246c839a44e789125fd10807fe3",
+    "apps/desktop/src/test/kotlin/dev/agenticscheduler/desktop/AgentWorkspaceUiTest.kt": "43806c8b1f72b67513206fe39934e69499f4157287d3e7834af5ae4d8360eacb",
     "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/AgentToolPresentation.kt": "51dd81a63ac8d4767c533be41addc4c2252d0653587c666a7a2c66ae1d16e988",
     "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/AgentWorkspaceCoordinator.kt": "1b7ffa5f813cfefbf364e6e41dd03cc9cf3e16fe78871a2fd00321b8f0baab40",
-    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/AgentWorkspaceScreen.kt": "c4c3512a4eea1307b5200c17e0c413741e5d6e0b729d348c7b1c09d9ff6d5e15",
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/AgentWorkspaceScreen.kt": "c5beda74ac8aac90961639a0ca7d3e6066534a9e3e379b6ba51480365f3b3b28",
     "test-support/d10-04/D10AgentFixtureGraph.kt": "fbb529c28661125b290233d6e7baa57372fcded38e77610a43f969c047d5baa3"
   },
   "candidates": [
@@ -23,7 +23,7 @@
         1024,
         768
       ],
-      "sha256": "cc8faa345fb7d0f8330e7f9714018e3934d4727a44ca73d514c0f58b2428e1e2"
+      "sha256": "29245d7298893da0b4de2b609f6ec5572354d6881ff22e269a32e9c65cf999d1"
     },
     {
       "file": "desktop-1024x768-font100-light-conversation.png",
@@ -32,7 +32,7 @@
         1024,
         768
       ],
-      "sha256": "c93783dfd52108dd6a6680674f400590045e4e2a292af101441434989f3bbe3c"
+      "sha256": "e7531889f6af2dc9040bba9cfe8f21fd32dd90e122a000d4f419062a6b7bbf8b"
     },
     {
       "file": "desktop-1280x800-font100-dark-chat-only.png",
@@ -41,7 +41,7 @@
         1280,
         800
       ],
-      "sha256": "fc57b7184ccd046865b7cb5cc0e0d19b5c5534b7770a0e3c82a861e065deaf4a"
+      "sha256": "999c3c1547a360e62806de7f6eeb5d22ed58664ca7deac059ad698736cf8c9f7"
     },
     {
       "file": "desktop-1280x800-font100-dark-confirmation.png",
@@ -50,7 +50,7 @@
         1280,
         800
       ],
-      "sha256": "f32e79d5f9727eed0c943a0b0add31a48448a08024d2f2d835578c6d5e16572a"
+      "sha256": "c5687af3c5d16d17cc215bf6fa017e5976ad8915b2dbda66799028f1babc7105"
     },
     {
       "file": "desktop-1280x800-font100-dark-conversation.png",
@@ -59,7 +59,7 @@
         1280,
         800
       ],
-      "sha256": "425ba6ea215eb8bc3e22fe1876a24ecc62787b3011ad0dea66c52fa6db405b16"
+      "sha256": "080bac20977ccf672331fd84371ee3957e550be4fce3276f1fa3a7d09ffe3f43"
     },
     {
       "file": "desktop-1280x800-font100-dark-denied.png",
@@ -68,7 +68,7 @@
         1280,
         800
       ],
-      "sha256": "3d8900797a0ad5757eb203323c5c20d14980c7ea3a98ec0fd4df59fc0bd6e384"
+      "sha256": "faebcbee8efd3cf4cbb836a4af5f9608a7215d8f830082576c82630a00653479"
     },
     {
       "file": "desktop-1280x800-font100-dark-permissions.png",
@@ -86,7 +86,7 @@
         1280,
         800
       ],
-      "sha256": "b02a1c9619e4245b2eaa7e77bbfe9831a5bc08ba0d01c334cd02968d47a930dc"
+      "sha256": "25e05e11b2633029d41c33639dddaa1fcae42352eb518242190f952564065264"
     },
     {
       "file": "desktop-1280x800-font100-dark-stale.png",
@@ -95,7 +95,7 @@
         1280,
         800
       ],
-      "sha256": "d6f4aa5287b7aa54a1bd7708bc54c1aec06e94b6bfb94cc655ab863477bd4d93"
+      "sha256": "dc685298da21336fb721b8cde91aa33e6a6238ffd2b1c896563b58bef311cd65"
     },
     {
       "file": "desktop-1280x800-font100-dark-threads.png",
@@ -104,7 +104,7 @@
         1280,
         800
       ],
-      "sha256": "c02204d81e22ad682788df890c30f2f40f1be274843143ab62b7ef875d3d4055"
+      "sha256": "b1fbf226a2a69bf04bdcbf19ff07fe20e04c5aec9f822fe5f65cb7fa631f9548"
     },
     {
       "file": "desktop-1280x800-font100-dark-tool-result.png",
@@ -113,7 +113,7 @@
         1280,
         800
       ],
-      "sha256": "42f89c326780fb409208cdd6f47b6907dac7de6f005ca9083c779f3a77e3f9d8"
+      "sha256": "7495dda4bb30a49608d3ba9d67d76069f8dc76b3c70bab2c3892fe1fe468e273"
     },
     {
       "file": "desktop-1280x800-font100-light-chat-only.png",
@@ -122,7 +122,7 @@
         1280,
         800
       ],
-      "sha256": "d8a5247bf68b842b93527a7e06d24ce17d8946e91da7adc0b4b83dfb55d91b91"
+      "sha256": "001ad85d33beab41ba8cf9db4c31ea1145df175faca3b9a72d0584b110da17e7"
     },
     {
       "file": "desktop-1280x800-font100-light-confirmation.png",
@@ -131,7 +131,7 @@
         1280,
         800
       ],
-      "sha256": "f51f4947b5efda49740d58e000453c17e747dcc979d7d93bebd3a39b43b10adb"
+      "sha256": "20d4a4f24b039dd3d86aaaeba5251c1c77b7a587adb5bc480603bc4d2326e6ff"
     },
     {
       "file": "desktop-1280x800-font100-light-conversation.png",
@@ -140,7 +140,7 @@
         1280,
         800
       ],
-      "sha256": "8479726db44ef9ce8ac51e0a73a19f28831beac165232402241fd8268fe283bf"
+      "sha256": "13d997b9d3ef1191a69062b77380b08f2653aa0edc5b07a6181765ffede3fbe8"
     },
     {
       "file": "desktop-1280x800-font100-light-denied.png",
@@ -149,7 +149,7 @@
         1280,
         800
       ],
-      "sha256": "1e7f73c11462e0f19c7cd03dc9afa7bf72cd19e855573f93a8ea181717115b71"
+      "sha256": "3e059e04edaa9e0605cd41cd14d3f499112ea4ae8babd10628d0d9bd763e1b38"
     },
     {
       "file": "desktop-1280x800-font100-light-permissions.png",
@@ -167,7 +167,7 @@
         1280,
         800
       ],
-      "sha256": "1ae9259765d50bb7c8465542c57f16fd2d22897c1ba33f7fc4dd1806d3c0c465"
+      "sha256": "ae0b05b184345fbb2b60c784d594dde8a42df2403be7f189f44aaf904b957132"
     },
     {
       "file": "desktop-1280x800-font100-light-stale.png",
@@ -176,7 +176,7 @@
         1280,
         800
       ],
-      "sha256": "bf57e5b55846c56110c2e05836bfb876762531d427d2d04de868f14177037513"
+      "sha256": "1adc683e597a27b6baac701b4c14349dbf7795f984b3d9d7f1bdeae43399bfae"
     },
     {
       "file": "desktop-1280x800-font100-light-threads.png",
@@ -185,7 +185,7 @@
         1280,
         800
       ],
-      "sha256": "c694b3dfd8639458ff37e75e93664c924dccbe9d9a25c05ed7653fc69d1fab10"
+      "sha256": "b432058879698e455bcc854a787813a7d460d58a066e08d4fb875a069c1fc301"
     },
     {
       "file": "desktop-1280x800-font100-light-tool-result.png",
@@ -194,7 +194,7 @@
         1280,
         800
       ],
-      "sha256": "87f9bd01a5f34c097eeb356e5bea300fc3642a553fd652b8406b070fca7045bb"
+      "sha256": "b8ef22f755824cd2e99ce05bd0a4d56b7f5276eec6c8ac83fa2eacf255644ad0"
     },
     {
       "file": "desktop-1440x900-font100-dark-conversation.png",
@@ -203,7 +203,7 @@
         1440,
         900
       ],
-      "sha256": "e176319bf67005dca80e2713e2770a2c9368f10c275325d92d31701a32dd86cc"
+      "sha256": "3966be2a4221cce54f24f8395711c850fbd06ad27e971c456f1462514e7f9f22"
     },
     {
       "file": "desktop-1440x900-font100-light-conversation.png",
@@ -212,7 +212,7 @@
         1440,
         900
       ],
-      "sha256": "4fada470e2248977de872fa41be4dbadec3fc030a506dc92dd6ec656f74c9770"
+      "sha256": "96afc75b7f5f9689b0a9e44f1544bbf73fbedd73794ea284c5daf1daf36aae35"
     },
     {
       "file": "desktop-1920x1080-font100-dark-conversation.png",
@@ -221,7 +221,7 @@
         1920,
         1080
       ],
-      "sha256": "e31d56419e618420a14a0126b53cc465d2dff37d8c4090d2961ab07eac837171"
+      "sha256": "b62845c069ea70b0908f567a5a782b2a2d138c2e137a3618cdeea11f5b98be59"
     },
     {
       "file": "desktop-1920x1080-font100-light-conversation.png",
@@ -230,7 +230,7 @@
         1920,
         1080
       ],
-      "sha256": "3616f2342912c374305d11738f350cb90a83d70fac82b3030ab3e4f2ca874e3d"
+      "sha256": "a29456f6de3614dc052158cce8d90cecbb8e203858300609432f18e91f53ffb0"
     },
     {
       "file": "desktop-640x720-font100-dark-conversation.png",
@@ -239,7 +239,7 @@
         640,
         720
       ],
-      "sha256": "f4b376b88ad3ea7e048b041e44050488e4867c94686794a371905e7d9397eb8c"
+      "sha256": "77db11f8bbf3de7ad5a8cc223696c293ae8a8b9060c51f5312cc9542185c6443"
     },
     {
       "file": "desktop-640x720-font100-light-conversation.png",
@@ -248,7 +248,7 @@
         640,
         720
       ],
-      "sha256": "d0ce897fde1c71d2dc07306175ea7568a582f9eea390d78abd0b3dfa34ee30f5"
+      "sha256": "3785ea1c18935eae07786c11cbf31046a78ca90f0f1d80e1d0f349222a6fcc6b"
     },
     {
       "file": "desktop-640x720-font200-dark-confirmation.png",
@@ -257,7 +257,7 @@
         640,
         720
       ],
-      "sha256": "b8f28ba92fc7e371397c5f5b1f024081310eef89b8a67d4af67c22e4e45b36a6"
+      "sha256": "fb36efe64410e3787fbc80d57e342a122f9cefe9ebc3e1ffca2da7d75aed7974"
     },
     {
       "file": "desktop-640x720-font200-dark-conversation.png",
@@ -266,7 +266,7 @@
         640,
         720
       ],
-      "sha256": "acc8662b9a1813db908462908a7f735e64be968dc12bc25d83e8e64e20dc9c3e"
+      "sha256": "3f6692c576566bfa2d863cf373a9e8688aca6bfda33358307002e7a779701336"
     },
     {
       "file": "desktop-640x720-font200-dark-permissions.png",
@@ -284,7 +284,7 @@
         640,
         720
       ],
-      "sha256": "5ce8826eaf917b36eee8582fe7eea0e6f0e19a2b18e3a37392fa06eafd04591d"
+      "sha256": "25fe50ac3f9532b094f463d49124d6bfdb41d4dc80a9f9040812ae9cf3c20187"
     },
     {
       "file": "desktop-640x720-font200-light-conversation.png",
@@ -293,7 +293,7 @@
         640,
         720
       ],
-      "sha256": "5450a098bb1d8761fdc9e8ea2b9dfc54f7c2683f4be50cbad0e91e0d5e0f413f"
+      "sha256": "c952ef7c93bae83e3cdc6a369f74400ff191c885585e7f6a695142b389fe0558"
     },
     {
       "file": "desktop-640x720-font200-light-permissions.png",
@@ -311,7 +311,7 @@
         800,
         360
       ],
-      "sha256": "e567e739766f3021175317fa79af11a71d7733f62e551b9881a5e97028a71558"
+      "sha256": "35353a42ca37e01851d648a8c0d39346cfc634b8de01cfbc388252a54c19dacb"
     },
     {
       "file": "desktop-800x360-font100-dark-conversation.png",
@@ -320,7 +320,7 @@
         800,
         360
       ],
-      "sha256": "25fb297b3c8d029dcf4d7bb509dd520fdff1756dbda883c0c2f43150064729e3"
+      "sha256": "10947660121bf89085002bb4c2abdf64c24d41e43b3f374318d513871c2743ea"
     },
     {
       "file": "desktop-800x360-font100-light-confirmation.png",
@@ -329,7 +329,7 @@
         800,
         360
       ],
-      "sha256": "1e048d180af71f11532d74df49d43c59f4ed8b9ebd1f30d737b10c8b166a396c"
+      "sha256": "4857349bd21aa5a587d8fe2025ba3a8053f09b262bfed8cfe31fdc6165676282"
     },
     {
       "file": "desktop-800x360-font100-light-conversation.png",
@@ -338,7 +338,7 @@
         800,
         360
       ],
-      "sha256": "be554ed4edb3acad16977d65c1b6780aa104c104e56165b7f9f43a8520295749"
+      "sha256": "920a9bd2b4af540644f272888c8f61c4d542f4cf804ca8f064197fdf90c9dec2"
     },
     {
       "file": "desktop-800x600-font100-dark-conversation.png",
@@ -347,7 +347,7 @@
         800,
         600
       ],
-      "sha256": "6dda9741c2a9cc5e98bf12f4c683c6e582d2f5d63cb9e37dd0f59fe0b80c0ccd"
+      "sha256": "10246ea00f604e418bdf228ecf26c63dd28b7b829b21e22a8bf708162f8f713b"
     },
     {
       "file": "desktop-800x600-font100-light-conversation.png",
@@ -356,7 +356,7 @@
         800,
         600
       ],
-      "sha256": "4584af0375e7cf20fd4a988e1ddced71d430358db5ad05467097a68877eb306a"
+      "sha256": "87413b33da4fefbece355c0d6b51ef13274fa0a68860d82f3bed3bd58b983fd3"
     },
     {
       "file": "android-1024x768-font100-dark-conversation.png",
@@ -365,7 +365,7 @@
         1024,
         768
       ],
-      "sha256": "b7fa4b2507c09722d27da2414b6ecbe736f6c310e2cc3d1671bdd88588194984"
+      "sha256": "228646bdff9b7936935571a526f2f94554ae057568d4576170074a0ab1e0b6b4"
     },
     {
       "file": "android-1024x768-font100-light-conversation.png",
@@ -374,7 +374,7 @@
         1024,
         768
       ],
-      "sha256": "cbd3ac89bf6b44c81f7cc140cb06ce2630b64dcd0a532533113faee087fd8886"
+      "sha256": "ebc093dcd1585bba9c441b2d5c820298053bc20b2b711d8fcec1b0869978c16b"
     },
     {
       "file": "android-360x800-font100-dark-chat-only.png",
@@ -383,7 +383,7 @@
         360,
         800
       ],
-      "sha256": "88d6b89134d850c58ed313b2dc1845a8c442b5cc6c2e2485c39d3d5965cd9ff5"
+      "sha256": "5f94af5a9ee77295326cec229514a286a11aa4f0015cc7f0a1635c0c115724ca"
     },
     {
       "file": "android-360x800-font100-dark-confirmation.png",
@@ -392,7 +392,7 @@
         360,
         800
       ],
-      "sha256": "8a0116481c4f187acba38e866705198bc921ab6ca2a51b2691cb6826e8bae4aa"
+      "sha256": "fd45457704d1fd46fa63e58b2b7a7eaa6eb7ef19700853c4812034ecdf463ce2"
     },
     {
       "file": "android-360x800-font100-dark-conversation.png",
@@ -401,7 +401,7 @@
         360,
         800
       ],
-      "sha256": "d385d8c810a62f9501497f321f1180072bf4ae1839d5683f19ec3638c1d1124c"
+      "sha256": "0eba1861fb352668636aa689fa670a3c7601b46265a4c6355f953e1c21197624"
     },
     {
       "file": "android-360x800-font100-dark-denied.png",
@@ -410,7 +410,7 @@
         360,
         800
       ],
-      "sha256": "eeb7d6eeb04288c65c508e8f44f2800b34ba275cbf1a5529ac6683148da7f737"
+      "sha256": "1091244ce43a8b22e5dc2175387b28ad079e84ec803fe91c147bc572dafc75e7"
     },
     {
       "file": "android-360x800-font100-dark-permissions.png",
@@ -419,7 +419,7 @@
         360,
         800
       ],
-      "sha256": "1274cee6bed6a8ff144af90f3e41be2e75787aaadd5d43126d9ca9f483590b07"
+      "sha256": "db98f317fca239c67ae94a00bda528ca692b503f961e4935884c165ff4182de5"
     },
     {
       "file": "android-360x800-font100-dark-provider-status.png",
@@ -428,7 +428,7 @@
         360,
         800
       ],
-      "sha256": "28f766dd461d8a11a4375fad88c29b1ecd530380aa881a7168a324af61a33c0b"
+      "sha256": "87367c6d474707a3fd0553163f7533029e1cdc30ab6b99256feed6bdf45206a2"
     },
     {
       "file": "android-360x800-font100-dark-stale.png",
@@ -437,7 +437,7 @@
         360,
         800
       ],
-      "sha256": "6e7447eb67431b06a628974effc4b57af19c7b78e2e920c21090e9d0c648eb26"
+      "sha256": "1d6378794443fb6474acf156d20a88e470f362743e102490bc68712d91fe2daf"
     },
     {
       "file": "android-360x800-font100-dark-threads.png",
@@ -446,7 +446,7 @@
         360,
         800
       ],
-      "sha256": "137eca4924fc14c5d4dd74c9a552786f68ea8494d6ce55899ee9a61d9e7ebef9"
+      "sha256": "9658ab91b7207f1689cfc84a63b1488241273ca688f7404ce99039f7968c5228"
     },
     {
       "file": "android-360x800-font100-dark-tool-result.png",
@@ -455,7 +455,7 @@
         360,
         800
       ],
-      "sha256": "f0c5315c9d47087eb7370e60f599c5e418d02d8b8a0d2ea82486538004abc20d"
+      "sha256": "a719565ad0d35a7fbe398b8bc3c23585309d630e4d9b1acc81c149c4df7b0963"
     },
     {
       "file": "android-360x800-font100-light-chat-only.png",
@@ -464,7 +464,7 @@
         360,
         800
       ],
-      "sha256": "841ae8551d4466c75088a93228b510dc424e1b8f6ce9f160a0071af6c155a887"
+      "sha256": "976aa33ec8e2391787edfec74851ea67c451e87676864d771364845b3449f9e5"
     },
     {
       "file": "android-360x800-font100-light-confirmation.png",
@@ -473,7 +473,7 @@
         360,
         800
       ],
-      "sha256": "baffd84e3f0c1d701a166a6bd766bd527827ef70cccae4302504a70f19941de4"
+      "sha256": "9d0a165a45d293855cdd439c75a05305b843cbfc39ac13f4abb40a82d6593d27"
     },
     {
       "file": "android-360x800-font100-light-conversation.png",
@@ -482,7 +482,7 @@
         360,
         800
       ],
-      "sha256": "15ebc06ed2d29a9e6da668d2d62f0291865e72d84fbf6c745c8ef63d9050b11f"
+      "sha256": "818b59e78b3c0ead4b35109c6b1294175a81da721da620a420920c2adf0c4d31"
     },
     {
       "file": "android-360x800-font100-light-denied.png",
@@ -491,7 +491,7 @@
         360,
         800
       ],
-      "sha256": "01ba019ac38f154f6968b8a598f78f1877075dff5b82f310e5c32499a00afae2"
+      "sha256": "108460bebddcd5fbfb6a18bf188657ec0c8ce2986ec3f18c213b6aa3b07ea0b1"
     },
     {
       "file": "android-360x800-font100-light-permissions.png",
@@ -500,7 +500,7 @@
         360,
         800
       ],
-      "sha256": "cc04215c0415b81e60b5430b162d72918b4dde992701305f240f767f7c1d5cb1"
+      "sha256": "6bcb2ef4b44613d217eb4aa58e5bdd0891b1b4ba8d65f54cc1e4d437ef50a8bf"
     },
     {
       "file": "android-360x800-font100-light-provider-status.png",
@@ -509,7 +509,7 @@
         360,
         800
       ],
-      "sha256": "531d2bef9d429fe5e42178fabc15ba20ed98a7038164faf0a0cb1da33961727d"
+      "sha256": "4475f281522e04ec5749eb6cc0fd1328f90076b7b23e71ac6751b363bf0012fd"
     },
     {
       "file": "android-360x800-font100-light-stale.png",
@@ -518,7 +518,7 @@
         360,
         800
       ],
-      "sha256": "d56e295c1468078d358b915635da147199f749a3a08bd5ff195e54f63eeadeeb"
+      "sha256": "de6ec59e1bb82050f7dcee7abe5c8ee556338349a9dcc3199f352ff53b17ca21"
     },
     {
       "file": "android-360x800-font100-light-threads.png",
@@ -527,7 +527,7 @@
         360,
         800
       ],
-      "sha256": "fa429fd80a498a7d738a06589148d00f39694916eed32e925305fd3f9160800f"
+      "sha256": "a4498288d74983cc35ec9cb18f6ab8e4b17ce4b0363380f12210a063b604327b"
     },
     {
       "file": "android-360x800-font100-light-tool-result.png",
@@ -536,7 +536,7 @@
         360,
         800
       ],
-      "sha256": "0e44c48c093a1c233664c14d8af13e5bc79a54e83e15066a02ecf056f07f09d7"
+      "sha256": "c976a1a247f60688074173bf44f9adc706d51ca3c33e0b62baac272e6971fda3"
     },
     {
       "file": "android-360x800-font200-dark-confirmation.png",
@@ -545,7 +545,7 @@
         360,
         800
       ],
-      "sha256": "9bb9ce259cb5392808c7b4be38ec99d03845074115bb0de4bdf1f39b1f63d894"
+      "sha256": "fbb348c076dc295135ebfb20a5466dc47567ca04c55a678baccd36c737e34a00"
     },
     {
       "file": "android-360x800-font200-dark-conversation.png",
@@ -554,7 +554,7 @@
         360,
         800
       ],
-      "sha256": "3d520692e891be89af68c02c6bafd8930fc966ab8cb468b2e1c9333bf06be653"
+      "sha256": "f06d853b059418cdab45a0a80bec9e8b9b3774f4d1de0443a1a31c0e246df6c3"
     },
     {
       "file": "android-360x800-font200-dark-permissions.png",
@@ -563,7 +563,7 @@
         360,
         800
       ],
-      "sha256": "26fc76775b6904d1e30626b6da765ff0b1897561db13d95c827a0f0bcb67fc2a"
+      "sha256": "97da0e3c64ca42bcbe03ee2d21b70797ca75ffc9371bc83462f61ebd99ef279d"
     },
     {
       "file": "android-360x800-font200-light-confirmation.png",
@@ -572,7 +572,7 @@
         360,
         800
       ],
-      "sha256": "a73d703859d10c478a379d416669b604ea8980cde9cc6b829a5df875b2ff2eac"
+      "sha256": "e8ce51e090660f9d3be0b712f0782d3da3a5eecf05f6c301f6a76fb1240d936b"
     },
     {
       "file": "android-360x800-font200-light-conversation.png",
@@ -581,7 +581,7 @@
         360,
         800
       ],
-      "sha256": "95eb4e76f7cb966bb1b3129b9a72dedd22382f13d99bf9e6eda44059e7870750"
+      "sha256": "2efe035b7b08ca9584051a4bd227f4ef2805f8c80110279c90f9e40d5934f861"
     },
     {
       "file": "android-360x800-font200-light-permissions.png",
@@ -590,7 +590,7 @@
         360,
         800
       ],
-      "sha256": "8d4528b5ebaf7908de6de1c75c7e09c2abd3e1d8145a9538292cf4cab6c3ad80"
+      "sha256": "f295f5153df3ed17e79f7f50054e11f958fbeb747814f70e46be828644bae405"
     },
     {
       "file": "android-480x900-font100-dark-conversation.png",
@@ -599,7 +599,7 @@
         480,
         900
       ],
-      "sha256": "ae1f791d468817685babaf06440b7a1144882e0def9c04e25294bdb2bc461918"
+      "sha256": "5444bee2eb2cd77ca5b1d54ec480780969d4cf8fb25f90108666e059efc2de78"
     },
     {
       "file": "android-480x900-font100-light-conversation.png",
@@ -608,7 +608,7 @@
         480,
         900
       ],
-      "sha256": "1909d1c674d7ead288a540f114eb745139e2686b8731081618c60aaf635f87a6"
+      "sha256": "9cea554f1e6a53ba4cb248d539bd719964df0a21c0abcfc869e1aa42dda03549"
     },
     {
       "file": "android-600x960-font100-dark-conversation.png",
@@ -617,7 +617,7 @@
         600,
         960
       ],
-      "sha256": "aebd6d71a3a266545595d426d3a74ec21f211d7180c69e8774b9d28266389183"
+      "sha256": "f8cbcb2e051b50bb73003ab166a1bdfe5f55e32302de1d11c015d7fa1113c5a1"
     },
     {
       "file": "android-600x960-font100-light-conversation.png",
@@ -626,7 +626,7 @@
         600,
         960
       ],
-      "sha256": "e2ecf17bbe0f5bfa56a97995f13fe7fb3278190450de66805232a4582820e7b6"
+      "sha256": "f1d05674feae60cb5dcd1b6566854da259dbb8f8745d1748cfc10f292ed764f7"
     },
     {
       "file": "android-800x360-font100-dark-confirmation.png",
@@ -635,7 +635,7 @@
         800,
         360
       ],
-      "sha256": "d2dfec905183e50380f6599027fc0e7d188621a1b204f43fa4f736eed786c25e"
+      "sha256": "dfd71fadf52fd065ca977d1c600112f86888ebc36cbc4c845db7d19827f9d6ea"
     },
     {
       "file": "android-800x360-font100-dark-conversation.png",
@@ -644,7 +644,7 @@
         800,
         360
       ],
-      "sha256": "097c09311703772bc609195fed200b38dcc3b5c49bdee85d03aacaffde070d34"
+      "sha256": "d87bc89bf4c238c644d4a71a37a1d08b8f0eaf47b535ec68e60c3798729d35f8"
     },
     {
       "file": "android-800x360-font100-light-confirmation.png",
@@ -653,7 +653,7 @@
         800,
         360
       ],
-      "sha256": "af008c36b815b981032c562391898016395c5fb73751082d7ee8af25d432a5fe"
+      "sha256": "aa44679bf1004f9e56082bd5b029ed68f1ad75fab960d5f257c7b48e7ad90958"
     },
     {
       "file": "android-800x360-font100-light-conversation.png",
@@ -662,7 +662,7 @@
         800,
         360
       ],
-      "sha256": "1fc4f084380c2f6d3ea163b4ccc9fcb5f3e3c0578de0fa17171e41e0d9dacbd0"
+      "sha256": "00b30fe86721b8038fc93ab9747155aaf8e46e283e5a24b51144bed0cebf2a40"
     },
     {
       "file": "android-840x900-font100-dark-conversation.png",
@@ -671,7 +671,7 @@
         840,
         900
       ],
-      "sha256": "e8d80f106493f24553d1cc1c2607f96ab4bf754ab903a0e5539296abfb834692"
+      "sha256": "8d54e8e25cfbb210165bc627ce77ad934c86bb06607773d7c0b9d27338f3c90e"
     },
     {
       "file": "android-840x900-font100-light-conversation.png",
@@ -680,7 +680,7 @@
         840,
         900
       ],
-      "sha256": "3506e3aa25f975b61dc63f4be4f2bfcf9fc4a9c4ba23756f61034b3fbd2bd5a9"
+      "sha256": "16882a7b3ae5ce3ca56eba6d1b8f995a1fa3795f584eae2efbafb45d923dcad3"
     }
   ]
 }

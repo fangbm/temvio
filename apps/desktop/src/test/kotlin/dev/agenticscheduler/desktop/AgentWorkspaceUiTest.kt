@@ -74,7 +74,7 @@ class AgentWorkspaceUiTest {
         runDesktopComposeUiTest(width=800,height=600) {
             setContent {TemvioTheme(false) {AgentWorkspaceScreen(c,rememberCoroutineScope(),{},{},{})}}
             onNodeWithText("Chat only").assertExists();onNodeWithText("API credential (optional)").assertDoesNotExist()
-            onNodeWithTag("agent-command").performTextInput("Create an event");onNodeWithTag("agent-send").assertIsEnabled().performScrollTo().performClick()
+            onNodeWithTag("agent-command").performTextInput("Create an event");onNodeWithTag("agent-send").assertIsEnabled().assertIsDisplayed().performClick()
             waitUntil(timeoutMillis=10000) {!c.busy && c.command.isEmpty()};check(f.lastToolCount==0);check(c.calls.isEmpty())
         }
     }
@@ -121,7 +121,10 @@ class AgentWorkspaceUiTest {
                     waitUntil(timeoutMillis=10000) {c.loaded && !c.busy};mainClock.advanceTimeByFrame();waitForIdle()
                     if(scene in listOf("tool-result","stale","denied")) onNodeWithTag("agent-conversation").performScrollToNode(hasTestTag("agent-result-status"))
                     if(scene=="conversation") onNodeWithTag("agent-conversation").performScrollToNode(hasText(c.messages.last().content))
-                    if(height<480 && scene=="conversation") onNodeWithTag("agent-send").performScrollTo().assertHeightIsAtLeast(48.dp).assertIsDisplayed()
+                    if(height<480 && scene=="conversation") {
+                        onNodeWithTag("agent-command").performScrollTo().assertIsDisplayed()
+                        onNodeWithTag("agent-send").assertHeightIsAtLeast(48.dp).assertIsDisplayed()
+                    }
                     val file=File(out,"desktop-${width}x$height-font${(font*100).toInt()}-${if(dark) "dark" else "light"}-$scene.png")
                     val target=if(scene in listOf("confirmation","threads")) onAllNodes(isRoot()).onLast() else onAllNodes(isRoot()).onFirst()
                     Image.makeFromBitmap(target.captureToImage().asSkiaBitmap()).encodeToData(EncodedImageFormat.PNG)!!.use {file.writeBytes(it.bytes)}

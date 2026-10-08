@@ -1,6 +1,6 @@
 """Explicitly collect new native captures as review candidates, never visual approval."""
 from pathlib import Path
-import hashlib, json, shutil, struct
+import hashlib, json, shutil, struct, re
 root=Path(__file__).resolve().parents[2]
 folder=root/'docs/tasks/fixtures/d10-04/screenshots'
 folder.mkdir(parents=True,exist_ok=True)
@@ -10,6 +10,13 @@ for source in sources:
     captures=sorted((root/source).glob('*.png'))
     assert captures,source
     for p in captures:
+        # Standalone instrumentation also records the host emulator's default
+        # dimensions. Retain only the explicitly requested review matrix here.
+        if p.name.startswith('android-'):
+            dimensions=re.match(r'android-(\d+x\d+)-font(\d+)-',p.name)
+            allowed={(size,'100') for size in ['360x800','480x900','600x960','840x900','1024x768','800x360']} | {('360x800','200')}
+            if not dimensions or (dimensions[1],dimensions[2]) not in allowed:
+                continue
         data=p.read_bytes();assert data[:8]==b'\x89PNG\r\n\x1a\n',p
         shutil.copyfile(p,folder/p.name)
         candidates.append(dict(file=p.name,generatedFrom=p.relative_to(root).as_posix(),

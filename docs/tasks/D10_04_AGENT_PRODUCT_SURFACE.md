@@ -135,7 +135,9 @@ Agent/More. The shared workspace uses an optional thread pane only when its avai
 content width >=860dp, height >=480dp and font scale <1.6; otherwise a single
 conversation and thread selector. Desktop shell may consume width independently;
 Android does not receive Desktop primary navigation. Conversation/composer text is
-bounded; narrow, short and 200% layouts scroll. Tool/confirmation detail is an owned
+bounded; narrow, short and 200% draft/detail bodies scroll. Send stays in its own
+48dp-or-larger action row outside the focused draft's scroll/IME region; short
+composer allocation is bounded by the actual available height. Tool/confirmation detail is an owned
 scrollable dialog. Android Back closes transient detail before shell navigation,
 never executes a pending call. Semantic authors/headings/state labels, focusable
 named actions, shared role contrast and >=48dp controls remain. Final physical
@@ -159,6 +161,7 @@ Executed locally on Windows / JDK17 / Android API35 Google APIs x86_64:
 | Canonical shared-ui tests | 3/3 |
 | Existing AgentPersistenceTest + AgentRunIntegrationTest | 9/9 + 14/14 |
 | Native Android AgentWorkspaceInstrumentedTest | 7/7 |
+| Combined native ProductWorkspace + AgentWorkspace at CI default phone dimensions/density | 10/10 + 7/7 |
 
 Commands:
 
@@ -196,6 +199,19 @@ Inspected Desktop narrow/wide, Light/Dark, actual Tool result, 200% confirmation
 and short-height; Android narrow/expanded, Light/Dark, stale, 200% confirmation
 and short-height. Dialog detail and short composer bodies scroll; Confirm/Deny/Send
 reachability is asserted. No new screenshots were produced by image editing.
+
+First CI on `7ec131e241b5439b5788462fa82e3fdcefc9f7ea` (run `37770045756`)
+completed build/Windows/Wear/platform E2E successfully, but exposed an existing
+History native Back harness race. Local repetition reproduced 3 failures in 5;
+the test now settles the restored UI frame and awaits native Back dispatch with
+all original compensation/audit/detail/route assertions retained, plus visible
+detail assertion. Five successive repetitions passed. Combined instrumentation
+then exposed Send outside the visible composer at default phone density/IME:
+Send is now anchored outside the scrolling draft; tests assert it is displayed
+before clicking, retaining zero-schema/zero-Tool/zero-action checks in chat-only.
+The final combined suite passed 17/17 and complete Desktop rerun passed 140/140.
+The superseded run is not final acceptance evidence; new exact-head full CI is
+mandatory. No History/Undo production semantics were changed.
 
 Exact-head full CI remains required before delivery: all five jobs must actually
 execute/pass (build, desktop-windows, android-keystore, wear-keystore,

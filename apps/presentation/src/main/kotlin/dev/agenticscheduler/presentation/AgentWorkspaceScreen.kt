@@ -27,7 +27,7 @@ fun AgentWorkspaceScreen(c: AgentWorkspaceCoordinator, scope: CoroutineScope, on
     val threads = c.threads; val messages = c.messages; val calls = c.calls; val results = c.results; val actions = c.actions
     BoxWithConstraints(Modifier.fillMaxSize().testTag(if (c.loaded) "agent-ready" else "agent-loading")) {
         val split = maxWidth >= 860.dp && maxHeight >= 480.dp && LocalDensity.current.fontScale < 1.6f
-        val composerHeight = maxHeight * 0.45f
+        val composerHeight = (maxHeight * 0.45f).coerceAtLeast(120.dp).coerceAtMost(maxHeight)
         Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             if (split) Column(Modifier.width(220.dp).fillMaxHeight().verticalScroll(rememberScrollState()).padding(12.dp)) {
                 ThreadControls(c, scope, threads)
@@ -61,15 +61,19 @@ fun AgentWorkspaceScreen(c: AgentWorkspaceCoordinator, scope: CoroutineScope, on
                     AgentToolSummary(call, results.lastOrNull { it.callId == call.id }, actions.filter { call.id in it.toolCallIds }, c, scope)
                 }
             }
-            Column(Modifier.fillMaxWidth().heightIn(max=composerHeight).verticalScroll(rememberScrollState()).padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.fillMaxWidth().heightIn(max=composerHeight).padding(horizontal=16.dp,vertical=8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                // Keep the explicit submission action outside the focused draft's
+                // scrolling/IME bring-into-view region, including short windows.
+                Column(Modifier.weight(1f,fill=false).fillMaxWidth().verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                     c.pending?.let { ActionButton(c::reviewPending, enabled = !c.busy, role = ActionRole.SECONDARY) { Text("Review pending action") } }
                     c.status?.let { Text(it, modifier = Modifier.testTag("agent-run-status")) }
                     c.diagnostic?.let { code -> TechnicalDetails("Diagnostic details") { Text(code) } }
                     OutlinedTextField(c.command, c::editCommand, Modifier.fillMaxWidth().widthIn(max = 680.dp).testTag("agent-command"),
                         label = { Text("Command") }, enabled = c.loaded && !c.busy && c.pending == null && c.selectedThread != null,
                         minLines = 2, maxLines = 6)
-                    ActionButton({ scope.launch { c.send() } }, enabled = c.canSend, modifier = Modifier.testTag("agent-send")) { Text(if (c.busy) "Working…" else "Send") }
                     Text("Send is explicit. Multiline Enter, navigation and appearance changes never submit.", style = MaterialTheme.typography.bodySmall)
+                }
+                ActionButton({ scope.launch { c.send() } }, enabled = c.canSend, modifier = Modifier.testTag("agent-send")) { Text(if (c.busy) "Working…" else "Send") }
                 }
             }
         }

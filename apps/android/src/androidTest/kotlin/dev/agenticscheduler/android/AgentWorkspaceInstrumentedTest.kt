@@ -30,7 +30,7 @@ class AgentWorkspaceInstrumentedTest {
         compose.onNodeWithTag("agent-command").performTextInput("Synthetic explicit command")
         compose.onNodeWithTag("android-nav-CALENDAR").performClick();compose.onNodeWithTag("theme-toggle").performClick();compose.onNodeWithTag("android-nav-AGENT").performClick()
         compose.onNodeWithText("Synthetic explicit command").assertExists();check(f.requests==0)
-        compose.onNodeWithTag("agent-send").performScrollTo().performClick()
+        compose.onNodeWithTag("agent-send").assertIsDisplayed().performClick()
         compose.waitUntil(15000) {!c.busy && c.command.isEmpty()}
         check(c.messages.any {it.role==AgentMessageRole.USER && it.content=="Synthetic explicit command"});check(f.requests==1)
     }
@@ -68,10 +68,15 @@ class AgentWorkspaceInstrumentedTest {
     @Test fun chatOnlySendUsesZeroSchemasAndNoAction() = fixture {f, _ ->
         val c=f.workspace();runBlocking {f.prepareScene("chat-only",c)}
         mount(f,c,AndroidNavigation().also {it.open(AndroidDestination.AGENT)})
-        compose.waitUntil(15000) {c.loaded};compose.onNodeWithText("Chat only").assertExists()
+        compose.waitForIdle();compose.waitUntil(15000) {c.loaded && !c.busy}
+        compose.mainClock.advanceTimeByFrame();compose.waitForIdle()
+        compose.onNodeWithText("Chat only").assertExists()
         compose.onNodeWithTag("agent-command").performTextInput("Create something")
-        compose.onNodeWithTag("agent-send").assertIsEnabled().performScrollTo().performClick()
-        compose.waitUntil(15000) {!c.busy && c.command.isEmpty()};check(f.lastToolCount==0);check(c.calls.isEmpty());check(c.actions.isEmpty())
+        compose.waitUntil(15000) {c.canSend && c.command=="Create something"}
+        compose.onNodeWithTag("agent-send").assertIsEnabled().assertIsDisplayed().performClick()
+        try {compose.waitUntil(15000) {!c.busy && c.command.isEmpty()}}
+        catch(error:ComposeTimeoutException) {throw AssertionError("Send completion missing: busy=${c.busy}, canSend=${c.canSend}, draftBlank=${c.command.isBlank()}, requests=${f.requests}, diagnostic=${c.diagnostic}",error)}
+        check(f.lastToolCount==0);check(c.calls.isEmpty());check(c.actions.isEmpty())
     }
     @Test fun localPermissionEditorPersistsPolicyWithoutBusinessWriteOrSend() = fixture {f, _ ->
         val c=f.workspace();val before=runBlocking {f.base.journal.timeline().size}
@@ -115,7 +120,10 @@ class AgentWorkspaceInstrumentedTest {
             compose.waitUntil(15000) {c.loaded && !c.busy};compose.mainClock.advanceTimeByFrame();compose.waitForIdle()
             if(scene in listOf("tool-result","stale","denied")) compose.onNodeWithTag("agent-conversation").performScrollToNode(hasTestTag("agent-result-status"))
             if(scene=="conversation") compose.onNodeWithTag("agent-conversation").performScrollToNode(hasText(c.messages.last().content))
-            if(height<480 && scene=="conversation") compose.onNodeWithTag("agent-send").performScrollTo().assertHeightIsAtLeast(48.dp).assertIsDisplayed()
+            if(height<480 && scene=="conversation") {
+                compose.onNodeWithTag("agent-command").performScrollTo().assertIsDisplayed()
+                compose.onNodeWithTag("agent-send").assertHeightIsAtLeast(48.dp).assertIsDisplayed()
+            }
             if(scene=="confirmation") {compose.onNodeWithTag("agent-confirm").assertIsDisplayed();compose.onNodeWithTag("agent-deny").assertIsDisplayed()}
             val bitmap=InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
             File(out,"android-${width}x$height-font$scale-${if(theme) "dark" else "light"}-$scene.png").outputStream().use {bitmap.compress(Bitmap.CompressFormat.PNG,100,it)}
