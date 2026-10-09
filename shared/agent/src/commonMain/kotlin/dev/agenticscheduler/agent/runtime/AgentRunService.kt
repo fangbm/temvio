@@ -1,6 +1,7 @@
 package dev.agenticscheduler.agent.runtime
 
 import dev.agenticscheduler.agent.context.ContextAssembler
+import dev.agenticscheduler.agent.context.AgentTurnContext
 import dev.agenticscheduler.agent.context.CompactionPressure
 import dev.agenticscheduler.agent.context.ContextCompactionResult
 import dev.agenticscheduler.agent.context.ContextCompactionService
@@ -100,30 +101,41 @@ class AgentRunService(
 
     suspend fun createThread(): AgentThreadId = AgentThreadId(ids.next()).also { state.saveThread(AgentThread(it, null, clock.nowEpochMillis())) }
 
-    suspend fun run(threadId: AgentThreadId, command: String): AgentRunResult =
+    suspend fun run(
+        threadId: AgentThreadId,
+        command: String,
+        turnContext: AgentTurnContext = AgentTurnContext(),
+    ): AgentRunResult =
         threadOperationLocks.withLock(threadId) {
             val turnId = if (command.isNotBlank() && state.thread(threadId) != null &&
                 state.toolCalls(threadId).none { it.state == AgentToolCallState.WAITING_CONFIRMATION }) {
                 AgentTurnSyncId(ids.next()).also { state.beginLocalHistoryTurn(threadId, it.value) }
             } else null
-            val result = runLocked(threadId, command)
+            val result = runLocked(threadId, command, turnContext)
             if (turnId != null) recordReturnedTurnState(threadId, turnId.value, result)
             result
         }
 
-    private suspend fun runLocked(threadId: AgentThreadId, command: String): AgentRunResult {
+    private suspend fun runLocked(threadId: AgentThreadId, command: String, turnContext: AgentTurnContext): AgentRunResult {
         if (command.isBlank()) return AgentRunResult.Failed("EMPTY_COMMAND")
         if (state.thread(threadId) == null) return AgentRunResult.Failed("THREAD_NOT_FOUND")
         if (state.toolCalls(threadId).any { it.state == AgentToolCallState.WAITING_CONFIRMATION }) return AgentRunResult.Failed("CONFIRMATION_PENDING")
         val ordinal = state.messages(threadId).maxOfOrNull { it.ordinal }?.plus(1) ?: 0
         state.appendMessage(AgentMessage(AgentMessageId(ids.next()), threadId, ordinal, AgentMessageRole.USER, command, clock.nowEpochMillis()))
         val config = selectedConfig() ?: return AgentRunResult.Failed("PROVIDER_NOT_CONFIGURED")
+        // An impossible explicit local anchor must fail before even the synthetic capability probe.
+        // Tool capability is not known yet; the final assembly still budgets the exact approved schemas.
+        if (turnContext.contextAnchor != null) {
+            val minimum = ContextAssembler(Utf8ByteBudgetMeter(config.maxContextUnits, config.reservedOutputUnits))
+                .assemble(ContextRequest(system, emptyList(), command, turnContext.contextAnchor, emptyList()))
+            if (minimum is ContextAssemblyResult.ContextTooLarge) return AgentRunResult.Failed("CONTEXT_TOO_LARGE")
+        }
         val tools = when (val probe = capabilityProbe(config)) {
             ProviderProbeResult.Supported -> supportedTools()
             ProviderProbeResult.Unsupported -> emptyList()
             is ProviderProbeResult.Unavailable -> return AgentRunResult.Failed(probe.redactedCode)
         }
-        return modelStep(threadId, config, tools, allowLocalRead = true)
+        return modelStep(threadId, config, tools, allowLocalRead = true, turnContext = turnContext)
     }
 
     suspend fun confirm(threadId: AgentThreadId, callId: AgentToolCallId, approved: Boolean): AgentRunResult =
@@ -394,6 +406,7 @@ class AgentRunService(
         config: ProviderConfig,
         tools: List<ProviderToolDefinition>,
         allowLocalRead: Boolean,
+        turnContext: AgentTurnContext = AgentTurnContext(),
     ): AgentRunResult {
         val transcript = when (val assembled = transcripts.assemble(threadId)) {
             is AgentTranscriptResult.Ready -> assembled.messages
@@ -409,7 +422,7 @@ class AgentRunService(
         if (groups.size != rawMessages.size) return AgentRunResult.Failed("INVALID_HISTORY")
         val currentGroup = groups.indexOfFirst { it.first <= lastUser && lastUser < it.first + it.second.size }
         val latestToolGroup = groups.indexOfLast { (start, messages) -> start > lastUser && messages.any { it.role == "tool" } }
-        val latestToolAnchor = groups.getOrNull(latestToolGroup)?.second?.let { json.encodeToString(it) }
+        val requiredToolContinuation = groups.getOrNull(latestToolGroup)?.second?.let { json.encodeToString(it) }
         var summary = state.summaries(threadId).maxWithOrNull(compareBy<ContextSummary>({ it.createdAtEpochMillis }, { it.id.value }))
         if (summary != null && rawMessages.none { it.id == summary.sourceEndMessageId }) return AgentRunResult.Failed("INVALID_HISTORY")
         fun candidates(): List<ContextCandidate> {
@@ -423,7 +436,8 @@ class AgentRunService(
             }.orEmpty()
         }
         fun assemble(values: List<ContextCandidate>) = budget.assemble(ContextRequest(
-            system, tools.map { it.name to it.parameters.toString() }, transcript[lastUser].content.orEmpty(), latestToolAnchor, values,
+            system, tools.map { it.name to it.parameters.toString() }, transcript[lastUser].content.orEmpty(),
+            turnContext.contextAnchor, values, requiredToolContinuation,
         ))
         var candidates = candidates()
         var assembled = assemble(candidates)
@@ -458,21 +472,27 @@ class AgentRunService(
             }
             ContextCompactionResult.NotNeeded, is ContextCompactionResult.Failed -> Unit
         }
-        val selected = (assembled as ContextAssemblyResult.Ready).parts.map { it.id }.toSet()
+        val finalAssembly = assembled as ContextAssemblyResult.Ready
+        val selected = finalAssembly.parts.map { it.id }.toSet()
+        val anchorPart = finalAssembly.parts.singleOrNull { it.source == "CONTEXT_ANCHOR" }
         val messages = buildList {
             add(ProviderChatMessage("system", system))
             summary?.let { value ->
                 if ("summary:${value.id.value}" in selected) add(ProviderChatMessage("user", "Earlier, potentially stale summary: ${value.text}"))
             }
-            groups.forEachIndexed { index, pair -> if (index == currentGroup || index == latestToolGroup || rawMessages[index].id.value in selected) addAll(pair.second) }
+            groups.forEachIndexed { index, pair ->
+                if (index == currentGroup || index == latestToolGroup || rawMessages[index].id.value in selected) addAll(pair.second)
+                // Application-owned context message only: never append it to Agent persistence or USER text.
+                if (index == currentGroup && anchorPart != null) add(ProviderChatMessage("user", anchorPart.serialized))
+            }
         }
         return when (val response = provider.complete(config, messages, tools)) {
             is ProviderCallResult.Failure -> AgentRunResult.Failed(response.redactedCode)
-            is ProviderCallResult.Success -> handleResponse(threadId, response.message, tools, allowLocalRead, config)
+            is ProviderCallResult.Success -> handleResponse(threadId, response.message, tools, allowLocalRead, config, turnContext)
         }
     }
 
-    private suspend fun handleResponse(threadId: AgentThreadId, response: ProviderChatMessage, tools: List<ProviderToolDefinition>, allowLocalRead: Boolean, config: ProviderConfig): AgentRunResult {
+    private suspend fun handleResponse(threadId: AgentThreadId, response: ProviderChatMessage, tools: List<ProviderToolDefinition>, allowLocalRead: Boolean, config: ProviderConfig, turnContext: AgentTurnContext): AgentRunResult {
         val calls = response.toolCalls.orEmpty()
         invalidProviderToolCallCode(calls)?.let { return AgentRunResult.Failed(it) }
         val message = AgentMessage(AgentMessageId(ids.next()), threadId, state.messages(threadId).maxOfOrNull { it.ordinal }?.plus(1) ?: 0,
@@ -496,7 +516,7 @@ class AgentRunService(
                 is AgentToolOutcome.ConfirmationRequired -> awaitConfirmation(call, action, eventCreate.normalizedPreviewJson(prepared.preview))
                 is AgentToolOutcome.Success -> {
                     executeEventCreate(call, action.copy(permissionDecision = AgentPermissionMode.ALLOW_DIRECT), prepared.payload, policy)
-                    modelStep(threadId, config, emptyList(), allowLocalRead = false)
+                    modelStep(threadId, config, emptyList(), allowLocalRead = false, turnContext = turnContext)
                 }
                 else -> { finishOutcome(call, action, prepared); AgentRunResult.Failed(outcomeCode(prepared)) }
             }
@@ -507,7 +527,7 @@ class AgentRunService(
                 is AgentToolOutcome.ConfirmationRequired -> awaitConfirmation(call, action, eventUpdate.normalizedPreviewJson(prepared.preview))
                 is AgentToolOutcome.Success -> {
                     executeEventUpdate(call, action.copy(permissionDecision = AgentPermissionMode.ALLOW_DIRECT), prepared.payload, policy)
-                    modelStep(threadId, config, emptyList(), allowLocalRead = false)
+                    modelStep(threadId, config, emptyList(), allowLocalRead = false, turnContext = turnContext)
                 }
                 else -> { finishOutcome(call, action, prepared); AgentRunResult.Failed(outcomeCode(prepared)) }
             }
@@ -518,7 +538,7 @@ class AgentRunService(
                 is AgentToolOutcome.ConfirmationRequired -> awaitConfirmation(call, action, historyUndo.normalizedPreviewJson(prepared.preview))
                 is AgentToolOutcome.Success -> {
                     executeHistoryUndo(call, action.copy(permissionDecision = AgentPermissionMode.ALLOW_DIRECT), prepared.payload, policy)
-                    modelStep(threadId, config, emptyList(), allowLocalRead = false)
+                    modelStep(threadId, config, emptyList(), allowLocalRead = false, turnContext = turnContext)
                 }
                 else -> { finishOutcome(call, action, prepared); AgentRunResult.Failed(outcomeCode(prepared)) }
             }
@@ -529,7 +549,7 @@ class AgentRunService(
                 is AgentToolOutcome.ConfirmationRequired -> awaitConfirmation(call, action, planningProfileUpdate.normalizedPreviewJson(prepared.preview))
                 is AgentToolOutcome.Success -> {
                     executePlanningProfileUpdate(call, action.copy(permissionDecision = AgentPermissionMode.ALLOW_DIRECT), prepared.payload, policy)
-                    modelStep(threadId, config, emptyList(), allowLocalRead = false)
+                    modelStep(threadId, config, emptyList(), allowLocalRead = false, turnContext = turnContext)
                 }
                 else -> { finishOutcome(call, action, prepared); AgentRunResult.Failed(outcomeCode(prepared)) }
             }
@@ -546,7 +566,7 @@ class AgentRunService(
                 is AgentToolOutcome.ConfirmationRequired -> awaitConfirmation(call, action.copy(planBranchReference = branch.id.value), branch.toSnapshotJson())
                 is AgentToolOutcome.Success -> {
                     executePlannerApply(call, action.copy(permissionDecision = AgentPermissionMode.ALLOW_DIRECT, planBranchReference = branch.id.value), branch, prepared.payload, policy)
-                    modelStep(threadId, config, emptyList(), allowLocalRead = false)
+                    modelStep(threadId, config, emptyList(), allowLocalRead = false, turnContext = turnContext)
                 }
                 else -> { finishOutcome(call, action, prepared); AgentRunResult.Failed(outcomeCode(prepared)) }
             }
@@ -562,7 +582,7 @@ class AgentRunService(
                 }
                 is AgentToolOutcome.Success -> {
                     executeTaskCreate(call, action.copy(permissionDecision = AgentPermissionMode.ALLOW_DIRECT), prepared.payload, false, policy)
-                    modelStep(threadId, config, emptyList(), allowLocalRead = false)
+                    modelStep(threadId, config, emptyList(), allowLocalRead = false, turnContext = turnContext)
                 }
                 is AgentToolOutcome.InvalidInput -> { finishWithoutWrite(call, action, AgentToolResultStatus.INVALID_INPUT, "INVALID_INPUT", AgentActionStatus.FAILED); AgentRunResult.Failed("INVALID_INPUT") }
                 is AgentToolOutcome.PermissionDenied -> { finishWithoutWrite(call, action, AgentToolResultStatus.PERMISSION_DENIED, "PERMISSION_DENIED", AgentActionStatus.DENIED); AgentRunResult.Failed("PERMISSION_DENIED") }
@@ -580,7 +600,7 @@ class AgentRunService(
                 }
                 is AgentToolOutcome.Success -> {
                     executeTaskUpdate(call, action.copy(permissionDecision = AgentPermissionMode.ALLOW_DIRECT), prepared.payload, false, policy)
-                    modelStep(threadId, config, emptyList(), allowLocalRead = false)
+                    modelStep(threadId, config, emptyList(), allowLocalRead = false, turnContext = turnContext)
                 }
                 is AgentToolOutcome.InvalidInput -> { finishWithoutWrite(call, action, AgentToolResultStatus.INVALID_INPUT, "INVALID_INPUT", AgentActionStatus.FAILED); AgentRunResult.Failed("INVALID_INPUT") }
                 is AgentToolOutcome.PermissionDenied -> { finishWithoutWrite(call, action, AgentToolResultStatus.PERMISSION_DENIED, "PERMISSION_DENIED", AgentActionStatus.DENIED); AgentRunResult.Failed("PERMISSION_DENIED") }
@@ -608,7 +628,7 @@ class AgentRunService(
                 AgentToolResultStatus.INFRASTRUCTURE_FAILURE to "READ_FAILED"
             }
             finishWithoutWrite(call, action.copy(permissionDecision = AgentPermissionMode.ALLOW_DIRECT), result.first, result.second, if (result.first == AgentToolResultStatus.SUCCESS) AgentActionStatus.SUCCEEDED else AgentActionStatus.FAILED)
-            return modelStep(threadId, config, tools, allowLocalRead = false)
+            return modelStep(threadId, config, tools, allowLocalRead = false, turnContext = turnContext)
         }
         if (call.name == AgentToolNames.CALENDAR_LIST && allowLocalRead && calendarList != null) {
             val viewport = runCatching {
@@ -624,7 +644,7 @@ class AgentRunService(
                 AgentToolResultStatus.INFRASTRUCTURE_FAILURE to "READ_FAILED"
             }
             finishWithoutWrite(call, action.copy(permissionDecision = AgentPermissionMode.ALLOW_DIRECT), result.first, result.second, if (result.first == AgentToolResultStatus.SUCCESS) AgentActionStatus.SUCCEEDED else AgentActionStatus.FAILED)
-            return modelStep(threadId, config, tools, allowLocalRead = false)
+            return modelStep(threadId, config, tools, allowLocalRead = false, turnContext = turnContext)
         }
         if (call.name == AgentToolNames.TASK_LIST && allowLocalRead && taskList != null) {
             val input = decodeTaskListInput(call.argumentsJson)
@@ -640,7 +660,7 @@ class AgentRunService(
                 AgentToolResultStatus.INFRASTRUCTURE_FAILURE to "READ_FAILED"
             }
             finishWithoutWrite(call, action.copy(permissionDecision = AgentPermissionMode.ALLOW_DIRECT), result.first, result.second, if (result.first == AgentToolResultStatus.SUCCESS) AgentActionStatus.SUCCEEDED else AgentActionStatus.FAILED)
-            return modelStep(threadId, config, tools, allowLocalRead = false)
+            return modelStep(threadId, config, tools, allowLocalRead = false, turnContext = turnContext)
         }
         if (call.name == AgentToolNames.HISTORY_TIMELINE && allowLocalRead && historyReads != null) {
             val input = runCatching { json.decodeFromString(TimelineInput.serializer(), call.argumentsJson) }.getOrNull()
@@ -654,7 +674,7 @@ class AgentRunService(
                 AgentToolResultStatus.INFRASTRUCTURE_FAILURE to "READ_FAILED"
             }
             finishWithoutWrite(call, action.copy(permissionDecision = AgentPermissionMode.ALLOW_DIRECT), result.first, result.second, if (result.first == AgentToolResultStatus.SUCCESS) AgentActionStatus.SUCCEEDED else AgentActionStatus.FAILED)
-            return modelStep(threadId, config, tools, allowLocalRead = false)
+            return modelStep(threadId, config, tools, allowLocalRead = false, turnContext = turnContext)
         }
         if (call.name == AgentToolNames.HISTORY_GET_MUTATION && allowLocalRead && historyReads != null) {
             val mutationId = runCatching { MutationId(json.decodeFromString(MutationInput.serializer(), call.argumentsJson).mutationId) }.getOrNull()
@@ -668,7 +688,7 @@ class AgentRunService(
                 AgentToolResultStatus.INFRASTRUCTURE_FAILURE to "READ_FAILED"
             }
             finishWithoutWrite(call, action.copy(permissionDecision = AgentPermissionMode.ALLOW_DIRECT), result.first, result.second, if (result.first == AgentToolResultStatus.SUCCESS) AgentActionStatus.SUCCEEDED else AgentActionStatus.FAILED)
-            return modelStep(threadId, config, tools, allowLocalRead = false)
+            return modelStep(threadId, config, tools, allowLocalRead = false, turnContext = turnContext)
         }
         if (call.name == AgentToolNames.HISTORY_GET_ENTITY_CHANGES && allowLocalRead && historyReads != null) {
             val input = runCatching { json.decodeFromString(EntityChangesInput.serializer(), call.argumentsJson) }.getOrNull()
@@ -683,19 +703,19 @@ class AgentRunService(
                 AgentToolResultStatus.INFRASTRUCTURE_FAILURE to "READ_FAILED"
             }
             finishWithoutWrite(call, action.copy(permissionDecision = AgentPermissionMode.ALLOW_DIRECT), result.first, result.second, if (result.first == AgentToolResultStatus.SUCCESS) AgentActionStatus.SUCCEEDED else AgentActionStatus.FAILED)
-            return modelStep(threadId, config, tools, allowLocalRead = false)
+            return modelStep(threadId, config, tools, allowLocalRead = false, turnContext = turnContext)
         }
         if (call.name == PlannerToolNames.PREVIEW_FULL_REPLAN && allowLocalRead && plannerFullReplan != null) {
             val outcome = plannerFullReplan.execute(call.argumentsJson)
             if (outcome is AgentToolOutcome.Success) planBranches[threadId to outcome.payload.id.value] = outcome.payload
             finishPlannerPreview(call, action, outcome)
-            return modelStep(threadId, config, tools, allowLocalRead = false)
+            return modelStep(threadId, config, tools, allowLocalRead = false, turnContext = turnContext)
         }
         if (call.name == PlannerToolNames.PREVIEW_LOCAL_REFLOW && allowLocalRead && plannerLocalReflow != null) {
             val outcome = plannerLocalReflow.execute(call.argumentsJson)
             if (outcome is AgentToolOutcome.Success) planBranches[threadId to outcome.payload.id.value] = outcome.payload
             finishPlannerPreview(call, action, outcome)
-            return modelStep(threadId, config, tools, allowLocalRead = false)
+            return modelStep(threadId, config, tools, allowLocalRead = false, turnContext = turnContext)
         }
         finishWithoutWrite(call, action, AgentToolResultStatus.PERMISSION_DENIED, "TOOL_CALL_LIMIT", AgentActionStatus.DENIED)
         return AgentRunResult.Failed("TOOL_CALL_LIMIT")
