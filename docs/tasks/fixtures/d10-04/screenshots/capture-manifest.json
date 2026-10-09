@@ -1,0 +1,686 @@
+{
+  "baseSha": "cdc8504527cc636f5d2932b7e00785f4be9ecaad",
+  "status": "CANDIDATES / AWAITING MAINTAINER VISUAL REVIEW",
+  "containsRealSecrets": false,
+  "fixture": "Existing AgentRunService -> typed Tools -> Application -> Room, synthetic MockEngine HTTP peer; no live Provider acceptance.",
+  "nativeEvidence": "Actual Desktop Compose/Skia + Android API35 Google APIs x86_64 emulator. Native clock/chrome is not deterministic; no physical-device claim.",
+  "sourceHashNormalization": "UTF-8 text / no BOM / LF",
+  "sourceHashes": {
+    "apps/android/src/androidTest/kotlin/dev/agenticscheduler/android/AgentWorkspaceInstrumentedTest.kt": "05ac0feafa9a2567181e1d0a7537c836c8528e892089621c577c525e868ffc46",
+    "apps/android/src/main/kotlin/dev/agenticscheduler/android/AndroidApp.kt": "1faa9f4a3927d83f5e3e0f4eea929670467d108cda90e5767caa502944f1cf19",
+    "apps/desktop/src/main/kotlin/dev/agenticscheduler/desktop/DesktopApp.kt": "972311db06070d592ca21c538ab6b7b2fe407fbf0aab9f493fc5034ddf1d9e67",
+    "apps/desktop/src/test/kotlin/dev/agenticscheduler/desktop/AgentWorkspaceUiTest.kt": "43806c8b1f72b67513206fe39934e69499f4157287d3e7834af5ae4d8360eacb",
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/AgentToolPresentation.kt": "51dd81a63ac8d4767c533be41addc4c2252d0653587c666a7a2c66ae1d16e988",
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/AgentWorkspaceCoordinator.kt": "1b7ffa5f813cfefbf364e6e41dd03cc9cf3e16fe78871a2fd00321b8f0baab40",
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/AgentWorkspaceScreen.kt": "c5beda74ac8aac90961639a0ca7d3e6066534a9e3e379b6ba51480365f3b3b28",
+    "test-support/d10-04/D10AgentFixtureGraph.kt": "fbb529c28661125b290233d6e7baa57372fcded38e77610a43f969c047d5baa3"
+  },
+  "candidates": [
+    {
+      "file": "desktop-1024x768-font100-dark-conversation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1024x768-font100-dark-conversation.png",
+      "bitmapPixels": [
+        1024,
+        768
+      ],
+      "sha256": "29245d7298893da0b4de2b609f6ec5572354d6881ff22e269a32e9c65cf999d1"
+    },
+    {
+      "file": "desktop-1024x768-font100-light-conversation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1024x768-font100-light-conversation.png",
+      "bitmapPixels": [
+        1024,
+        768
+      ],
+      "sha256": "e7531889f6af2dc9040bba9cfe8f21fd32dd90e122a000d4f419062a6b7bbf8b"
+    },
+    {
+      "file": "desktop-1280x800-font100-dark-chat-only.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-dark-chat-only.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "999c3c1547a360e62806de7f6eeb5d22ed58664ca7deac059ad698736cf8c9f7"
+    },
+    {
+      "file": "desktop-1280x800-font100-dark-confirmation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-dark-confirmation.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "c5687af3c5d16d17cc215bf6fa017e5976ad8915b2dbda66799028f1babc7105"
+    },
+    {
+      "file": "desktop-1280x800-font100-dark-conversation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-dark-conversation.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "080bac20977ccf672331fd84371ee3957e550be4fce3276f1fa3a7d09ffe3f43"
+    },
+    {
+      "file": "desktop-1280x800-font100-dark-denied.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-dark-denied.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "faebcbee8efd3cf4cbb836a4af5f9608a7215d8f830082576c82630a00653479"
+    },
+    {
+      "file": "desktop-1280x800-font100-dark-permissions.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-dark-permissions.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "9653bd283c3dfca7ac6d065826607096ed16792f39c91d662def60855b33d08b"
+    },
+    {
+      "file": "desktop-1280x800-font100-dark-provider-status.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-dark-provider-status.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "25e05e11b2633029d41c33639dddaa1fcae42352eb518242190f952564065264"
+    },
+    {
+      "file": "desktop-1280x800-font100-dark-stale.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-dark-stale.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "dc685298da21336fb721b8cde91aa33e6a6238ffd2b1c896563b58bef311cd65"
+    },
+    {
+      "file": "desktop-1280x800-font100-dark-threads.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-dark-threads.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "b1fbf226a2a69bf04bdcbf19ff07fe20e04c5aec9f822fe5f65cb7fa631f9548"
+    },
+    {
+      "file": "desktop-1280x800-font100-dark-tool-result.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-dark-tool-result.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "7495dda4bb30a49608d3ba9d67d76069f8dc76b3c70bab2c3892fe1fe468e273"
+    },
+    {
+      "file": "desktop-1280x800-font100-light-chat-only.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-light-chat-only.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "001ad85d33beab41ba8cf9db4c31ea1145df175faca3b9a72d0584b110da17e7"
+    },
+    {
+      "file": "desktop-1280x800-font100-light-confirmation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-light-confirmation.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "20d4a4f24b039dd3d86aaaeba5251c1c77b7a587adb5bc480603bc4d2326e6ff"
+    },
+    {
+      "file": "desktop-1280x800-font100-light-conversation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-light-conversation.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "13d997b9d3ef1191a69062b77380b08f2653aa0edc5b07a6181765ffede3fbe8"
+    },
+    {
+      "file": "desktop-1280x800-font100-light-denied.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-light-denied.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "3e059e04edaa9e0605cd41cd14d3f499112ea4ae8babd10628d0d9bd763e1b38"
+    },
+    {
+      "file": "desktop-1280x800-font100-light-permissions.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-light-permissions.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "e371a67dffa1894114ebe8c60a118bac4110e813c5ab7b19c2cd7541f9584232"
+    },
+    {
+      "file": "desktop-1280x800-font100-light-provider-status.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-light-provider-status.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "ae0b05b184345fbb2b60c784d594dde8a42df2403be7f189f44aaf904b957132"
+    },
+    {
+      "file": "desktop-1280x800-font100-light-stale.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-light-stale.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "1adc683e597a27b6baac701b4c14349dbf7795f984b3d9d7f1bdeae43399bfae"
+    },
+    {
+      "file": "desktop-1280x800-font100-light-threads.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-light-threads.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "b432058879698e455bcc854a787813a7d460d58a066e08d4fb875a069c1fc301"
+    },
+    {
+      "file": "desktop-1280x800-font100-light-tool-result.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-light-tool-result.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "b8ef22f755824cd2e99ce05bd0a4d56b7f5276eec6c8ac83fa2eacf255644ad0"
+    },
+    {
+      "file": "desktop-1440x900-font100-dark-conversation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1440x900-font100-dark-conversation.png",
+      "bitmapPixels": [
+        1440,
+        900
+      ],
+      "sha256": "3966be2a4221cce54f24f8395711c850fbd06ad27e971c456f1462514e7f9f22"
+    },
+    {
+      "file": "desktop-1440x900-font100-light-conversation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1440x900-font100-light-conversation.png",
+      "bitmapPixels": [
+        1440,
+        900
+      ],
+      "sha256": "96afc75b7f5f9689b0a9e44f1544bbf73fbedd73794ea284c5daf1daf36aae35"
+    },
+    {
+      "file": "desktop-1920x1080-font100-dark-conversation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1920x1080-font100-dark-conversation.png",
+      "bitmapPixels": [
+        1920,
+        1080
+      ],
+      "sha256": "b62845c069ea70b0908f567a5a782b2a2d138c2e137a3618cdeea11f5b98be59"
+    },
+    {
+      "file": "desktop-1920x1080-font100-light-conversation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1920x1080-font100-light-conversation.png",
+      "bitmapPixels": [
+        1920,
+        1080
+      ],
+      "sha256": "a29456f6de3614dc052158cce8d90cecbb8e203858300609432f18e91f53ffb0"
+    },
+    {
+      "file": "desktop-640x720-font100-dark-conversation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-640x720-font100-dark-conversation.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "77db11f8bbf3de7ad5a8cc223696c293ae8a8b9060c51f5312cc9542185c6443"
+    },
+    {
+      "file": "desktop-640x720-font100-light-conversation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-640x720-font100-light-conversation.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "3785ea1c18935eae07786c11cbf31046a78ca90f0f1d80e1d0f349222a6fcc6b"
+    },
+    {
+      "file": "desktop-640x720-font200-dark-confirmation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-640x720-font200-dark-confirmation.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "fb36efe64410e3787fbc80d57e342a122f9cefe9ebc3e1ffca2da7d75aed7974"
+    },
+    {
+      "file": "desktop-640x720-font200-dark-conversation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-640x720-font200-dark-conversation.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "3f6692c576566bfa2d863cf373a9e8688aca6bfda33358307002e7a779701336"
+    },
+    {
+      "file": "desktop-640x720-font200-dark-permissions.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-640x720-font200-dark-permissions.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "3f0352f0b8b9052223e0b92852e2307b9395a3c04181be85c92b6d8bdaac73f0"
+    },
+    {
+      "file": "desktop-640x720-font200-light-confirmation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-640x720-font200-light-confirmation.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "25fe50ac3f9532b094f463d49124d6bfdb41d4dc80a9f9040812ae9cf3c20187"
+    },
+    {
+      "file": "desktop-640x720-font200-light-conversation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-640x720-font200-light-conversation.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "c952ef7c93bae83e3cdc6a369f74400ff191c885585e7f6a695142b389fe0558"
+    },
+    {
+      "file": "desktop-640x720-font200-light-permissions.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-640x720-font200-light-permissions.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "404ffa73c2c9f39006c6dc55281f5664394e8be87b5b86f7d8eb2912a8ef2665"
+    },
+    {
+      "file": "desktop-800x360-font100-dark-confirmation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-800x360-font100-dark-confirmation.png",
+      "bitmapPixels": [
+        800,
+        360
+      ],
+      "sha256": "35353a42ca37e01851d648a8c0d39346cfc634b8de01cfbc388252a54c19dacb"
+    },
+    {
+      "file": "desktop-800x360-font100-dark-conversation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-800x360-font100-dark-conversation.png",
+      "bitmapPixels": [
+        800,
+        360
+      ],
+      "sha256": "10947660121bf89085002bb4c2abdf64c24d41e43b3f374318d513871c2743ea"
+    },
+    {
+      "file": "desktop-800x360-font100-light-confirmation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-800x360-font100-light-confirmation.png",
+      "bitmapPixels": [
+        800,
+        360
+      ],
+      "sha256": "4857349bd21aa5a587d8fe2025ba3a8053f09b262bfed8cfe31fdc6165676282"
+    },
+    {
+      "file": "desktop-800x360-font100-light-conversation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-800x360-font100-light-conversation.png",
+      "bitmapPixels": [
+        800,
+        360
+      ],
+      "sha256": "920a9bd2b4af540644f272888c8f61c4d542f4cf804ca8f064197fdf90c9dec2"
+    },
+    {
+      "file": "desktop-800x600-font100-dark-conversation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-800x600-font100-dark-conversation.png",
+      "bitmapPixels": [
+        800,
+        600
+      ],
+      "sha256": "10246ea00f604e418bdf228ecf26c63dd28b7b829b21e22a8bf708162f8f713b"
+    },
+    {
+      "file": "desktop-800x600-font100-light-conversation.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-800x600-font100-light-conversation.png",
+      "bitmapPixels": [
+        800,
+        600
+      ],
+      "sha256": "87413b33da4fefbece355c0d6b51ef13274fa0a68860d82f3bed3bd58b983fd3"
+    },
+    {
+      "file": "android-1024x768-font100-dark-conversation.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-1024x768-font100-dark-conversation.png",
+      "bitmapPixels": [
+        1024,
+        768
+      ],
+      "sha256": "228646bdff9b7936935571a526f2f94554ae057568d4576170074a0ab1e0b6b4"
+    },
+    {
+      "file": "android-1024x768-font100-light-conversation.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-1024x768-font100-light-conversation.png",
+      "bitmapPixels": [
+        1024,
+        768
+      ],
+      "sha256": "ebc093dcd1585bba9c441b2d5c820298053bc20b2b711d8fcec1b0869978c16b"
+    },
+    {
+      "file": "android-360x800-font100-dark-chat-only.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-dark-chat-only.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "5f94af5a9ee77295326cec229514a286a11aa4f0015cc7f0a1635c0c115724ca"
+    },
+    {
+      "file": "android-360x800-font100-dark-confirmation.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-dark-confirmation.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "fd45457704d1fd46fa63e58b2b7a7eaa6eb7ef19700853c4812034ecdf463ce2"
+    },
+    {
+      "file": "android-360x800-font100-dark-conversation.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-dark-conversation.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "0eba1861fb352668636aa689fa670a3c7601b46265a4c6355f953e1c21197624"
+    },
+    {
+      "file": "android-360x800-font100-dark-denied.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-dark-denied.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "1091244ce43a8b22e5dc2175387b28ad079e84ec803fe91c147bc572dafc75e7"
+    },
+    {
+      "file": "android-360x800-font100-dark-permissions.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-dark-permissions.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "db98f317fca239c67ae94a00bda528ca692b503f961e4935884c165ff4182de5"
+    },
+    {
+      "file": "android-360x800-font100-dark-provider-status.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-dark-provider-status.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "87367c6d474707a3fd0553163f7533029e1cdc30ab6b99256feed6bdf45206a2"
+    },
+    {
+      "file": "android-360x800-font100-dark-stale.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-dark-stale.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "1d6378794443fb6474acf156d20a88e470f362743e102490bc68712d91fe2daf"
+    },
+    {
+      "file": "android-360x800-font100-dark-threads.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-dark-threads.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "9658ab91b7207f1689cfc84a63b1488241273ca688f7404ce99039f7968c5228"
+    },
+    {
+      "file": "android-360x800-font100-dark-tool-result.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-dark-tool-result.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "a719565ad0d35a7fbe398b8bc3c23585309d630e4d9b1acc81c149c4df7b0963"
+    },
+    {
+      "file": "android-360x800-font100-light-chat-only.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-light-chat-only.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "976aa33ec8e2391787edfec74851ea67c451e87676864d771364845b3449f9e5"
+    },
+    {
+      "file": "android-360x800-font100-light-confirmation.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-light-confirmation.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "9d0a165a45d293855cdd439c75a05305b843cbfc39ac13f4abb40a82d6593d27"
+    },
+    {
+      "file": "android-360x800-font100-light-conversation.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-light-conversation.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "818b59e78b3c0ead4b35109c6b1294175a81da721da620a420920c2adf0c4d31"
+    },
+    {
+      "file": "android-360x800-font100-light-denied.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-light-denied.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "108460bebddcd5fbfb6a18bf188657ec0c8ce2986ec3f18c213b6aa3b07ea0b1"
+    },
+    {
+      "file": "android-360x800-font100-light-permissions.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-light-permissions.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "6bcb2ef4b44613d217eb4aa58e5bdd0891b1b4ba8d65f54cc1e4d437ef50a8bf"
+    },
+    {
+      "file": "android-360x800-font100-light-provider-status.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-light-provider-status.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "4475f281522e04ec5749eb6cc0fd1328f90076b7b23e71ac6751b363bf0012fd"
+    },
+    {
+      "file": "android-360x800-font100-light-stale.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-light-stale.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "de6ec59e1bb82050f7dcee7abe5c8ee556338349a9dcc3199f352ff53b17ca21"
+    },
+    {
+      "file": "android-360x800-font100-light-threads.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-light-threads.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "a4498288d74983cc35ec9cb18f6ab8e4b17ce4b0363380f12210a063b604327b"
+    },
+    {
+      "file": "android-360x800-font100-light-tool-result.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-light-tool-result.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "c976a1a247f60688074173bf44f9adc706d51ca3c33e0b62baac272e6971fda3"
+    },
+    {
+      "file": "android-360x800-font200-dark-confirmation.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font200-dark-confirmation.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "fbb348c076dc295135ebfb20a5466dc47567ca04c55a678baccd36c737e34a00"
+    },
+    {
+      "file": "android-360x800-font200-dark-conversation.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font200-dark-conversation.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "f06d853b059418cdab45a0a80bec9e8b9b3774f4d1de0443a1a31c0e246df6c3"
+    },
+    {
+      "file": "android-360x800-font200-dark-permissions.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font200-dark-permissions.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "97da0e3c64ca42bcbe03ee2d21b70797ca75ffc9371bc83462f61ebd99ef279d"
+    },
+    {
+      "file": "android-360x800-font200-light-confirmation.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font200-light-confirmation.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "e8ce51e090660f9d3be0b712f0782d3da3a5eecf05f6c301f6a76fb1240d936b"
+    },
+    {
+      "file": "android-360x800-font200-light-conversation.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font200-light-conversation.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "2efe035b7b08ca9584051a4bd227f4ef2805f8c80110279c90f9e40d5934f861"
+    },
+    {
+      "file": "android-360x800-font200-light-permissions.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font200-light-permissions.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "f295f5153df3ed17e79f7f50054e11f958fbeb747814f70e46be828644bae405"
+    },
+    {
+      "file": "android-480x900-font100-dark-conversation.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-480x900-font100-dark-conversation.png",
+      "bitmapPixels": [
+        480,
+        900
+      ],
+      "sha256": "5444bee2eb2cd77ca5b1d54ec480780969d4cf8fb25f90108666e059efc2de78"
+    },
+    {
+      "file": "android-480x900-font100-light-conversation.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-480x900-font100-light-conversation.png",
+      "bitmapPixels": [
+        480,
+        900
+      ],
+      "sha256": "9cea554f1e6a53ba4cb248d539bd719964df0a21c0abcfc869e1aa42dda03549"
+    },
+    {
+      "file": "android-600x960-font100-dark-conversation.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-600x960-font100-dark-conversation.png",
+      "bitmapPixels": [
+        600,
+        960
+      ],
+      "sha256": "f8cbcb2e051b50bb73003ab166a1bdfe5f55e32302de1d11c015d7fa1113c5a1"
+    },
+    {
+      "file": "android-600x960-font100-light-conversation.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-600x960-font100-light-conversation.png",
+      "bitmapPixels": [
+        600,
+        960
+      ],
+      "sha256": "f1d05674feae60cb5dcd1b6566854da259dbb8f8745d1748cfc10f292ed764f7"
+    },
+    {
+      "file": "android-800x360-font100-dark-confirmation.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-800x360-font100-dark-confirmation.png",
+      "bitmapPixels": [
+        800,
+        360
+      ],
+      "sha256": "dfd71fadf52fd065ca977d1c600112f86888ebc36cbc4c845db7d19827f9d6ea"
+    },
+    {
+      "file": "android-800x360-font100-dark-conversation.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-800x360-font100-dark-conversation.png",
+      "bitmapPixels": [
+        800,
+        360
+      ],
+      "sha256": "d87bc89bf4c238c644d4a71a37a1d08b8f0eaf47b535ec68e60c3798729d35f8"
+    },
+    {
+      "file": "android-800x360-font100-light-confirmation.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-800x360-font100-light-confirmation.png",
+      "bitmapPixels": [
+        800,
+        360
+      ],
+      "sha256": "aa44679bf1004f9e56082bd5b029ed68f1ad75fab960d5f257c7b48e7ad90958"
+    },
+    {
+      "file": "android-800x360-font100-light-conversation.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-800x360-font100-light-conversation.png",
+      "bitmapPixels": [
+        800,
+        360
+      ],
+      "sha256": "00b30fe86721b8038fc93ab9747155aaf8e46e283e5a24b51144bed0cebf2a40"
+    },
+    {
+      "file": "android-840x900-font100-dark-conversation.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-840x900-font100-dark-conversation.png",
+      "bitmapPixels": [
+        840,
+        900
+      ],
+      "sha256": "8d54e8e25cfbb210165bc627ce77ad934c86bb06607773d7c0b9d27338f3c90e"
+    },
+    {
+      "file": "android-840x900-font100-light-conversation.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-840x900-font100-light-conversation.png",
+      "bitmapPixels": [
+        840,
+        900
+      ],
+      "sha256": "16882a7b3ae5ce3ca56eba6d1b8f995a1fa3795f584eae2efbafb45d923dcad3"
+    }
+  ]
+}

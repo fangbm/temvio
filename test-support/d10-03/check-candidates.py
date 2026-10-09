@@ -1,6 +1,6 @@
 """Verify immutable candidate evidence. Does not modify or approve visuals."""
 from pathlib import Path
-import hashlib,json,struct,sys
+import hashlib,json,struct,sys,subprocess
 root=Path(__file__).resolve().parents[2]
 folder=root/'docs/tasks/fixtures/d10-03/screenshots'
 manifest=json.loads((folder/'capture-manifest.json').read_text(encoding='utf-8'))
@@ -12,7 +12,12 @@ for item in manifest['candidates']:
     if '--compare-generated' in sys.argv:
         assert hashlib.sha256((root/item['generatedFrom']).read_bytes()).hexdigest()==item['sha256'],p
 for name,expected in manifest['sourceHashes'].items():
-    content=(root/name).read_text(encoding='utf-8-sig').replace('\r\n','\n')
+    if '--source-revision' in sys.argv:
+        revision=sys.argv[sys.argv.index('--source-revision')+1]
+        # Historical evidence is checked against the accepted source, not relabeled as a new capture.
+        content=subprocess.check_output(['git','show',f'{revision}:{name}'],cwd=root).decode('utf-8-sig').replace('\r\n','\n')
+    else:
+        content=(root/name).read_text(encoding='utf-8-sig').replace('\r\n','\n')
     assert hashlib.sha256(content.encode()).hexdigest()==expected,name
 assert manifest['baseSha']=='74e20e555c9037ff62dda95ab67e3e0e455b0aa1'
 assert manifest['containsRealSecrets'] is False

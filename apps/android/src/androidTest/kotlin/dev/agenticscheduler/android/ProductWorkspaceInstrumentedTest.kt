@@ -66,8 +66,14 @@ class ProductWorkspaceInstrumentedTest {
         compose.onNodeWithText("Confirm compensating Undo",substring=false).performClick()
         compose.waitUntil(10000) {!h.busy && h.message?.startsWith("Compensating")==true}
         runBlocking {check(f.base.journal.timeline().size==count+1);check(f.base.tasks.getTask(task.id)==task);check(f.base.journal.mutation(update.mutationId!!.value)!=null)}
-        back();compose.runOnIdle {check(h.detail==null);check(nav.current==AndroidDestination.HISTORY)}
-        back();compose.runOnIdle {check(nav.current==AndroidDestination.MORE)}
+        // The async post-commit read restores the original detail. Settle that UI
+        // frame before native Back, then await its dispatch rather than reading mid-dispatch.
+        compose.mainClock.advanceTimeByFrame();compose.waitForIdle()
+        compose.onNodeWithTag("history-detail").assertIsDisplayed()
+        back();compose.waitUntil(10000) {h.detail==null && nav.current==AndroidDestination.HISTORY}
+        compose.runOnIdle {check(h.detail==null);check(nav.current==AndroidDestination.HISTORY)}
+        back();compose.waitUntil(10000) {nav.current==AndroidDestination.MORE}
+        compose.runOnIdle {check(nav.current==AndroidDestination.MORE)}
     }
     @Test fun nativeSyncStoppedRetryAndConflictInspectionDoNotResolve() = fixture {f,_ ->
         runBlocking {f.enroll();f.profileConflict()};val s=f.sync();var retries=0
@@ -153,9 +159,16 @@ class ProductWorkspaceInstrumentedTest {
         val config=context.resources.configuration
         val out=File(context.getExternalFilesDir(null),"d10-03-screenshots").also {it.mkdirs()}
         for(theme in listOf(false,true)) for(case in listOf("profile-editor","profile-policy","profile-configured")) {
+            // Theme remount starts a real refresh; settle it before issuing guarded editor commands.
+            compose.runOnIdle { dark=theme }
+            compose.waitForIdle()
+            compose.waitUntil(10000) { p.loaded && !p.busy }
             compose.runOnIdle {
-                p.discardProfileDraft();dark=theme
-                if(case!="profile-configured") p.openProfileEditor(f.configured)
+                p.discardProfileDraft()
+                if(case!="profile-configured") {
+                    p.openProfileEditor(f.configured)
+                    check(p.profileEditor!=null) { "Screenshot editor command was not accepted" }
+                }
             }
             compose.waitForIdle()
             if(case=="profile-policy") compose.onNodeWithText("Block the whole local day",substring=false).performScrollTo()
