@@ -1,5 +1,6 @@
 package dev.agenticscheduler.agent.context
 
+import dev.agenticscheduler.domain.id.TaskId
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -25,9 +26,12 @@ class ContextAssemblerTest {
             ContextCandidate("a", ContextClass.CURRENT_DOMAIN, "current-a", 1, 1, "task:2"),
             ContextCandidate("history", ContextClass.RETRIEVED_HISTORY, "history", 0, 0),
         )
-        val request = ContextRequest("system", listOf("z" to "schema-z", "a" to "schema-a"), "command", "anchor", candidates)
-        val first = assertIs<ContextAssemblyResult.Ready>(ContextAssembler(meter).assemble(request))
-        val second = assertIs<ContextAssemblyResult.Ready>(ContextAssembler(meter).assemble(request.copy(candidates = candidates.reversed())))
+        val anchor = AgentContextAnchor.Task(TaskId("018f6e68-7d0c-7000-8000-000000000001"))
+        val request = ContextRequest("system", listOf("z" to "schema-z", "a" to "schema-a"), "command", anchor, candidates)
+        // The referent now has a canonical tagged representation, rather than the literal "anchor" fixture.
+        val assembler = ContextAssembler(Utf8ByteBudgetMeter(1024, 100))
+        val first = assertIs<ContextAssemblyResult.Ready>(assembler.assemble(request))
+        val second = assertIs<ContextAssemblyResult.Ready>(assembler.assemble(request.copy(candidates = candidates.reversed())))
         assertEquals(first, second)
         assertEquals(listOf("system", "a", "z", "command", "anchor", "a", "b", "history"), first.parts.map(ContextPart::id))
         assertTrue(first.parts.none { it.id == "summary" })

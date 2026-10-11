@@ -29,8 +29,10 @@ data class ContextRequest(
     val systemInstructions: String,
     val toolSchemas: List<Pair<String, String>>,
     val currentCommand: String,
-    val contextAnchor: String?,
+    val contextAnchor: AgentContextAnchor?,
     val candidates: List<ContextCandidate>,
+    /** Exact serialized latest assistant ToolCall + matched ToolResult group; not UI context. */
+    val requiredToolContinuation: String? = null,
 ) {
     init { require(systemInstructions.isNotBlank() && currentCommand.isNotBlank()) }
 }
@@ -60,7 +62,8 @@ class ContextAssembler(private val meter: BudgetMeter) {
                 add(ContextPart("TOOL_SCHEMA", id, schema))
             }
             add(ContextPart("CURRENT_COMMAND", "command", request.currentCommand))
-            request.contextAnchor?.let { add(ContextPart("CONTEXT_ANCHOR", "anchor", it)) }
+            request.contextAnchor?.let { add(ContextPart("CONTEXT_ANCHOR", "anchor", it.renderForModel())) }
+            request.requiredToolContinuation?.let { add(ContextPart("TOOL_CONTINUATION", "required-tool-continuation", it)) }
         }
         var used = 0L
         mandatory.forEach { part ->
