@@ -10,6 +10,10 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.unit.dp
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.agenticscheduler.agent.history.*
+import dev.agenticscheduler.agent.context.*
+import dev.agenticscheduler.domain.id.TaskId
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import dev.agenticscheduler.agent.permission.*
 import dev.agenticscheduler.database.openAndroidDatabase
 import dev.agenticscheduler.fixtures.D10AgentFixtureGraph
@@ -33,6 +37,43 @@ class AgentWorkspaceInstrumentedTest {
         compose.onNodeWithTag("agent-send").assertIsDisplayed().performClick()
         compose.waitUntil(15000) {!c.busy && c.command.isEmpty()}
         check(c.messages.any {it.role==AgentMessageRole.USER && it.content=="Synthetic explicit command"});check(f.requests==1)
+    }
+    @Test fun contextualTaskOpenRetainsVisibleAttachmentAndSendsExactUserOnlyExplicitly() = fixture {f, _ ->
+        val c=f.workspace();val nav=AndroidNavigation().also {it.open(AndroidDestination.TASKS)}
+        val core=CoreScreenCoordinator();mount(f,c,nav,core)
+        compose.waitUntil(15000) {compose.onAllNodesWithText("View Task").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithText("View Task").performClick();compose.onNodeWithTag("agent-discuss-task").performScrollTo().performClick()
+        compose.waitUntil(15000) {c.loaded && nav.current==AndroidDestination.AGENT}
+        val context=checkNotNull(c.attachedContext);check(context.anchor is AgentContextAnchor.Task);check(f.requests==0);check(c.messages.size==2)
+        compose.onNodeWithTag("agent-command").performTextInput("Exact contextual Android command")
+        compose.onNodeWithTag("theme-toggle").performClick();compose.onNodeWithTag("android-nav-CALENDAR").performClick();compose.onNodeWithTag("android-nav-AGENT").performClick()
+        compose.onNodeWithTag("agent-context-label").assertIsDisplayed();check(c.attachedContext==context);check(f.requests==0)
+        compose.onNodeWithTag("agent-send").assertIsDisplayed().performClick()
+        compose.waitUntil(15000) {!c.busy && c.command.isEmpty()}
+        check(c.messages.last {it.role==AgentMessageRole.USER}.content=="Exact contextual Android command")
+        check(f.bodies.single().contains(context.anchor.renderForModel().replace("\"","\\\"")))
+        check(!f.bodies.single().contains(context.label));check(c.attachedContext==context)
+        compose.onNodeWithTag("agent-clear-context").performClick();check(c.attachedContext==null)
+        compose.onNodeWithTag("android-nav-TASKS").performClick();compose.onNodeWithText("View Task").performClick()
+        // Return from detail before choosing the ordinary primary Agent destination.
+        compose.waitForIdle();compose.waitUntil(15000) {core.selection is CoreSelection.TaskDetail}
+        compose.mainClock.advanceTimeByFrame();compose.waitForIdle()
+        compose.onNodeWithText("Selected detail").assertIsDisplayed()
+        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
+        compose.waitUntil(15000) {core.selection==null}
+        compose.onNodeWithTag("android-nav-AGENT").performClick();compose.waitUntil(15000) {c.loaded}
+        check(c.attachedContext==null);check(f.requests==1)
+    }
+    @Test fun nativeTwoHundredPercentContextClearIsReachableWithoutSend() = fixture {f, _ ->
+        val c=f.workspace();val attachment=taskAgentContext(TaskId("00000000-0000-7000-8000-000000008801"),"A long synthetic selected Task")
+        c.attachContext(attachment)
+        compose.setContent {CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density,2f)) {
+            TemvioTheme(true) {AgentWorkspaceScreen(c,rememberCoroutineScope(),{},{},{})}
+        }}
+        compose.waitUntil(15000) {c.loaded};compose.onNodeWithTag("agent-command").performTextInput("Unsent draft")
+        compose.onNodeWithTag("agent-clear-context").assertHeightIsAtLeast(48.dp).assertIsDisplayed().performClick()
+        check(c.attachedContext==null);check(c.command=="Unsent draft");check(f.requests==0)
+        compose.onNodeWithTag("agent-send").assertIsDisplayed()
     }
     @Test fun nativeBackClosesExactRestoredConfirmationWithoutDenyOrWrite() = fixture {f, _ ->
         val c=f.workspace();runBlocking {f.prepareScene("confirmation",c)};val call=c.pending!!;val before=f.requests
@@ -99,8 +140,8 @@ class AgentWorkspaceInstrumentedTest {
         arguments.getString("captureFont")?.let {check(scale==(it.toFloat()*100).toInt()) {"Requested font scale not applied: $scale"}}
         val out=File(context.getExternalFilesDir(null),"d10-04-screenshots").also {it.mkdirs()}
         val scenes=when {
-            width==360 && scale==100 -> listOf("conversation","tool-result","confirmation","stale","denied","chat-only","threads","permissions","provider-status")
-            scale>=190 -> listOf("conversation","confirmation","permissions")
+            width==360 && scale==100 -> listOf("conversation","tool-result","confirmation","stale","denied","chat-only","threads","permissions","provider-status","context-task","context-calendar","context-viewport")
+            scale>=190 -> listOf("conversation","confirmation","permissions","context-task")
             height<480 -> listOf("conversation","confirmation")
             else -> listOf("conversation")
         }
@@ -120,6 +161,10 @@ class AgentWorkspaceInstrumentedTest {
             compose.waitUntil(15000) {c.loaded && !c.busy};compose.mainClock.advanceTimeByFrame();compose.waitForIdle()
             if(scene in listOf("tool-result","stale","denied")) compose.onNodeWithTag("agent-conversation").performScrollToNode(hasTestTag("agent-result-status"))
             if(scene=="conversation") compose.onNodeWithTag("agent-conversation").performScrollToNode(hasText(c.messages.last().content))
+            if(scene.startsWith("context-")) {
+                compose.onNodeWithTag("agent-clear-context").assertHeightIsAtLeast(48.dp).assertIsDisplayed()
+                compose.onNodeWithTag("agent-context-label").assertIsDisplayed();compose.onNodeWithTag("agent-send").assertIsDisplayed()
+            }
             if(height<480 && scene=="conversation") {
                 compose.onNodeWithTag("agent-command").performScrollTo().assertIsDisplayed()
                 compose.onNodeWithTag("agent-send").assertHeightIsAtLeast(48.dp).assertIsDisplayed()
@@ -132,10 +177,10 @@ class AgentWorkspaceInstrumentedTest {
         }
     }
 
-    private fun mount(f:D10AgentFixtureGraph,c:AgentWorkspaceCoordinator,nav:AndroidNavigation) {
+    private fun mount(f:D10AgentFixtureGraph,c:AgentWorkspaceCoordinator,nav:AndroidNavigation,core:CoreScreenCoordinator? = null) {
         compose.setContent {AndroidApp(f.base.reads,f.base.planner,f.base.profileSettings,f.base.eventEditor,f.base.taskEditor,
             f.base.agent,f.run,f.base.secrets,f.base.enrollments,f.base.ids,f.base.conversationSettings,null,{},
-            navigationSession=nav,initialDark=false,agentWorkspaceSession=c)}
+            navigationSession=nav,initialDark=false,agentWorkspaceSession=c,coreSession=core)}
     }
     private fun fixture(test:(D10AgentFixtureGraph,Context)->Unit) {
         val context=InstrumentationRegistry.getInstrumentation().targetContext

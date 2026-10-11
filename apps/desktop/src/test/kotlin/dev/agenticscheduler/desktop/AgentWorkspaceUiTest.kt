@@ -106,9 +106,10 @@ class AgentWorkspaceUiTest {
         val variants=listOf(Triple(640,720,1f),Triple(800,600,1f),Triple(1024,768,1f),Triple(1280,800,1f),Triple(1440,900,1f),Triple(1920,1080,1f),Triple(640,720,2f),Triple(800,360,1f))
         for((width,height,font) in variants) {
             val scenes=when {
-                width==1280 -> listOf("conversation","tool-result","confirmation","stale","denied","chat-only","threads","permissions","provider-status")
-                font==2f -> listOf("conversation","confirmation","permissions")
+                width==1280 -> listOf("conversation","tool-result","confirmation","stale","denied","chat-only","threads","permissions","provider-status","context-task","context-calendar","context-viewport")
+                font==2f -> listOf("conversation","confirmation","permissions","context-task")
                 height<480 -> listOf("conversation","confirmation")
+                width==640 -> listOf("conversation","context-task","context-calendar","context-viewport")
                 else -> listOf("conversation")
             }
             for(scene in scenes) for(dark in listOf(false,true)) fixture {f ->
@@ -121,6 +122,10 @@ class AgentWorkspaceUiTest {
                     waitUntil(timeoutMillis=10000) {c.loaded && !c.busy};mainClock.advanceTimeByFrame();waitForIdle()
                     if(scene in listOf("tool-result","stale","denied")) onNodeWithTag("agent-conversation").performScrollToNode(hasTestTag("agent-result-status"))
                     if(scene=="conversation") onNodeWithTag("agent-conversation").performScrollToNode(hasText(c.messages.last().content))
+                    if(scene.startsWith("context-")) {
+                        onNodeWithTag("agent-clear-context").assertHeightIsAtLeast(48.dp).assertIsDisplayed()
+                        onNodeWithTag("agent-context-label").assertIsDisplayed(); onNodeWithTag("agent-send").assertIsDisplayed()
+                    }
                     if(height<480 && scene=="conversation") {
                         onNodeWithTag("agent-command").performScrollTo().assertIsDisplayed()
                         onNodeWithTag("agent-send").assertHeightIsAtLeast(48.dp).assertIsDisplayed()

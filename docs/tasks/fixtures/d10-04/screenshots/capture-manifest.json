@@ -1,19 +1,20 @@
 {
-  "baseSha": "cdc8504527cc636f5d2932b7e00785f4be9ecaad",
+  "baseSha": "17fd6e7ef117cdb899b7e2f28d3a1a8bf13a58ed",
   "status": "CANDIDATES / AWAITING MAINTAINER VISUAL REVIEW",
   "containsRealSecrets": false,
   "fixture": "Existing AgentRunService -> typed Tools -> Application -> Room, synthetic MockEngine HTTP peer; no live Provider acceptance.",
   "nativeEvidence": "Actual Desktop Compose/Skia + Android API35 Google APIs x86_64 emulator. Native clock/chrome is not deterministic; no physical-device claim.",
   "sourceHashNormalization": "UTF-8 text / no BOM / LF",
   "sourceHashes": {
-    "apps/android/src/androidTest/kotlin/dev/agenticscheduler/android/AgentWorkspaceInstrumentedTest.kt": "05ac0feafa9a2567181e1d0a7537c836c8528e892089621c577c525e868ffc46",
-    "apps/android/src/main/kotlin/dev/agenticscheduler/android/AndroidApp.kt": "1faa9f4a3927d83f5e3e0f4eea929670467d108cda90e5767caa502944f1cf19",
-    "apps/desktop/src/main/kotlin/dev/agenticscheduler/desktop/DesktopApp.kt": "972311db06070d592ca21c538ab6b7b2fe407fbf0aab9f493fc5034ddf1d9e67",
-    "apps/desktop/src/test/kotlin/dev/agenticscheduler/desktop/AgentWorkspaceUiTest.kt": "43806c8b1f72b67513206fe39934e69499f4157287d3e7834af5ae4d8360eacb",
+    "apps/android/src/androidTest/kotlin/dev/agenticscheduler/android/AgentWorkspaceInstrumentedTest.kt": "6ee0572243a1a47346ed9e81a0e823ea6aab15a08579b5697a24b676e9fb3318",
+    "apps/android/src/main/kotlin/dev/agenticscheduler/android/AndroidApp.kt": "be6cc72c55010b1bc3269212efcfd8c9932db49c3ba83ed6da44b184a2987466",
+    "apps/desktop/src/main/kotlin/dev/agenticscheduler/desktop/DesktopApp.kt": "2f762f4903ea506101f10052f9f1d1137aa04710dace4f346660be2e38eb186b",
+    "apps/desktop/src/test/kotlin/dev/agenticscheduler/desktop/AgentWorkspaceUiTest.kt": "8ed61573e60ac8edcb7da947d3425b56c2f8e3b49b37ebb6debd2648bf857174",
     "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/AgentToolPresentation.kt": "51dd81a63ac8d4767c533be41addc4c2252d0653587c666a7a2c66ae1d16e988",
-    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/AgentWorkspaceCoordinator.kt": "1b7ffa5f813cfefbf364e6e41dd03cc9cf3e16fe78871a2fd00321b8f0baab40",
-    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/AgentWorkspaceScreen.kt": "c5beda74ac8aac90961639a0ca7d3e6066534a9e3e379b6ba51480365f3b3b28",
-    "test-support/d10-04/D10AgentFixtureGraph.kt": "fbb529c28661125b290233d6e7baa57372fcded38e77610a43f969c047d5baa3"
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/AgentWorkspaceCoordinator.kt": "13088eb15718f402bf63fe67c6d3fe5c2fe38c90dc85e7feb5b2d1ed5d52be5a",
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/AgentWorkspaceScreen.kt": "4fca481bc3f01fc7d71f89d77f5f24793fa56ec5b269b870d5f93eb43e7a91da",
+    "apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/AttachedAgentContext.kt": "708dde8de5c602ca81306c59eba9b759446d77ef733b284d7ee77769898cd829",
+    "test-support/d10-04/D10AgentFixtureGraph.kt": "32ac31fbeae0526913710a715a53cd156cda5e4a83d447630c741e6616bd975a"
   },
   "candidates": [
     {
@@ -51,6 +52,33 @@
         800
       ],
       "sha256": "c5687af3c5d16d17cc215bf6fa017e5976ad8915b2dbda66799028f1babc7105"
+    },
+    {
+      "file": "desktop-1280x800-font100-dark-context-calendar.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-dark-context-calendar.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "a0aaae1ef71417a7df4efc08406ffede1cd7af3cf7e1c4bfa89d10f657dab694"
+    },
+    {
+      "file": "desktop-1280x800-font100-dark-context-task.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-dark-context-task.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "44c27210c3e9da86b1d4f0d364cce12f65191e83d3999e5d9ac951f0b7e5e0ee"
+    },
+    {
+      "file": "desktop-1280x800-font100-dark-context-viewport.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-dark-context-viewport.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "bb44e265e5af73dacd6e79419f6105c554daaf19647c9b710f7c32db05032bad"
     },
     {
       "file": "desktop-1280x800-font100-dark-conversation.png",
@@ -132,6 +160,33 @@
         800
       ],
       "sha256": "20d4a4f24b039dd3d86aaaeba5251c1c77b7a587adb5bc480603bc4d2326e6ff"
+    },
+    {
+      "file": "desktop-1280x800-font100-light-context-calendar.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-light-context-calendar.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "4be0ce4a90a92f8749ef25b353fde03e05914b83f21ebe67fc3685462e1a5f39"
+    },
+    {
+      "file": "desktop-1280x800-font100-light-context-task.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-light-context-task.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "2bf0bff72303960e1251f80add36ce69d2bd1a92302c653b82b04ff88d4bc9d3"
+    },
+    {
+      "file": "desktop-1280x800-font100-light-context-viewport.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-1280x800-font100-light-context-viewport.png",
+      "bitmapPixels": [
+        1280,
+        800
+      ],
+      "sha256": "c6425c16361a73b09a22f2b42f335ca0ecd9bada0a9eae75e916b013387d4bce"
     },
     {
       "file": "desktop-1280x800-font100-light-conversation.png",
@@ -233,6 +288,33 @@
       "sha256": "a29456f6de3614dc052158cce8d90cecbb8e203858300609432f18e91f53ffb0"
     },
     {
+      "file": "desktop-640x720-font100-dark-context-calendar.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-640x720-font100-dark-context-calendar.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "061f70999991f7560ce8445007bad15d5518478fce1125d6624b562f33689722"
+    },
+    {
+      "file": "desktop-640x720-font100-dark-context-task.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-640x720-font100-dark-context-task.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "24baeee86e2488e36f01303ebf1a0e90b5c6cc165d3b2bd9e0764cc15478667c"
+    },
+    {
+      "file": "desktop-640x720-font100-dark-context-viewport.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-640x720-font100-dark-context-viewport.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "599ea1f6881d631085463f060ed66441e09e2f926ae8e01fd20b7463a2a05dd9"
+    },
+    {
       "file": "desktop-640x720-font100-dark-conversation.png",
       "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-640x720-font100-dark-conversation.png",
       "bitmapPixels": [
@@ -240,6 +322,33 @@
         720
       ],
       "sha256": "77db11f8bbf3de7ad5a8cc223696c293ae8a8b9060c51f5312cc9542185c6443"
+    },
+    {
+      "file": "desktop-640x720-font100-light-context-calendar.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-640x720-font100-light-context-calendar.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "36a238696224e683ec1a15675c12fb64989b39b5bb82c37fcc0794f459bc11d9"
+    },
+    {
+      "file": "desktop-640x720-font100-light-context-task.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-640x720-font100-light-context-task.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "ec9582e7c321a916012777e904c03b0bac6150eacce8b6ca3a14d2f63f9b4f6a"
+    },
+    {
+      "file": "desktop-640x720-font100-light-context-viewport.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-640x720-font100-light-context-viewport.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "1856b0166d089c7035d0d3c443fc1674cc0a64077682f0d379619af577853434"
     },
     {
       "file": "desktop-640x720-font100-light-conversation.png",
@@ -258,6 +367,15 @@
         720
       ],
       "sha256": "fb36efe64410e3787fbc80d57e342a122f9cefe9ebc3e1ffca2da7d75aed7974"
+    },
+    {
+      "file": "desktop-640x720-font200-dark-context-task.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-640x720-font200-dark-context-task.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "ff80b39874733dc03a4f33eaabccf99dd3a4bbb3925362ca7433d7d471a8604f"
     },
     {
       "file": "desktop-640x720-font200-dark-conversation.png",
@@ -285,6 +403,15 @@
         720
       ],
       "sha256": "25fe50ac3f9532b094f463d49124d6bfdb41d4dc80a9f9040812ae9cf3c20187"
+    },
+    {
+      "file": "desktop-640x720-font200-light-context-task.png",
+      "generatedFrom": "apps/desktop/build/d10-04/screenshots/desktop-640x720-font200-light-context-task.png",
+      "bitmapPixels": [
+        640,
+        720
+      ],
+      "sha256": "be93ac3cd4105c14794d2513d3a3b1533c0d96d1ac02a60b03b2317d2af988ba"
     },
     {
       "file": "desktop-640x720-font200-light-conversation.png",
@@ -365,7 +492,7 @@
         1024,
         768
       ],
-      "sha256": "228646bdff9b7936935571a526f2f94554ae057568d4576170074a0ab1e0b6b4"
+      "sha256": "2fe5be2eeca9e943cc589ca1eaecfd737766797513cca6f1b8f6ff5ba05debf7"
     },
     {
       "file": "android-1024x768-font100-light-conversation.png",
@@ -374,7 +501,7 @@
         1024,
         768
       ],
-      "sha256": "ebc093dcd1585bba9c441b2d5c820298053bc20b2b711d8fcec1b0869978c16b"
+      "sha256": "1c761a6d3770ece3bbeb4a424ef5ebce66e5bb3da419c8f09b4c20d8fead82ae"
     },
     {
       "file": "android-360x800-font100-dark-chat-only.png",
@@ -383,7 +510,7 @@
         360,
         800
       ],
-      "sha256": "5f94af5a9ee77295326cec229514a286a11aa4f0015cc7f0a1635c0c115724ca"
+      "sha256": "b7bc7cf14daf9a3a3b1323495cf987aea4c03d8b142928f43cc7074fd0987380"
     },
     {
       "file": "android-360x800-font100-dark-confirmation.png",
@@ -392,7 +519,34 @@
         360,
         800
       ],
-      "sha256": "fd45457704d1fd46fa63e58b2b7a7eaa6eb7ef19700853c4812034ecdf463ce2"
+      "sha256": "ca2aa847ac137195bc7152d37d2c79cf9df1e212afccf0bf04bf883ec18f461f"
+    },
+    {
+      "file": "android-360x800-font100-dark-context-calendar.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-dark-context-calendar.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "e5cd0d6d7a496299fd5d11dca382b6f426dd0f8e8fdf2f34a0d1d6743c82ebc2"
+    },
+    {
+      "file": "android-360x800-font100-dark-context-task.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-dark-context-task.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "5407c1c531adc86ded55d8089459b6cbc4a3620272f569d6da97f4f2840788a0"
+    },
+    {
+      "file": "android-360x800-font100-dark-context-viewport.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-dark-context-viewport.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "00c2bef426923da62237fef4cb2b482ecbdbb548817ef69abc70cde1058fdeb6"
     },
     {
       "file": "android-360x800-font100-dark-conversation.png",
@@ -401,7 +555,7 @@
         360,
         800
       ],
-      "sha256": "0eba1861fb352668636aa689fa670a3c7601b46265a4c6355f953e1c21197624"
+      "sha256": "900624a86cecb02a8a7164a1a4ca6c7ab742b43ef7259d0167768db19a77b1e1"
     },
     {
       "file": "android-360x800-font100-dark-denied.png",
@@ -410,7 +564,7 @@
         360,
         800
       ],
-      "sha256": "1091244ce43a8b22e5dc2175387b28ad079e84ec803fe91c147bc572dafc75e7"
+      "sha256": "7d0f6816aef805b91093cf96f404ffac873376716663073da1c498837cb8e9d1"
     },
     {
       "file": "android-360x800-font100-dark-permissions.png",
@@ -419,7 +573,7 @@
         360,
         800
       ],
-      "sha256": "db98f317fca239c67ae94a00bda528ca692b503f961e4935884c165ff4182de5"
+      "sha256": "5927bc27c0f8d9b93fdf90cf1e6b594e37d3ca3547af999508fc88947d9a79c0"
     },
     {
       "file": "android-360x800-font100-dark-provider-status.png",
@@ -428,7 +582,7 @@
         360,
         800
       ],
-      "sha256": "87367c6d474707a3fd0553163f7533029e1cdc30ab6b99256feed6bdf45206a2"
+      "sha256": "a52ddf8b4d7630f74f9e7d505a89b00620219198762e39287d88115dd056deed"
     },
     {
       "file": "android-360x800-font100-dark-stale.png",
@@ -437,7 +591,7 @@
         360,
         800
       ],
-      "sha256": "1d6378794443fb6474acf156d20a88e470f362743e102490bc68712d91fe2daf"
+      "sha256": "4163ca36cd39a59564aeb65fece1e7ec42f255011cadbac3f28a931c512aa7b8"
     },
     {
       "file": "android-360x800-font100-dark-threads.png",
@@ -446,7 +600,7 @@
         360,
         800
       ],
-      "sha256": "9658ab91b7207f1689cfc84a63b1488241273ca688f7404ce99039f7968c5228"
+      "sha256": "f01f44f2f1067fc10ae947c1b988d512646f8658b4edb808bf1ed9075c62ea4d"
     },
     {
       "file": "android-360x800-font100-dark-tool-result.png",
@@ -455,7 +609,7 @@
         360,
         800
       ],
-      "sha256": "a719565ad0d35a7fbe398b8bc3c23585309d630e4d9b1acc81c149c4df7b0963"
+      "sha256": "4992377a5b6ec8962e72ef1638b0c093eb8c8110ad43b4e1d8186e29644c54ca"
     },
     {
       "file": "android-360x800-font100-light-chat-only.png",
@@ -464,7 +618,7 @@
         360,
         800
       ],
-      "sha256": "976aa33ec8e2391787edfec74851ea67c451e87676864d771364845b3449f9e5"
+      "sha256": "ab32e32236446d6160313cb2a480cf3c09b4bcb31dc62a88308248e53b5083ac"
     },
     {
       "file": "android-360x800-font100-light-confirmation.png",
@@ -473,7 +627,34 @@
         360,
         800
       ],
-      "sha256": "9d0a165a45d293855cdd439c75a05305b843cbfc39ac13f4abb40a82d6593d27"
+      "sha256": "2adaa9a273c92c20b3cc028cea182ff9538fb14abee07b6287645ea20f25104d"
+    },
+    {
+      "file": "android-360x800-font100-light-context-calendar.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-light-context-calendar.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "48c294a347adf7b25a8f5d6f360d095830eb26109205a66c7dd21a46979aef74"
+    },
+    {
+      "file": "android-360x800-font100-light-context-task.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-light-context-task.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "26e4d14d29fe675603a6cff3146d9e83f5ba7742146481791de7c2150bc45369"
+    },
+    {
+      "file": "android-360x800-font100-light-context-viewport.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font100-light-context-viewport.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "c9eee5f84e355f9c4db84d8d6bad5f869ece28ce19b955197e20ead302688c15"
     },
     {
       "file": "android-360x800-font100-light-conversation.png",
@@ -482,7 +663,7 @@
         360,
         800
       ],
-      "sha256": "818b59e78b3c0ead4b35109c6b1294175a81da721da620a420920c2adf0c4d31"
+      "sha256": "2a8ac482478bf761e767687c55e1fd2c8996197ae874be3f0da5a8476b49c97a"
     },
     {
       "file": "android-360x800-font100-light-denied.png",
@@ -491,7 +672,7 @@
         360,
         800
       ],
-      "sha256": "108460bebddcd5fbfb6a18bf188657ec0c8ce2986ec3f18c213b6aa3b07ea0b1"
+      "sha256": "034f332e19f30eb59e1f248ed1c263b29d4fd495e3a62a508563e8d999496796"
     },
     {
       "file": "android-360x800-font100-light-permissions.png",
@@ -500,7 +681,7 @@
         360,
         800
       ],
-      "sha256": "6bcb2ef4b44613d217eb4aa58e5bdd0891b1b4ba8d65f54cc1e4d437ef50a8bf"
+      "sha256": "59195e36fd5dbacc8275f0e85af6bc3880e0bc99ce98b4255fd3c62d846bfab6"
     },
     {
       "file": "android-360x800-font100-light-provider-status.png",
@@ -509,7 +690,7 @@
         360,
         800
       ],
-      "sha256": "4475f281522e04ec5749eb6cc0fd1328f90076b7b23e71ac6751b363bf0012fd"
+      "sha256": "d3c8d8884ee3c3a3451088493913511cee86f8f6a0ebbf09b3f2a32a1d17c456"
     },
     {
       "file": "android-360x800-font100-light-stale.png",
@@ -518,7 +699,7 @@
         360,
         800
       ],
-      "sha256": "de6ec59e1bb82050f7dcee7abe5c8ee556338349a9dcc3199f352ff53b17ca21"
+      "sha256": "ff3c70984c36c50bef5bc1d2a35d0789b252449f7eaea71a43754b9bdf89721d"
     },
     {
       "file": "android-360x800-font100-light-threads.png",
@@ -527,7 +708,7 @@
         360,
         800
       ],
-      "sha256": "a4498288d74983cc35ec9cb18f6ab8e4b17ce4b0363380f12210a063b604327b"
+      "sha256": "99bdda4b84359dbd675007797518ce0a152d3973b630a9d8d12d71e4a59290a0"
     },
     {
       "file": "android-360x800-font100-light-tool-result.png",
@@ -536,7 +717,7 @@
         360,
         800
       ],
-      "sha256": "c976a1a247f60688074173bf44f9adc706d51ca3c33e0b62baac272e6971fda3"
+      "sha256": "c76c906aa26b846812b397e8be88a4c8f468c3dfb4222ca1f6775955183ac6c3"
     },
     {
       "file": "android-360x800-font200-dark-confirmation.png",
@@ -545,7 +726,16 @@
         360,
         800
       ],
-      "sha256": "fbb348c076dc295135ebfb20a5466dc47567ca04c55a678baccd36c737e34a00"
+      "sha256": "e5e5b198928af8cfb66fa330821d71bdbafa6481c7a111c032c275a9ae3b0f4c"
+    },
+    {
+      "file": "android-360x800-font200-dark-context-task.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font200-dark-context-task.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "66cccbb8ebcbb6b7fb891ec48069bc72653c9f73b7aa85a14be6286a07bd04d6"
     },
     {
       "file": "android-360x800-font200-dark-conversation.png",
@@ -554,7 +744,7 @@
         360,
         800
       ],
-      "sha256": "f06d853b059418cdab45a0a80bec9e8b9b3774f4d1de0443a1a31c0e246df6c3"
+      "sha256": "021fbb50cf262671e1c4e746e2945fb5e1fc91825d2ee6ddbf00cdc0d9d9a675"
     },
     {
       "file": "android-360x800-font200-dark-permissions.png",
@@ -563,7 +753,7 @@
         360,
         800
       ],
-      "sha256": "97da0e3c64ca42bcbe03ee2d21b70797ca75ffc9371bc83462f61ebd99ef279d"
+      "sha256": "aabd8c02c8fb3bf2d2f1804472d0cf6c68a819a38018ded1eb7abc4db438229e"
     },
     {
       "file": "android-360x800-font200-light-confirmation.png",
@@ -572,7 +762,16 @@
         360,
         800
       ],
-      "sha256": "e8ce51e090660f9d3be0b712f0782d3da3a5eecf05f6c301f6a76fb1240d936b"
+      "sha256": "5c9a0433ea419690d6872d3047e6ab7ef6ad0825aec39607f3b9c2e0d7b9fddf"
+    },
+    {
+      "file": "android-360x800-font200-light-context-task.png",
+      "generatedFrom": "build/d10-04/android-captures/d10-04-screenshots/android-360x800-font200-light-context-task.png",
+      "bitmapPixels": [
+        360,
+        800
+      ],
+      "sha256": "b8f7c3ebc78e3e831c792699d751d59dd2b55b8bab91d461e6148d0431dd9c20"
     },
     {
       "file": "android-360x800-font200-light-conversation.png",
@@ -581,7 +780,7 @@
         360,
         800
       ],
-      "sha256": "2efe035b7b08ca9584051a4bd227f4ef2805f8c80110279c90f9e40d5934f861"
+      "sha256": "73ce3a4ef8d0804753ecc3b8f8cc6171c08ebacab05c13de29cdcdfe07e07946"
     },
     {
       "file": "android-360x800-font200-light-permissions.png",
@@ -590,7 +789,7 @@
         360,
         800
       ],
-      "sha256": "f295f5153df3ed17e79f7f50054e11f958fbeb747814f70e46be828644bae405"
+      "sha256": "1e8b03615fcee1079365b1bf07bf8369a15632bfda184045cece977643d2ab85"
     },
     {
       "file": "android-480x900-font100-dark-conversation.png",
@@ -599,7 +798,7 @@
         480,
         900
       ],
-      "sha256": "5444bee2eb2cd77ca5b1d54ec480780969d4cf8fb25f90108666e059efc2de78"
+      "sha256": "1abfa2a3b6da2d27e4d4721b1b27e5bef154613a60ea2389de8dd07267727972"
     },
     {
       "file": "android-480x900-font100-light-conversation.png",
@@ -608,7 +807,7 @@
         480,
         900
       ],
-      "sha256": "9cea554f1e6a53ba4cb248d539bd719964df0a21c0abcfc869e1aa42dda03549"
+      "sha256": "a157fe643d381194dae95c637ed7f84b42ff024a3a928d9427470d6663a0adae"
     },
     {
       "file": "android-600x960-font100-dark-conversation.png",
@@ -617,7 +816,7 @@
         600,
         960
       ],
-      "sha256": "f8cbcb2e051b50bb73003ab166a1bdfe5f55e32302de1d11c015d7fa1113c5a1"
+      "sha256": "1f9a9335f855fb1add4e6d87b57593eb9e24b87239442ffdf5cde62f8e8e4c2d"
     },
     {
       "file": "android-600x960-font100-light-conversation.png",
@@ -626,7 +825,7 @@
         600,
         960
       ],
-      "sha256": "f1d05674feae60cb5dcd1b6566854da259dbb8f8745d1748cfc10f292ed764f7"
+      "sha256": "4fcf89aa6c0d49d16324c943b28a4599e2a7d323b0cde0957bb7a6f5c93ba02d"
     },
     {
       "file": "android-800x360-font100-dark-confirmation.png",
@@ -635,7 +834,7 @@
         800,
         360
       ],
-      "sha256": "dfd71fadf52fd065ca977d1c600112f86888ebc36cbc4c845db7d19827f9d6ea"
+      "sha256": "bf95c1626ae4d6b7f56be1c638e15c007685831bfaeb9d88cc7b9f566707451a"
     },
     {
       "file": "android-800x360-font100-dark-conversation.png",
@@ -644,7 +843,7 @@
         800,
         360
       ],
-      "sha256": "d87bc89bf4c238c644d4a71a37a1d08b8f0eaf47b535ec68e60c3798729d35f8"
+      "sha256": "61aae4b344e61c63ca28ff4ddc386de1391eff44a9366ebef292d91e309f1aeb"
     },
     {
       "file": "android-800x360-font100-light-confirmation.png",
@@ -653,7 +852,7 @@
         800,
         360
       ],
-      "sha256": "aa44679bf1004f9e56082bd5b029ed68f1ad75fab960d5f257c7b48e7ad90958"
+      "sha256": "cba505a512c94974c8a77c0529362ebbf718fd04030d62c7a6ce908c1ce14bbf"
     },
     {
       "file": "android-800x360-font100-light-conversation.png",
@@ -662,7 +861,7 @@
         800,
         360
       ],
-      "sha256": "00b30fe86721b8038fc93ab9747155aaf8e46e283e5a24b51144bed0cebf2a40"
+      "sha256": "e2606a2b9ce7ae17da429d26c86630eabb7587adb09a7dec9d44f647f51908b8"
     },
     {
       "file": "android-840x900-font100-dark-conversation.png",
@@ -671,7 +870,7 @@
         840,
         900
       ],
-      "sha256": "8d54e8e25cfbb210165bc627ce77ad934c86bb06607773d7c0b9d27338f3c90e"
+      "sha256": "4e961f154bc06bcadd1cebd2437b4f931e8216ebbec3e1a33abeb2785c6bf829"
     },
     {
       "file": "android-840x900-font100-light-conversation.png",
@@ -680,7 +879,7 @@
         840,
         900
       ],
-      "sha256": "16882a7b3ae5ce3ca56eba6d1b8f995a1fa3795f584eae2efbafb45d923dcad3"
+      "sha256": "c730a5c92ae3f7a2402eea1c20f1c22ad30f4671b17d05d2f6dee7a214965481"
     }
   ]
 }

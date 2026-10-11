@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 import kotlin.time.Instant
 
 @Composable
-fun PlannerWorkspaceScreen(coordinator: PlannerWorkspaceCoordinator, scope: CoroutineScope) {
+fun PlannerWorkspaceScreen(coordinator: PlannerWorkspaceCoordinator, scope: CoroutineScope, onOpenAgent: ((AttachedAgentContext) -> Unit)? = null) {
     LaunchedEffect(coordinator) { coordinator.refresh() }
     val preview = coordinator.preview
     val draft = coordinator.draft
@@ -30,7 +30,7 @@ fun PlannerWorkspaceScreen(coordinator: PlannerWorkspaceCoordinator, scope: Coro
     LazyColumn(Modifier.fillMaxSize().padding(20.dp).testTag("planner-workspace"),
         verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom=24.dp)) {
         item { SectionHeading("Plan your time", "Source facts → session preview → explicit Apply") }
-        item { PlanningProfiles(coordinator,scope) }
+        item { PlanningProfiles(coordinator,scope,onOpenAgent) }
         item {
             SectionHeading("Request inputs", "Reference and ranges are explicit Instants; no hidden horizon")
             FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
@@ -106,7 +106,7 @@ fun PlannerWorkspaceScreen(coordinator: PlannerWorkspaceCoordinator, scope: Coro
 }
 
 @Composable
-fun PlanningProfiles(coordinator: PlannerWorkspaceCoordinator, scope: CoroutineScope) {
+fun PlanningProfiles(coordinator: PlannerWorkspaceCoordinator, scope: CoroutineScope, onOpenAgent: ((AttachedAgentContext) -> Unit)? = null) {
     LaunchedEffect(coordinator) {if(!coordinator.loaded) coordinator.refresh()}
     Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
         SectionHeading("Planning profiles", "Choose explicit availability and scheduling policies")
@@ -131,6 +131,9 @@ fun PlanningProfiles(coordinator: PlannerWorkspaceCoordinator, scope: CoroutineS
             ActionButton({scope.launch {coordinator.refresh()}},enabled=!coordinator.busy,role=ActionRole.TERTIARY) {Text("Refresh source facts")}
         }
         coordinator.profiles.firstOrNull { it.id == coordinator.draft.profileId }?.let { profile ->
+            planningProfileAgentContext(profile).let { context -> onOpenAgent?.let { open ->
+                ActionButton({ open(context) }, role = ActionRole.TERTIARY, modifier = Modifier.testTag("agent-discuss-profile")) { Text("Discuss with Agent") }
+            } }
             ActionButton({ coordinator.openProfileEditor(profile) }, enabled = !coordinator.busy,
                 role = ActionRole.SECONDARY, modifier = Modifier.testTag("profile-edit-open")) { Text("Edit selected profile") }
         }

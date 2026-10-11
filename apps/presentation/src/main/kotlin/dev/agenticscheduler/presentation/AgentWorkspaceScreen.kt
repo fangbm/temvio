@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import dev.agenticscheduler.agent.history.*
 import dev.agenticscheduler.agent.permission.*
 import dev.agenticscheduler.ui.*
@@ -25,9 +26,11 @@ fun AgentWorkspaceScreen(c: AgentWorkspaceCoordinator, scope: CoroutineScope, on
     LaunchedEffect(c) { c.refresh() }
     // Immutable frame captured before any deferred LazyColumn interval construction.
     val threads = c.threads; val messages = c.messages; val calls = c.calls; val results = c.results; val actions = c.actions
+    val attachedContext = c.attachedContext
     BoxWithConstraints(Modifier.fillMaxSize().testTag(if (c.loaded) "agent-ready" else "agent-loading")) {
         val split = maxWidth >= 860.dp && maxHeight >= 480.dp && LocalDensity.current.fontScale < 1.6f
-        val composerHeight = (maxHeight * 0.45f).coerceAtLeast(120.dp).coerceAtMost(maxHeight)
+        val composerHeight = (maxHeight * if (attachedContext == null) 0.45f else 0.65f)
+            .coerceAtLeast(if (attachedContext == null) 120.dp else 200.dp).coerceAtMost(maxHeight)
         Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             if (split) Column(Modifier.width(220.dp).fillMaxHeight().verticalScroll(rememberScrollState()).padding(12.dp)) {
                 ThreadControls(c, scope, threads)
@@ -62,6 +65,15 @@ fun AgentWorkspaceScreen(c: AgentWorkspaceCoordinator, scope: CoroutineScope, on
                 }
             }
             Column(Modifier.fillMaxWidth().heightIn(max=composerHeight).padding(horizontal=16.dp,vertical=8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                attachedContext?.let { context ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(context.label, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f).testTag("agent-context-label"))
+                        ActionButton(c::clearContext, enabled = !c.busy, role = ActionRole.TERTIARY,
+                            modifier = Modifier.testTag("agent-clear-context")) { Text("Clear context") }
+                    }
+                    Text("Local context for this session", style = MaterialTheme.typography.bodySmall)
+                }
                 // Keep the explicit submission action outside the focused draft's
                 // scrolling/IME bring-into-view region, including short windows.
                 Column(Modifier.weight(1f,fill=false).fillMaxWidth().verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)) {

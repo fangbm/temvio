@@ -2,6 +2,7 @@ package dev.agenticscheduler.presentation
 
 import androidx.compose.runtime.*
 import dev.agenticscheduler.agent.history.*
+import dev.agenticscheduler.agent.context.AgentTurnContext
 import dev.agenticscheduler.agent.permission.*
 import dev.agenticscheduler.agent.provider.ProviderProbeResult
 import dev.agenticscheduler.agent.runtime.*
@@ -33,6 +34,14 @@ class AgentWorkspaceCoordinator(
     var diagnostic by mutableStateOf<String?>(null); private set
     var overlay by mutableStateOf<AgentOverlay?>(null); private set
     var inspectedCall by mutableStateOf<AgentToolCallId?>(null); private set
+    var attachedContext by mutableStateOf<AttachedAgentContext?>(null); private set
+    /** Local session state only. Opening/clearing context performs no repository or Provider work. */
+    fun attachContext(value: AttachedAgentContext): Boolean {
+        if (busy) return false
+        attachedContext = value
+        return true
+    }
+    fun clearContext() { if (!busy) attachedContext = null }
     private val drafts = mutableStateMapOf<AgentThreadId, String>()
     private var selectedConfig: ProviderConfig? = null // Non-secret config; never exposed in a screen snapshot.
     private var observedProbe: Pair<ProviderConfig, ProviderProbeResult>? = null
@@ -118,13 +127,14 @@ class AgentWorkspaceCoordinator(
     }
     suspend fun send() {
         if (!canSend) return
-        val id = checkNotNull(selectedThread); val submitted = command
+        val frame = SubmissionFrame(checkNotNull(selectedThread), command, AgentTurnContext(attachedContext?.anchor))
         guarded {
-            showResult(runtime.run(id, submitted))
+            showResult(runtime.run(frame.threadId, frame.command, frame.context))
             // Clear only the submitted session draft, after the runtime has returned.
-            drafts[id] = ""; load(id)
+            drafts[frame.threadId] = ""; load(frame.threadId)
         }
     }
+    private data class SubmissionFrame(val threadId: AgentThreadId, val command: String, val context: AgentTurnContext)
     suspend fun confirm(callId: AgentToolCallId, approved: Boolean) {
         val call = pending?.takeIf { it.id == callId } ?: return
         if (busy) return

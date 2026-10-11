@@ -1,6 +1,8 @@
 package dev.agenticscheduler.fixtures
 
 import dev.agenticscheduler.agent.history.*
+import dev.agenticscheduler.application.calendar.*
+import dev.agenticscheduler.presentation.*
 import dev.agenticscheduler.agent.provider.*
 import dev.agenticscheduler.agent.runtime.*
 import dev.agenticscheduler.agent.tool.*
@@ -78,6 +80,14 @@ class D10AgentFixtureGraph(db: AgenticSchedulerDatabase) {
     suspend fun prepareScene(scene: String, c: AgentWorkspaceCoordinator) {
         c.refresh()
         when (scene) {
+            "context-task", "context-calendar", "context-viewport" -> {
+                val attachment = when (scene) {
+                    "context-task" -> base.tasks.observeTasks().first().single().let { taskAgentContext(it.id, it.title) }
+                    "context-calendar" -> base.events.observeAll().first().first().let { calendarAgentContext(CalendarSourceRef.Event(it.id), it.title) }
+                    else -> viewportAgentContext(calendarViewport(base.date, CalendarMode.WEEK, base.zone))
+                }
+                c.attachContext(attachment); c.editCommand("Discuss this selection. Nothing is sent until I choose Send.")
+            }
             "confirmation", "denied", "tool-result" -> {
                 propose("task.create",createInput("Prepare the synthetic seminar notes"));c.editCommand("Propose a 30-minute task for seminar notes.");c.send()
                 if(scene!="confirmation") c.confirm(c.pending!!.id,scene=="tool-result")

@@ -29,7 +29,12 @@ for platform,sizes in [('desktop',['640x720','800x600','1024x768','1280x800','14
             assert any(n.startswith(platform+'-') and f'-font200-{theme}-{scene}.png' in n for n in names),(platform,theme,scene)
     for scene in ['tool-result','confirmation','stale','denied','chat-only','threads','provider-status']:
         assert any(n.startswith(platform+'-') and n.endswith('-'+scene+'.png') for n in names),(platform,scene)
-assert manifest['baseSha']=='cdc8504527cc636f5d2932b7e00785f4be9ecaad'
+for platform in ['desktop','android']:
+    for theme in ['light','dark']:
+        for scene in ['context-task','context-calendar','context-viewport']:
+            assert any(n.startswith(platform+'-') and n.endswith(f'-{theme}-{scene}.png') for n in names),(platform,theme,scene)
+        assert any(n.startswith(platform+'-') and f'-font200-{theme}-context-task.png' in n for n in names),(platform,theme,'200% context')
+assert manifest['baseSha']=='17fd6e7ef117cdb899b7e2f28d3a1a8bf13a58ed'
 assert manifest['containsRealSecrets'] is False
 assert {p.name for p in folder.glob('*.png')}==names,'Unrecorded/stale candidate file'
 print(f'{len(names)} D10-04 real Compose candidate/source hashes + responsive/theme matrix PASS; maintainer visual approval pending')

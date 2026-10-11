@@ -107,6 +107,9 @@ internal fun AndroidApp(
     val syncScreen = syncSession ?: conflictQueries?.let { remember(enrollments,it,agentState) { SyncSecurityScreenCoordinator(enrollments,it,agentState) } }
     val securityScreen = securityServices?.let {remember(it) {SecurityWorkflowCoordinator(it)}}
     var settingsSection by remember {mutableStateOf(SettingsSection.GENERAL)}
+    val openContextualAgent: (AttachedAgentContext) -> Unit = { attachment ->
+        if (agentWorkspace.attachContext(attachment)) navigation.open(AndroidDestination.AGENT)
+    }
     val probeObservation=providerProbes?.observation
     LaunchedEffect(probeObservation,agentWorkspace.providerLabel) {agentWorkspace.observeProbe(probeObservation?.first,probeObservation?.second)}
     val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
@@ -118,24 +121,24 @@ internal fun AndroidApp(
                 CoreSchedulingScreen(when (destination) { AndroidDestination.TODAY -> CoreScreen.TODAY; AndroidDestination.CALENDAR -> CoreScreen.CALENDAR; else -> CoreScreen.TASKS },
                     core, selectedDate, displayTimeZone, now, projectionRead, taskRead, focusRead, reads,
                     { selectedDate = it }, { creatingEvent = true }, { creatingTask = true }, { editingEvent = it }, { editingTask = it },
-                    { navigation.open(AndroidDestination.AGENT) },
+                    openContextualAgent,
                     { ruleId -> featureScope.launch { academic?.refresh(); academic?.facts?.courseScheduleRules?.firstOrNull { it.id == ruleId }?.let { rule ->
                         academic.requestedCourse = rule.courseId; navigation.open(AndroidDestination.COURSES)
                     } } },
                     { examId -> academic?.requestedExam = examId; navigation.open(AndroidDestination.EXAMS) }, syncStoppedReason, onRetrySync, { navigation.open(AndroidDestination.CALENDAR) }, { navigation.open(AndroidDestination.TASKS) })
             } else if (destination in listOf(AndroidDestination.COURSES, AndroidDestination.EXAMS) && academic != null) {
-                AcademicScreen(academic, if (destination == AndroidDestination.EXAMS) AcademicKind.EXAM else AcademicKind.COURSE)
+                AcademicScreen(academic, if (destination == AndroidDestination.EXAMS) AcademicKind.EXAM else AcademicKind.COURSE, openContextualAgent)
             } else if (destination == AndroidDestination.PLANNER) {
-                PlannerWorkspaceScreen(plannerWorkspace,featureScope)
+                PlannerWorkspaceScreen(plannerWorkspace,featureScope,openContextualAgent)
             } else if (destination == AndroidDestination.HISTORY && historyScreen != null) {
-                HistoryScreen(historyScreen,featureScope)
+                HistoryScreen(historyScreen,featureScope,openContextualAgent)
             } else if (destination == AndroidDestination.AGENT) {
                 AgentWorkspaceScreen(agentWorkspace,featureScope,{navigation.open(AndroidDestination.PROVIDER)},
                     {settingsSection=SettingsSection.AGENT_PERMISSIONS; navigation.open(AndroidDestination.SETTINGS)},
                     {navigation.open(AndroidDestination.SYNC_SECURITY)})
             } else if (destination == AndroidDestination.SETTINGS) {
                 SettingsHub(settingsSection,{settingsSection=it},dark,{darkOverride=!dark},
-                    planning={PlanningProfiles(plannerWorkspace,featureScope);NewProfileDialogHost(plannerWorkspace,featureScope)},
+                    planning={PlanningProfiles(plannerWorkspace,featureScope,openContextualAgent);NewProfileDialogHost(plannerWorkspace,featureScope)},
                     sync={syncScreen?.let {SyncSecurityScreen(it,featureScope,SyncRuntimeDisplay(syncConfigured,syncStoppedReason),onRetrySync,{AndroidConversationSyncControls(conversationSettings)},securityScreen)}},
                     onProvider={navigation.open(AndroidDestination.PROVIDER)},permissions={AgentPermissionSettings(agentWorkspace,featureScope)})
             } else if (destination == AndroidDestination.SYNC_SECURITY && syncScreen != null) {

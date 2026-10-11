@@ -22,12 +22,13 @@ for source in sources:
         candidates.append(dict(file=p.name,generatedFrom=p.relative_to(root).as_posix(),
             bitmapPixels=list(struct.unpack('>II',data[16:24])),sha256=hashlib.sha256(data).hexdigest()))
 paths=list((root/'apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation').glob('Agent*.kt'))
+paths += [root/'apps/presentation/src/main/kotlin/dev/agenticscheduler/presentation/AttachedAgentContext.kt']
 paths += [root/p for p in ['apps/desktop/src/main/kotlin/dev/agenticscheduler/desktop/DesktopApp.kt',
     'apps/android/src/main/kotlin/dev/agenticscheduler/android/AndroidApp.kt',
     'apps/desktop/src/test/kotlin/dev/agenticscheduler/desktop/AgentWorkspaceUiTest.kt',
     'apps/android/src/androidTest/kotlin/dev/agenticscheduler/android/AgentWorkspaceInstrumentedTest.kt',
     'test-support/d10-04/D10AgentFixtureGraph.kt']]
-manifest=dict(baseSha='cdc8504527cc636f5d2932b7e00785f4be9ecaad',status='CANDIDATES / AWAITING MAINTAINER VISUAL REVIEW',
+manifest=dict(baseSha='17fd6e7ef117cdb899b7e2f28d3a1a8bf13a58ed',status='CANDIDATES / AWAITING MAINTAINER VISUAL REVIEW',
     containsRealSecrets=False,fixture='Existing AgentRunService -> typed Tools -> Application -> Room, synthetic MockEngine HTTP peer; no live Provider acceptance.',
     nativeEvidence='Actual Desktop Compose/Skia + Android API35 Google APIs x86_64 emulator. Native clock/chrome is not deterministic; no physical-device claim.',
     sourceHashNormalization='UTF-8 text / no BOM / LF',sourceHashes={p.relative_to(root).as_posix():hashlib.sha256(p.read_text(encoding='utf-8-sig').replace('\r\n','\n').encode()).hexdigest() for p in sorted(paths)},

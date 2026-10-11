@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.DayOfWeek
 
 @Composable
-fun AcademicScreen(coordinator: AcademicScreenCoordinator, initialKind: AcademicKind) {
+fun AcademicScreen(coordinator: AcademicScreenCoordinator, initialKind: AcademicKind, onOpenAgent: ((AttachedAgentContext) -> Unit)? = null) {
     var kind by remember(initialKind) { mutableStateOf(initialKind) }
     val scope = rememberCoroutineScope()
     LaunchedEffect(coordinator, initialKind) {
@@ -38,7 +38,12 @@ fun AcademicScreen(coordinator: AcademicScreenCoordinator, initialKind: Academic
     val records = facts?.records(currentKind).orEmpty()
     val selected = coordinator.selected?.let { old -> facts?.records(currentKind)?.firstOrNull { it.id == old.id && it.kind == old.kind } }
     AdaptiveDetailWorkspace(selected != null, { coordinator.selected = null }, {
-        selected?.let { AcademicDetail(it, coordinator) }
+        selected?.let { record ->
+            record.agentContext()?.let { context -> onOpenAgent?.let { open ->
+                ActionButton({ open(context) }, role = ActionRole.TERTIARY, modifier = Modifier.testTag("agent-discuss-academic")) { Text("Discuss with Agent") }
+            } }
+            AcademicDetail(record, coordinator)
+        }
     }) {
         LazyColumn(Modifier.fillMaxSize().padding(horizontal = 20.dp).testTag(if (loading) "academic-loading" else "academic-ready"),
             contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

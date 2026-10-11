@@ -108,35 +108,52 @@ internal fun DesktopApp(
     val securityScreen = securityServices?.let {remember(it) {SecurityWorkflowCoordinator(it)}}
     var settingsSection by remember {mutableStateOf(SettingsSection.GENERAL)}
     val openProvider:()->Unit = {settingsSection=SettingsSection.PROVIDER; navigation.open(DesktopDestination.SETTINGS)}
+    val openContextualAgent: (AttachedAgentContext) -> Unit = { attachment ->
+        if (agentCoordinator.attachContext(attachment)) navigation.open(DesktopDestination.AGENT)
+    }
     val probeObservation = providerProbes?.observation
     LaunchedEffect(probeObservation,agentCoordinator.providerLabel) {agentCoordinator.observeProbe(probeObservation?.first,probeObservation?.second)}
     val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
     var darkOverride by remember { mutableStateOf(initialDark) }
     val dark = darkOverride ?: systemDark
     TemvioTheme(dark) {
-        DesktopAppShell(navigation, dark, { darkOverride = !dark }) { destination ->
+        DesktopAppShell(navigation, dark, { darkOverride = !dark }, onOpenAgent = {
+            // Selection truth belongs to this platform root, never to the shell or Agent runtime.
+            val context = when (navigation.current) {
+                DesktopDestination.TODAY, DesktopDestination.CALENDAR -> coreAgentContext(core.selection, viewport,
+                    (taskRead as? ConflictAwareRead.Projected)?.value.orEmpty(), projectionRead)
+                DesktopDestination.TASKS -> coreAgentContext(core.selection, null,
+                    (taskRead as? ConflictAwareRead.Projected)?.value.orEmpty(), projectionRead)
+                DesktopDestination.COURSES, DesktopDestination.EXAMS -> academic?.selected?.agentContext()
+                DesktopDestination.PLANNER -> plannerWorkspace.agentContext()
+                DesktopDestination.HISTORY -> historyScreen?.agentContext()
+                DesktopDestination.SETTINGS -> if (settingsSection == SettingsSection.PLANNING) plannerWorkspace.agentContext() else null
+                else -> null
+            }
+            if (context != null) openContextualAgent(context) else navigation.open(DesktopDestination.AGENT)
+        }) { destination ->
             if (destination in listOf(DesktopDestination.TODAY, DesktopDestination.CALENDAR, DesktopDestination.TASKS)) {
                 CoreSchedulingScreen(when (destination) { DesktopDestination.TODAY -> CoreScreen.TODAY; DesktopDestination.CALENDAR -> CoreScreen.CALENDAR; else -> CoreScreen.TASKS },
                     core, selectedDate, displayTimeZone, now, projectionRead, taskRead, focusRead, reads,
                     { selectedDate = it }, { creatingEvent = true }, { creatingTask = true }, { editingEvent = it }, { editingTask = it },
-                    { navigation.open(DesktopDestination.AGENT) },
+                    openContextualAgent,
                     { ruleId -> featureScope.launch { academic?.refresh(); academic?.facts?.courseScheduleRules?.firstOrNull { it.id == ruleId }?.let { rule ->
                         academic.requestedCourse = rule.courseId; navigation.open(DesktopDestination.COURSES)
                     } } },
                     { examId -> academic?.requestedExam = examId; navigation.open(DesktopDestination.EXAMS) }, syncStoppedReason, onRetrySync, { navigation.open(DesktopDestination.CALENDAR) }, { navigation.open(DesktopDestination.TASKS) })
             } else if (destination in listOf(DesktopDestination.COURSES, DesktopDestination.EXAMS) && academic != null) {
-                AcademicScreen(academic, if (destination == DesktopDestination.EXAMS) AcademicKind.EXAM else AcademicKind.COURSE)
+                AcademicScreen(academic, if (destination == DesktopDestination.EXAMS) AcademicKind.EXAM else AcademicKind.COURSE, openContextualAgent)
             } else if (destination == DesktopDestination.PLANNER) {
-                PlannerWorkspaceScreen(plannerWorkspace,featureScope)
+                PlannerWorkspaceScreen(plannerWorkspace,featureScope,openContextualAgent)
             } else if (destination == DesktopDestination.HISTORY && historyScreen != null) {
-                HistoryScreen(historyScreen,featureScope)
+                HistoryScreen(historyScreen,featureScope,openContextualAgent)
             } else if (destination == DesktopDestination.AGENT) {
                 AgentWorkspaceScreen(agentCoordinator,featureScope,openProvider,
                     {settingsSection=SettingsSection.AGENT_PERMISSIONS; navigation.open(DesktopDestination.SETTINGS)},
                     {settingsSection=SettingsSection.SYNC_SECURITY; navigation.open(DesktopDestination.SETTINGS)})
             } else if (destination == DesktopDestination.SETTINGS) {
                 SettingsHub(settingsSection,{settingsSection=it},dark,{darkOverride=!dark},
-                    planning={PlanningProfiles(plannerWorkspace,featureScope);NewProfileDialogHost(plannerWorkspace,featureScope)},
+                    planning={PlanningProfiles(plannerWorkspace,featureScope,openContextualAgent);NewProfileDialogHost(plannerWorkspace,featureScope)},
                     sync={syncScreen?.let {SyncSecurityScreen(it,featureScope,SyncRuntimeDisplay(syncConfigured,syncStoppedReason),onRetrySync,{DesktopConversationSyncControls(conversationSettings)},securityScreen)}},
                     onProvider=openProvider,permissions={AgentPermissionSettings(agentCoordinator,featureScope)},
                     provider={DesktopProviderPanel(agentState,secureStore,ids,featureScope)})

@@ -29,10 +29,18 @@ Representative review views:
 | Stale proposal | [Dark](desktop-1280x800-font100-dark-stale.png) | [Dark](android-360x800-font100-dark-stale.png) |
 | Chat-only Provider | [Light](desktop-1280x800-font100-light-chat-only.png) | [Light](android-360x800-font100-light-chat-only.png) |
 | Short-height reachable Send | [Dark](desktop-800x360-font100-dark-conversation.png) | [Light](android-800x360-font100-light-conversation.png) |
+| Task attachment, Light | [1280×800](desktop-1280x800-font100-light-context-task.png) | [360×800](android-360x800-font100-light-context-task.png) |
+| CalendarSource attachment, Dark | [640×720](desktop-640x720-font100-dark-context-calendar.png) | [360×800](android-360x800-font100-dark-context-calendar.png) |
+| Exact viewport attachment | [1280×800](desktop-1280x800-font100-light-context-viewport.png) | [360×800](android-360x800-font100-light-context-viewport.png) |
+| 200% attachment / reachable Clear | [Dark](desktop-640x720-font200-dark-context-task.png) | [Dark](android-360x800-font200-dark-context-task.png) |
 
 200% detail bodies and short-height content are scrollable. Confirm/Deny and short
 Send reachability are asserted in capture/functional tests; closing or scrolling
 a preview never executes it. Tool states come from persisted records, not prose.
+Context scenes begin with an unsent draft and zero Provider requests: readable
+labels are session hints, not canonical JSON or copied facts sent as authority.
+Clear context and Send reachability are asserted. New coordinator starts without
+the attachment; the same coordinator retains it through theme/layout changes.
 
 Regenerate with `AgentWorkspaceUiTest.actualDesktopD10AgentScreenshotCandidates`
 and `test-support/d10-04/capture-android.ps1` (or CI shell equivalent), then run

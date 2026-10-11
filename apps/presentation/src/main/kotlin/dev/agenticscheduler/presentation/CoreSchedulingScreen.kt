@@ -55,7 +55,7 @@ fun CoreSchedulingScreen(
     taskRead: ConflictAwareRead<List<Task>>?, focusRead: ConflictAwareRead<List<FocusBlock>>?,
     reads: ConflictAwareSourceFactReadService, onDateChange: (LocalDate) -> Unit,
     onCreateEvent: () -> Unit, onCreateTask: () -> Unit, onEditEvent: (Event) -> Unit, onEditTask: (Task) -> Unit,
-    onOpenAgent: () -> Unit, onOpenCourse: (CourseScheduleRuleId) -> Unit, onOpenExam: (ExamId) -> Unit,
+    onOpenAgent: (AttachedAgentContext) -> Unit, onOpenCourse: (CourseScheduleRuleId) -> Unit, onOpenExam: (ExamId) -> Unit,
     syncStoppedReason: String?, onRetrySync: () -> Unit,
     onOpenCalendar: () -> Unit = {}, onOpenTasks: () -> Unit = {},
 ) {
@@ -84,6 +84,8 @@ fun CoreSchedulingScreen(
                 Text(deadlineLabel(selectedTask, selectedDate, now))
                 Text("Source ID ${selectedTask.id.value}", style = MaterialTheme.typography.bodySmall)
                 ActionButton(role = ActionRole.SECONDARY, onClick = { onEditTask(selectedTask) }) { Text("Edit Task") }
+                ActionButton(role = ActionRole.TERTIARY, onClick = { onOpenAgent(taskAgentContext(selectedTask.id, selectedTask.title)) },
+                    modifier = Modifier.testTag("agent-discuss-task")) { Text("Discuss with Agent") }
                 SectionHeading("Linked FocusBlocks", "Planned time does not complete this Task.")
                 val linked = blocks.filter { it.taskId == selectedTask.id }
                 when (focusRead) {
@@ -99,6 +101,8 @@ fun CoreSchedulingScreen(
             selectedItem != null -> {
                 val row = calendarRow(selectedItem, zone, (selectedItem.source as? CalendarSourceRef.FocusBlock)?.let { focusTitles[it.id] })
                 SectionHeading(row.title, row.kind.label); Text(row.time); Text(row.detail)
+                ActionButton(role = ActionRole.TERTIARY, onClick = { onOpenAgent(calendarAgentContext(selectedItem.source, row.title)) },
+                    modifier = Modifier.testTag("agent-discuss-calendar")) { Text("Discuss with Agent") }
                 Text("Source ${selectedItem.source}", style = MaterialTheme.typography.bodySmall)
                 if (projection?.conflicts?.any { it.first == selectedItem.source || it.second == selectedItem.source } == true) StatusMessage("Calendar overlap", "Authoritative projection reports overlapping occupied instants.")
                 if (projection?.syncConflictRefs?.isNotEmpty() == true) StatusMessage("Sync conflict", "Provisional source facts are present; ordinary editing cannot resolve conflicts.")
@@ -144,10 +148,13 @@ fun CoreSchedulingScreen(
                         is ConflictAwareRead.Unprojectable -> "FocusBlocks unavailable; no raw fallback."
                         is ConflictAwareRead.Projected -> "No upcoming FocusBlock in this day."
                     })
-                    ActionButton(role = ActionRole.TERTIARY, onClick = onOpenAgent) { Text("Open Agent") }
+                    ActionButton(role = ActionRole.TERTIARY, onClick = { onOpenAgent(checkNotNull(coreAgentContext(selected, viewport, tasks, projection))) },
+                        modifier = Modifier.testTag("agent-open-viewport")) { Text("Open Agent") }
                 } }
             }
             if (screen == CoreScreen.CALENDAR) item { FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ActionButton(role = ActionRole.TERTIARY, onClick = { onOpenAgent(checkNotNull(coreAgentContext(selected, viewport, tasks, projection))) },
+                    modifier = Modifier.testTag("agent-open-viewport")) { Text("Open Agent") }
                 CalendarMode.entries.forEach { mode -> NavigationControl(mode.name.lowercase().replaceFirstChar { it.uppercase() }, session.mode == mode, { session.mode = mode; session.expandedDate = null; session.selection = null }, Modifier.testTag("calendar-mode-${mode.name}")) }
                 ActionButton(role = ActionRole.TERTIARY, onClick = { session.listAlternative = !session.listAlternative }) { Text(if (session.listAlternative) "Grid view" else "Accessible list") }
                 if (session.mode != CalendarMode.DAY) {

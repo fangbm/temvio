@@ -1,8 +1,9 @@
 # D10-04 — Agent Product Surface
 
-Status: **IMPLEMENTED / AWAITING REVIEW**. Scoped ContextAnchor FOUNDATION_GAP below.
-Authoritative baseline: `cdc8504527cc636f5d2932b7e00785f4be9ecaad`
-([merged D10-03 PR #35](https://github.com/fangbm/temvio/pull/35)).
+Status: **IMPLEMENTED / AWAITING REVIEW**. ContextAnchor foundation RESOLVED via merged PR #38.
+Authoritative baseline: `17fd6e7ef117cdb899b7e2f28d3a1a8bf13a58ed`
+([merged D10-04F PR #38](https://github.com/fangbm/temvio/pull/38)), including accepted D10-03.
+Normal baseline merge into this implementation branch: `2dd0ddb493153e5b69d8199b1dd96a4dd4710259`; no rebase or history rewrite.
 Branch: `feature/d10-04-agent-product-surface`.
 Target: `feature/d9-02-agent-sync`. Keep Draft; no merge or D10-05/06.
 
@@ -106,27 +107,55 @@ V2 Agent-origin business acknowledgement and V3 history consent/export remain
 independent in D10-03 Sync/Security. Agent links out; no duplicate toggle, export,
 catch-up or all-history-uploaded claim. OD-012 remains OPEN.
 
-## ContextAnchor audit — FOUNDATION_GAP
+## ContextAnchor foundation — RESOLVED
 
-User interaction: Open/focus Agent from a selected product entity while carrying
-a device/session-local ContextAnchor, without implicitly Sending.
+The historical D10-04 audit found no approved typed public runtime entry. That gap
+was independently resolved by [D10-04F](D10_04F_CONTEXT_ANCHOR_FOUNDATION.md),
+[PR #38](https://github.com/fangbm/temvio/pull/38), merge
+`17fd6e7ef117cdb899b7e2f28d3a1a8bf13a58ed`. This presentation follow-up consumes
+`AgentRunService.run(threadId, command, AgentTurnContext(contextAnchor = anchor))`
+without changing the accepted foundation, Tools, Provider or persistence.
 
-Existing APIs inspected: `ContextRequest.contextAnchor`,
-`ContextAssembler.assemble(ContextRequest)`,
-`AgentRunService.run(threadId: AgentThreadId, command: String)`, private
-`AgentRunService.modelStep`, `AgentTranscriptAssembler.assemble`.
+`AttachedAgentContext(anchor: AgentContextAnchor, label: String)` is ephemeral
+app-owned coordinator state. The readable label is display-only; runtime receives
+only the typed anchor. It is not a command, message, thread attribute, summary,
+provenance, Tool result or V3 field. New coordinator/process starts without it;
+history is never consulted to reconstruct it. Context is visibly shown near the
+composer with **Local context for this session** and an explicit **Clear context**.
+Clear/replace are local presentation operations with no Provider/repository I/O.
 
-Why insufficient: the public runtime entry has no reviewed UI anchor parameter.
-Its ContextRequest receives an internally derived `latestToolAnchor`, not a local
-presentation reference from the selected product entity. Passing selected entity
-context through command concatenation, fake messages or ToolResult JSON would
-change context authority and lifetime.
+Contextual open attaches/replaces then selects Agent, permitting command drafting;
+it neither creates a thread nor Sends. Task detail passes its exact TaskId;
+Event/FocusBlock/CourseSession/Exam detail passes the existing CalendarSourceRef.
+Today/Calendar broad open passes the exact finite current CalendarViewport
+(date range and display time zone). A concrete selection takes precedence. No
+cached titles/status/calendar facts are sent as anchor authority. Existing edit,
+Open Course/Open Exam and linked-Task actions retain their semantics.
 
-Minimal requested foundation: separately reviewed Agent/Application typed entry
-passing an explicit session-local anchor reference into existing ContextAssembler
-for that explicit turn, without persistence/sync or Provider memory ownership.
-No runtime boundary is extended here. Ordinary no-anchor Agent navigation and
-explicit conversation flow remain fully functional; this path is unavailable.
+Desktop's global Open Agent callback is supplied by the root, which owns current
+screen selection truth: Task, CalendarSource, visible Today/Calendar viewport,
+then an already-selected supported reference. Shell/sidebar navigation owns no
+business selection. Selected Planner/Settings profile, exact History mutation,
+Course and Exam expose small contextual actions. AcademicYear, Semester,
+PeriodTemplate, schedule rules, unselected Planner/History and unsupported screens
+remain unanchored; no synthetic selection or fallback reference is invented.
+Android's primary Agent tab is ordinary navigation, never stale context inference.
+
+Attachment remains visible through theme/resize/recomposition, Tool detail,
+confirmation, ordinary navigation and explicit thread switch/new conversation,
+until explicit Clear or contextual replacement. Ordinary navigation preserves an
+existing visible session attachment; it creates no new anchor. Busy actions reject
+attachment/draft/thread edits. Explicit Send captures one immutable frame of
+selected thread, exact command and current anchor before suspension; it never
+rereads another screen or concatenates a label/context into the user command.
+Stored USER content remains the exact typed command. The accepted runtime's
+existing context budget and authoritative typed Tool reads remain unchanged.
+
+Confirm/Deny still use the exact original persisted ThreadId/ToolCallId/preview.
+A newly attached context cannot alter that proposal or enter its continuation.
+After process restart pending confirmation restores but the attachment does not.
+Model responses cannot replace/clear attachment. Passive navigation/Back/theme,
+resize/open/clear never Send, Confirm, Preview, Apply, Undo or write history.
 
 ## Responsive and accessibility contract
 
@@ -135,7 +164,10 @@ Agent/More. The shared workspace uses an optional thread pane only when its avai
 content width >=860dp, height >=480dp and font scale <1.6; otherwise a single
 conversation and thread selector. Desktop shell may consume width independently;
 Android does not receive Desktop primary navigation. Conversation/composer text is
-bounded; narrow, short and 200% draft/detail bodies scroll. Send stays in its own
+bounded; narrow, short and 200% draft/detail bodies scroll. The attachment label
+and Clear action stay outside the draft scroll/IME region, visible before Send.
+Labels keep their full accessibility text while limiting visual overflow to two
+lines; only the displayed hint may truncate, never the typed anchor. Send stays in its own
 48dp-or-larger action row outside the focused draft's scroll/IME region; short
 composer allocation is bounded by the actual available height. Tool/confirmation detail is an owned
 scrollable dialog. Android Back closes transient detail before shell navigation,
@@ -151,7 +183,8 @@ Synthetic HTTP fixtures are not live Provider/physical-device acceptance.
 
 ## Verification evidence
 
-Executed locally on Windows / JDK17 / Android API35 Google APIs x86_64:
+Historical pre-foundation evidence below (PR #37 head `ff30f217`; run `37776983345`):
+Windows / JDK17 / Android API35 Google APIs x86_64. Current follow-up evidence is recorded separately below.
 
 | Evidence | Result |
 |---|---|
@@ -230,13 +263,77 @@ execute/pass (build, desktop-windows, android-keystore, wear-keystore,
 agent-history-platform-e2e). The Draft PR check suite carries the authoritative
 final head/run link; no pre-change or cancelled/unallocated run counts.
 
+## Contextual follow-up verification
+
+Current follow-up executed locally on Windows / JDK17 and an isolated Android
+API35 Google APIs x86_64 emulator:
+
+| Evidence | Result |
+|---|---|
+| Agent coordinator/runtime/Room set (26 retained + 13 attachment) | 39/39 |
+| Mounted Desktop Agent Compose (8 retained + 5 contextual-entry/layout) | 13/13 |
+| Complete Desktop, including all D10-01/02/03 regressions | 158/158 |
+| shared-ui | 3/3 |
+| Complete shared Agent, including the 10 accepted anchor/assembly tests | 58/58 |
+| AgentPersistence / AgentRunIntegration / accepted ContextAnchor integration | 9/9 + 14/14 + 12/12 |
+| Native Android AgentWorkspace (7 retained + 2 attachment) | 9/9 |
+| Complete Android CI instrumentation set, same relay-fixture exclusion | 34/34; no failures/skips |
+| Native capture matrix | 7/7 variants; 52 Desktop + 44 Android = 96 PNGs |
+
+Commands actually used (isolated Gradle user home as above):
+
+```powershell
+.\gradlew.bat :apps:desktop:test :shared:ui:desktopTest :shared:agent:desktopTest :apps:android:assembleDebug :apps:android:assembleDebugAndroidTest --no-daemon --console=plain --gradle-user-home D:\codex\asp-d10-gradle-home
+.\gradlew.bat :shared:database:desktopTest --tests '*AgentPersistenceTest*' --tests '*AgentRunIntegrationTest*' --tests '*AgentContextAnchorIntegrationTest*' --no-daemon --console=plain --gradle-user-home D:\codex\asp-d10-gradle-home
+adb -s emulator-5554 shell am instrument -w -r -e class dev.agenticscheduler.android.AgentWorkspaceInstrumentedTest dev.agenticscheduler.android.test/androidx.test.runner.AndroidJUnitRunner
+adb -s emulator-5554 shell am instrument -w -r -e notClass dev.agenticscheduler.android.D9PlatformRelayInstrumentedTest dev.agenticscheduler.android.test/androidx.test.runner.AndroidJUnitRunner
+.\test-support\d10-04\capture-android.ps1 -Serial emulator-5554 -Sdk C:\ProgramData\Android
+python test-support/d10-04/record-candidates.py
+python test-support/d10-04/check-candidates.py --compare-generated
+python test-support/d10-04/check-boundaries.py
+git diff --check
+```
+
+Real runtime HTTP input proves exact typed anchor once, zero display label,
+original USER text, replacement A→B and later Clear→no anchor. In-flight edits
+are rejected; explicit thread switch keeps the visible attachment. Reopened Room
+with a fresh composition restores the exact pending ToolCall but no attachment.
+Agent rows/provenance and real historical export source contain no local referent
+or display canary; accepted foundation integration independently exercises actual
+V3 export/outbox and restart. Existing confirmation/read/write/Planner/Undo and
+chat-only regressions remain in the complete suites.
+
+Actual UI controls cover Task, all four CalendarSource variants, Today/Calendar
+finite viewports and Desktop global selection precedence / ordinary fallback.
+The existing Planner/History/Academic selection mappers preserve typed identities
+and leave unsupported academic records without a synthetic anchor. Android tests
+exercise contextual Task open, theme/navigation retention, exact explicit Send,
+Clear, primary-tab no-inference, native Back and reachable 200% controls.
+
+The first new Android Back check pressed Back before the selected-detail dialog
+settled and exited the test Activity. The test now asserts the visible dialog and
+waits for actual dismissal; the full Agent 9/9 and complete Android 34/34 passed.
+No navigation/runtime workaround or removal of the no-Send assertions was made.
+
+Only D10-04 captures were regenerated. The manifest/source hashes and all required
+sizes/Light-Dark/200% states pass; historical D10-01/02/03 PNGs/manifests are unchanged.
+Task / CalendarSource / viewport labels, Clear and Send were visually inspected in
+Desktop 1280×800 and 640×720 Light/Dark and Android 360×800 Light/Dark, including
+200% Task attachment. These remain candidates awaiting maintainer visual review,
+not live Provider or physical Wear acceptance.
+
+The pre-foundation run `37776983345` is historical only. The final Draft PR head's
+check suite/run URL is authoritative: all five jobs must actually execute/pass
+(build, desktop-windows, android-keystore, wear-keystore, agent-history-platform-e2e).
+No superseded head or cancelled/unallocated job counts toward final acceptance.
+
 ## Exclusions and remaining gates
 
 No new Agent engine/Tool/schema/capability/permission ceiling; no Domain/Application/
 Planner/D7/D8/D9 semantic change, migration, wire/crypto/server or Wear behavior.
 No context summary authority, Provider SDK/protocol or provider-owned memory.
 FG-02 typed D8 candidate selection, FG-03 pairing orchestration and FG-04 directional
-progress remain deferred/non-blocking. ContextAnchor foundation remains separately
-reviewable; no hidden workaround. D10-05/06 are not started. OD-012 stays OPEN.
+progress remain deferred/non-blocking. ContextAnchor foundation is accepted/merged
+and consumed through its reviewed typed API; no hidden workaround. D10-05/06 are not started. OD-012 stays OPEN.
 LOCAL_REVERSIBLE: presentation copy, layout spacing, pane threshold and session
 overlay visibility. No new business defaults or high-impact decisions selected.
