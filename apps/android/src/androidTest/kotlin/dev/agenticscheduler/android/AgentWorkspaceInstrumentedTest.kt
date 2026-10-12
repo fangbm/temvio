@@ -42,7 +42,7 @@ class AgentWorkspaceInstrumentedTest {
         val c=f.workspace();val nav=AndroidNavigation().also {it.open(AndroidDestination.TASKS)}
         val core=CoreScreenCoordinator();mount(f,c,nav,core)
         compose.waitUntil(15000) {compose.onAllNodesWithText("View Task").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithText("View Task").performClick()
+        compose.onNodeWithText("View Task").performScrollTo().assertIsDisplayed().performClick()
         // A compact detail is a separate Dialog window; wait for its semantics
         // before looking up the contextual action in that window.
         compose.waitUntil(15000) {compose.onAllNodesWithTag("agent-discuss-task").fetchSemanticsNodes().size==1}
@@ -58,7 +58,8 @@ class AgentWorkspaceInstrumentedTest {
         check(f.bodies.single().contains(context.anchor.renderForModel().replace("\"","\\\"")))
         check(!f.bodies.single().contains(context.label));check(c.attachedContext==context)
         compose.onNodeWithTag("agent-clear-context").performClick();check(c.attachedContext==null)
-        compose.onNodeWithTag("android-nav-TASKS").performClick();compose.onNodeWithText("View Task").performClick()
+        compose.onNodeWithTag("android-nav-TASKS").performClick()
+        compose.onNodeWithText("View Task").performScrollTo().assertIsDisplayed().performClick()
         // Return from detail before choosing the ordinary primary Agent destination.
         compose.waitForIdle();compose.waitUntil(15000) {core.selection is CoreSelection.TaskDetail}
         compose.mainClock.advanceTimeByFrame();compose.waitForIdle()

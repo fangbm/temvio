@@ -317,10 +317,18 @@ No navigation/runtime workaround or removal of the no-Send assertions was made.
 
 The first integrated CI run `38138103670` passed build, Desktop Windows, Wear
 and Agent history platform E2E. Android executed all 34 tests; the new contextual
-Task test looked up its action before the compact detail Dialog exposed its
-semantics. The test now waits for that actual action node before clicking it,
-with all behavior assertions retained. This run is superseded by the final
+Task test clicked a Task control without scrolling it into view on the default
+narrow emulator, then looked up a detail action that had not opened. A default
+320×640 local rerun confirmed that waiting alone was insufficient. Both Task
+clicks now scroll and assert visibility, and the test waits for the actual Dialog
+action semantics before clicking it. All behavior assertions are retained.
+These failed runs are superseded by the final
 head's complete check suite; it is not all-green acceptance evidence.
+The corrected complete Android set also passed 34/34 with no failures/skips on
+the default 320×640 API35 emulator. The local connected-test UTP Worker failed
+to start (`SystemApplicationClassLoaderWorker` not found), so this rerun installed
+the successfully built APKs and executed the same AndroidJUnitRunner exclusion
+directly through adb. Compilation/Worker startup is not counted as a test pass.
 
 Only D10-04 captures were regenerated. The manifest/source hashes and all required
 sizes/Light-Dark/200% states pass; historical D10-01/02/03 PNGs/manifests are unchanged.

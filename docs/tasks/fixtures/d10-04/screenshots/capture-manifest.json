@@ -6,7 +6,7 @@
   "nativeEvidence": "Actual Desktop Compose/Skia + Android API35 Google APIs x86_64 emulator. Native clock/chrome is not deterministic; no physical-device claim.",
   "sourceHashNormalization": "UTF-8 text / no BOM / LF",
   "sourceHashes": {
-    "apps/android/src/androidTest/kotlin/dev/agenticscheduler/android/AgentWorkspaceInstrumentedTest.kt": "1345d54a004fcfba2488fc9ad481cd439048f178d9a28e4b2f72455463e65967",
+    "apps/android/src/androidTest/kotlin/dev/agenticscheduler/android/AgentWorkspaceInstrumentedTest.kt": "820fc72008e570688b5e4ad71c552cea02b3291b9218993b81c4ab2b6c230eec",
     "apps/android/src/main/kotlin/dev/agenticscheduler/android/AndroidApp.kt": "be6cc72c55010b1bc3269212efcfd8c9932db49c3ba83ed6da44b184a2987466",
     "apps/desktop/src/main/kotlin/dev/agenticscheduler/desktop/DesktopApp.kt": "2f762f4903ea506101f10052f9f1d1137aa04710dace4f346660be2e38eb186b",
     "apps/desktop/src/test/kotlin/dev/agenticscheduler/desktop/AgentWorkspaceUiTest.kt": "8ed61573e60ac8edcb7da947d3425b56c2f8e3b49b37ebb6debd2648bf857174",
