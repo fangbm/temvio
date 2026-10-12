@@ -315,6 +315,13 @@ settled and exited the test Activity. The test now asserts the visible dialog an
 waits for actual dismissal; the full Agent 9/9 and complete Android 34/34 passed.
 No navigation/runtime workaround or removal of the no-Send assertions was made.
 
+The first integrated CI run `38138103670` passed build, Desktop Windows, Wear
+and Agent history platform E2E. Android executed all 34 tests; the new contextual
+Task test looked up its action before the compact detail Dialog exposed its
+semantics. The test now waits for that actual action node before clicking it,
+with all behavior assertions retained. This run is superseded by the final
+head's complete check suite; it is not all-green acceptance evidence.
+
 Only D10-04 captures were regenerated. The manifest/source hashes and all required
 sizes/Light-Dark/200% states pass; historical D10-01/02/03 PNGs/manifests are unchanged.
 Task / CalendarSource / viewport labels, Clear and Send were visually inspected in

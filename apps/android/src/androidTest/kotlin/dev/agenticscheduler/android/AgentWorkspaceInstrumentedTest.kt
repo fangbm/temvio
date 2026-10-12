@@ -42,7 +42,11 @@ class AgentWorkspaceInstrumentedTest {
         val c=f.workspace();val nav=AndroidNavigation().also {it.open(AndroidDestination.TASKS)}
         val core=CoreScreenCoordinator();mount(f,c,nav,core)
         compose.waitUntil(15000) {compose.onAllNodesWithText("View Task").fetchSemanticsNodes().isNotEmpty()}
-        compose.onNodeWithText("View Task").performClick();compose.onNodeWithTag("agent-discuss-task").performScrollTo().performClick()
+        compose.onNodeWithText("View Task").performClick()
+        // A compact detail is a separate Dialog window; wait for its semantics
+        // before looking up the contextual action in that window.
+        compose.waitUntil(15000) {compose.onAllNodesWithTag("agent-discuss-task").fetchSemanticsNodes().size==1}
+        compose.onNodeWithTag("agent-discuss-task").performScrollTo().performClick()
         compose.waitUntil(15000) {c.loaded && nav.current==AndroidDestination.AGENT}
         val context=checkNotNull(c.attachedContext);check(context.anchor is AgentContextAnchor.Task);check(f.requests==0);check(c.messages.size==2)
         compose.onNodeWithTag("agent-command").performTextInput("Exact contextual Android command")
