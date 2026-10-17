@@ -1,0 +1,565 @@
+{
+  "baseSha": "93a2aab9714a729ed2f53e60e0077372a237cbf7",
+  "status": "CANDIDATES / AWAITING MAINTAINER VISUAL REVIEW",
+  "platform": "Wear emulator acceptance; no physical Watch or speech recognition success claim",
+  "avds": [
+    {
+      "name": "temvio-d10-05",
+      "profile": "wearos_small_round",
+      "physicalPixels": [
+        384,
+        384
+      ]
+    },
+    {
+      "name": "temvio-d10-05-large",
+      "profile": "wearos_large_round",
+      "physicalPixels": [
+        454,
+        454
+      ]
+    }
+  ],
+  "apiLevel": 35,
+  "systemImage": "android-35-ext15/android-wear/x86_64",
+  "round": true,
+  "fixture": "Synthetic typed presentation inputs; retained real AgentRunService/Room/Android HTTP E2E is separate execution evidence",
+  "containsRealSecrets": false,
+  "sourceHashNormalization": "UTF-8 without BOM / LF",
+  "sourceHashes": {
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/agent/WatchPermissionPolicy.kt": "83840038d186bdae74a26ffdb06e103eaff0e8d3dc167f216df7941e02d27936",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/agent/WearAgentRuntimeComposition.kt": "c6ad9b1f843ba023e333068ef4262c8c0c6f99ed3e96d580c3d6688491d1a150",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/agent/WearAgentScreen.kt": "4fd6554dce291b0cf99e9fb4f85557ae2b25bb199cbac200c1b1a9100d9b69dd",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/agent/WearAgentSessionController.kt": "e8b4ca4ebd2886c9644a423356cb29fa920673be5d879bd4909f820d80acea9f",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/AndroidWearSpeechPlatform.kt": "65e04ee4e50919cbdb5cd7733124fa204467ad1d6e73b0bb9d812030fdfa4c0e",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearCapabilityService.kt": "f11fce0d3c9ad226991a1a6a464201c686a8e535640736248623f64746d0f123",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearDefaultNetworkState.kt": "f09c2e5fe5c975c6fbedd0b53d6f655a846c1221893296d6951ba48a7f825648",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearNetworkObserver.kt": "873a20feadc69e0e7438536d4ad84d45dd2473b01206dbb9749dd253994d8f5f",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearProviderBindingSource.kt": "9f8a58f38c0c61ff6476f8f73ff4784c0ea99999a948f4e563d44484079d5b1d",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearProviderProbe.kt": "15138d6d33ea013643d6ea59cbba888d358dd6b0db9ee881744d571e2f76b001",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearReadiness.kt": "5a27ba0dce952c1b919e8baf27ec82b25e454c6de06b946be07c2853926b2251",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearReadinessComposition.kt": "778c061dacd05f90a7a987e5867f44f982545ae9723e66f1fa4b4b0ee5404093",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/presentation/WearApp.kt": "a6b29bda1c72317eb96454e0d7075bc387522980a0777274762d7b6cee06393f",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/presentation/WearComponents.kt": "1de14b74d2666816e5687a6138953ec8927ff33e77c273e007a2bde9c0fe8867",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/presentation/WearConfirmationScreen.kt": "3350b0fb9c2c8eba127a267a0694a5764154533c38280b84e736be3826f2fef6",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/presentation/WearNavigation.kt": "32eb845710604375defb7d8b769bd88f0b915c91b897a2b98cbbd9b20a6a3146",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/presentation/WearPresentation.kt": "a4671e6fc306b79aea40e979fe12c08e471111ff8b8b5010c156730e0da64a28",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/presentation/WearStatusScreen.kt": "144e5cb4b771e8bc055b9d6d1896e92c1d63e2e47d4e23189111460324dde52b",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/presentation/WearTodayScreen.kt": "400f6fbc4e3c15c0c18b7956e1e519340f96a87bbcf33f6616ea4b19a9117d2d",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/WearMainActivity.kt": "f9225c6ea8c2187c3ff31d41c917fa253f58006d1913e6ad69173038c360de07",
+    "apps/wear/src/androidTest/kotlin/dev/agenticscheduler/wear/WearFinalUxInstrumentedTest.kt": "4b427c435e7a9f9086fb046c150e0fb0dadf0c6876a28c0d17fc62b04993eec8",
+    "apps/wear/build.gradle.kts": "736966d17804e4654526914a695d974cf036d98015191a68e7fedff50e233024"
+  },
+  "candidates": [
+    {
+      "file": "wear-192x192-font100-dark-chat-only.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "scene": "chat-only",
+      "sha256": "29f779614eae77d88796628f05ce6a2d1e0597ae6cd0f3d0e57a7f2e940ffe6f"
+    },
+    {
+      "file": "wear-192x192-font100-dark-confirmation-actions.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "scene": "confirmation-actions",
+      "sha256": "98b61fffd7349d6faae509a45e0ef8bff2aea3ed0c0dde900fe077948956cfaa"
+    },
+    {
+      "file": "wear-192x192-font100-dark-confirmation.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "scene": "confirmation",
+      "sha256": "29aeaeb39dd601a251fbdb37f251c1352b089597ed6cd2afa92d8d582810c545"
+    },
+    {
+      "file": "wear-192x192-font100-dark-offline.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "scene": "offline",
+      "sha256": "45a4ffde246283fb79f6b2364049dbcd0fa98194d9886e81077290e6f1966890"
+    },
+    {
+      "file": "wear-192x192-font100-dark-ready.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "scene": "ready",
+      "sha256": "a254f15ed15374bf70ef0922ea0f6502d76ae58311240725adcc0721a8632a8b"
+    },
+    {
+      "file": "wear-192x192-font100-dark-status.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "scene": "status",
+      "sha256": "9a52f04eb7fe60fcdb21582c729ab7ca4ef4437a86b7cb5732d767712f640663"
+    },
+    {
+      "file": "wear-192x192-font100-dark-sync-stopped.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "scene": "sync-stopped",
+      "sha256": "9c1377a486bdbd23ca6ff47ee34e5a7abc1fb777bd68d290054f221071c46950"
+    },
+    {
+      "file": "wear-192x192-font100-dark-today.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "scene": "today",
+      "sha256": "1ae78579ab40b2674e67ab28e3c8306f0fadf8013d15c0bc48faa5d9a6329288"
+    },
+    {
+      "file": "wear-192x192-font100-light-confirmation-actions.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "light",
+      "scene": "confirmation-actions",
+      "sha256": "13d1192f584f4bf47db9f1df1bd71bf48021dbb4ed19ae509973a0303d04c8f6"
+    },
+    {
+      "file": "wear-192x192-font100-light-confirmation.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "light",
+      "scene": "confirmation",
+      "sha256": "53b125fcb3a6a91b34b19b2be32a15001a08fa7c09918e74267ced5228db81a2"
+    },
+    {
+      "file": "wear-192x192-font100-light-offline.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "light",
+      "scene": "offline",
+      "sha256": "e3d70305157be2143866e908f9e1d767f9c312f1cae68a3677761ee5923fcd0a"
+    },
+    {
+      "file": "wear-192x192-font100-light-ready.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "light",
+      "scene": "ready",
+      "sha256": "79101219093e8d560164641d2541d9a02caaff2da69af8f658904ec00c174c6d"
+    },
+    {
+      "file": "wear-192x192-font100-light-status.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "light",
+      "scene": "status",
+      "sha256": "7677771acbd66a10bb2d41087dd21c4b6372ed2a35365149f7ad597cae411437"
+    },
+    {
+      "file": "wear-192x192-font100-light-today.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "light",
+      "scene": "today",
+      "sha256": "e764da8fafca65d69c11a73f645b592d67f75efb251bdf7ea0bc1c6260a7d85e"
+    },
+    {
+      "file": "wear-192x192-font200-dark-confirmation-actions.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 2.0,
+      "theme": "dark",
+      "scene": "confirmation-actions",
+      "sha256": "db6786427a2549b5721dc76205e06523ec4c4afba72960e6a9eb0b54d3976341"
+    },
+    {
+      "file": "wear-192x192-font200-dark-status.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 2.0,
+      "theme": "dark",
+      "scene": "status",
+      "sha256": "e6d73f6a9a13dc3f5a941c31ceda10a66395c3a9cc5d398313c782aa99b2b60c"
+    },
+    {
+      "file": "wear-227x227-font100-dark-confirmation-actions.png",
+      "logicalDp": [
+        227,
+        227
+      ],
+      "bitmapPixels": [
+        454,
+        454
+      ],
+      "profile": "wearos_large_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "scene": "confirmation-actions",
+      "sha256": "876abb65d31fcc328f5bfd2ae1db5f6d32f72c32a42e6adda0c77febd269758b"
+    },
+    {
+      "file": "wear-227x227-font100-dark-confirmation.png",
+      "logicalDp": [
+        227,
+        227
+      ],
+      "bitmapPixels": [
+        454,
+        454
+      ],
+      "profile": "wearos_large_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "scene": "confirmation",
+      "sha256": "cbcc78cc2f445862f752846ef1672ccece35456367115e864c799bc2dc5a73dc"
+    },
+    {
+      "file": "wear-227x227-font100-dark-conversation.png",
+      "logicalDp": [
+        227,
+        227
+      ],
+      "bitmapPixels": [
+        454,
+        454
+      ],
+      "profile": "wearos_large_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "scene": "conversation",
+      "sha256": "4b31743314a1a4722e3d235b80fd233d3984915f40ba608754224793388e3bf4"
+    },
+    {
+      "file": "wear-227x227-font100-dark-status.png",
+      "logicalDp": [
+        227,
+        227
+      ],
+      "bitmapPixels": [
+        454,
+        454
+      ],
+      "profile": "wearos_large_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "scene": "status",
+      "sha256": "d6803841322bccd000a1f026e1b0f4be20dcaf3b07874aa44d612d71538c2314"
+    },
+    {
+      "file": "wear-227x227-font100-dark-today.png",
+      "logicalDp": [
+        227,
+        227
+      ],
+      "bitmapPixels": [
+        454,
+        454
+      ],
+      "profile": "wearos_large_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "scene": "today",
+      "sha256": "6761a9e52d2a52bbf3541cdd28dc90fc3ad2a5ca1094f3e78f8db8f9a10e8989"
+    },
+    {
+      "file": "wear-227x227-font100-dark-tool-result.png",
+      "logicalDp": [
+        227,
+        227
+      ],
+      "bitmapPixels": [
+        454,
+        454
+      ],
+      "profile": "wearos_large_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "scene": "tool-result",
+      "sha256": "67c2c0f6e1869e699e61586f6e9cebace7c0c97bce9b1af51a75de3294315c93"
+    },
+    {
+      "file": "wear-227x227-font100-light-confirmation-actions.png",
+      "logicalDp": [
+        227,
+        227
+      ],
+      "bitmapPixels": [
+        454,
+        454
+      ],
+      "profile": "wearos_large_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "light",
+      "scene": "confirmation-actions",
+      "sha256": "69de414da1102a8975a460aff446c3951ec9fa84595447b7d04ee7230a414a75"
+    },
+    {
+      "file": "wear-227x227-font100-light-confirmation.png",
+      "logicalDp": [
+        227,
+        227
+      ],
+      "bitmapPixels": [
+        454,
+        454
+      ],
+      "profile": "wearos_large_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "light",
+      "scene": "confirmation",
+      "sha256": "8fec44277dc2b8c524009e74404f96ab2a50160115b7c7466dd2d31f81a5ce64"
+    },
+    {
+      "file": "wear-227x227-font100-light-conversation.png",
+      "logicalDp": [
+        227,
+        227
+      ],
+      "bitmapPixels": [
+        454,
+        454
+      ],
+      "profile": "wearos_large_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "light",
+      "scene": "conversation",
+      "sha256": "5e5d125b0e3ce197f56bad70bfb0f8848691a23288ee4a628d9fc7a0d3ee8255"
+    },
+    {
+      "file": "wear-227x227-font100-light-status.png",
+      "logicalDp": [
+        227,
+        227
+      ],
+      "bitmapPixels": [
+        454,
+        454
+      ],
+      "profile": "wearos_large_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "light",
+      "scene": "status",
+      "sha256": "15bd888bf9c9eec1568a523452a3e93cc02c9d194eedd3a69890e1e9cf66b47d"
+    },
+    {
+      "file": "wear-227x227-font100-light-today.png",
+      "logicalDp": [
+        227,
+        227
+      ],
+      "bitmapPixels": [
+        454,
+        454
+      ],
+      "profile": "wearos_large_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "light",
+      "scene": "today",
+      "sha256": "05a4372d4d826189ddbd4bf816a2ddc2afc81a39ed70d75f31914dbfa7c8c0ad"
+    },
+    {
+      "file": "wear-227x227-font100-light-tool-result.png",
+      "logicalDp": [
+        227,
+        227
+      ],
+      "bitmapPixels": [
+        454,
+        454
+      ],
+      "profile": "wearos_large_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "light",
+      "scene": "tool-result",
+      "sha256": "5a0728cc94340f1fc30f702738fb53c3161ad8e11e71a4a7a61fbdee30151c3e"
+    },
+    {
+      "file": "wear-227x227-font200-dark-confirmation-actions.png",
+      "logicalDp": [
+        227,
+        227
+      ],
+      "bitmapPixels": [
+        454,
+        454
+      ],
+      "profile": "wearos_large_round",
+      "densityDpi": 320,
+      "fontScale": 2.0,
+      "theme": "dark",
+      "scene": "confirmation-actions",
+      "sha256": "cfa9d794cbd0e5fa8bbddb9edd948db7bf11c4cce4c7e637bf5b385dc4853596"
+    },
+    {
+      "file": "wear-227x227-font200-dark-status.png",
+      "logicalDp": [
+        227,
+        227
+      ],
+      "bitmapPixels": [
+        454,
+        454
+      ],
+      "profile": "wearos_large_round",
+      "densityDpi": 320,
+      "fontScale": 2.0,
+      "theme": "dark",
+      "scene": "status",
+      "sha256": "9998aa9b1eeb23cb054fca88e5716c3df2d3ccaeb4ff59da42df44e9868ae242"
+    }
+  ]
+}
