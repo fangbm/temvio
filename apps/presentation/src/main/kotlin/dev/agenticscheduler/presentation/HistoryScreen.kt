@@ -18,7 +18,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
-fun HistoryScreen(c: HistoryScreenCoordinator,scope:CoroutineScope) {
+fun HistoryScreen(c: HistoryScreenCoordinator,scope:CoroutineScope,onOpenAgent: ((AttachedAgentContext) -> Unit)? = null) {
     LaunchedEffect(c) {c.refresh()}
     val detail = c.detail
     val rows = c.rows
@@ -45,6 +45,9 @@ fun HistoryScreen(c: HistoryScreenCoordinator,scope:CoroutineScope) {
     },detail={ detail?.let {d ->
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(20.dp).testTag("history-detail"),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             SectionHeading("Mutation detail",d.mutation.operation.origin.originLabel())
+            d.agentContext().let { context -> onOpenAgent?.let { open ->
+                ActionButton({ open(context) }, role = ActionRole.TERTIARY, modifier = Modifier.testTag("agent-discuss-mutation")) { Text("Discuss with Agent") }
+            } }
             Text("One logical mutation · ${d.changes.size} ordered change(s)")
             d.mutation.operation.orderedMutations.forEach {
                 Text(it.historySummary()); Text(it.historyDiffSummary(),style=MaterialTheme.typography.bodySmall)

@@ -27,7 +27,7 @@ for name in ('docs/tasks/D10_03_PLANNER_HISTORY_SYNC_SETTINGS.md','docs/ROADMAP_
         target=target.split('#',1)[0].strip('<>')
         if target and not re.match('[a-z]+:',target) and not (p.parent/unquote(target)).exists(): errors.append('Broken link: '+name+': '+target)
 roadmap=(root/'docs/ROADMAP_D5_D9.md').read_text(encoding='utf-8')
-if 'D10-03 IMPLEMENTED / AWAITING REVIEW' not in roadmap or 'D10-04+ unstarted' not in roadmap: errors.append('D10-03/later-slice status drift')
+if 'D10-03 MERGED PR #35' not in roadmap or 'cdc8504527cc636f5d2932b7e00785f4be9ecaad' not in roadmap: errors.append('D10-03 accepted baseline status drift')
 if re.search(r'D10-02[^;\n]*(?:AWAITING REVIEW|unstarted)',roadmap): errors.append('D10-02 baseline not synchronized')
 if 'MERGED PR #36' not in roadmap or '74e20e555c9037ff62dda95ab67e3e0e455b0aa1' not in roadmap: errors.append('FG-01 merged foundation missing')
 if 'OD-012 OPEN' not in roadmap: errors.append('OD-012 gate lost')

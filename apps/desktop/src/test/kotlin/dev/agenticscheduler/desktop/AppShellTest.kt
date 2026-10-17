@@ -84,7 +84,7 @@ class AppShellTest {
                 DesktopScheduleScreenCoordinator(f.reads,f.date,f.zone),nav,false) }
             waitUntil(timeoutMillis=10000) { onAllNodesWithText("Command").fetchSemanticsNodes().isNotEmpty() }
             onNodeWithText("Command").performTextInput("Create an event")
-            onNodeWithText("Send").performScrollTo().performClick()
+            onNodeWithText("Send").assertIsDisplayed().performClick()
             waitUntil(timeoutMillis=10000) { onAllNodesWithText("Turn completed.").fetchSemanticsNodes().isNotEmpty() }
             runBlocking {
                 check(f.providerRequests==1)
@@ -148,7 +148,7 @@ class AppShellTest {
                     DesktopScheduleScreenCoordinator(f.reads,f.date,f.zone),nav,false,providerProbes=probes) }
                 waitUntil(timeoutMillis=10000) { onAllNodesWithTag("agent-ready").fetchSemanticsNodes().isNotEmpty() }
                 onNodeWithText("Command").performTextInput("Create an event")
-                onNodeWithText("Send").performScrollTo().performClick()
+                onNodeWithText("Send").assertIsDisplayed().performClick()
                 waitUntil(timeoutMillis=10000) { onAllNodesWithText("Turn completed.").fetchSemanticsNodes().isNotEmpty() }
                 onNodeWithText("Chat only").assertExists()
                 runBlocking {

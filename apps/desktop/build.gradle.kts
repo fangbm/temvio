@@ -39,3 +39,4 @@ compose.desktop {
 }
 
 sourceSets.test { kotlin.srcDir(rootProject.file("test-support/d10-03")) }
+sourceSets.test { kotlin.srcDir(rootProject.file("test-support/d10-04")) }

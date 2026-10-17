@@ -31,6 +31,7 @@ class DesktopNavigation {
 @Composable
 internal fun DesktopAppShell(navigation: DesktopNavigation, dark: Boolean, onThemeChange: () -> Unit,
     detail: (@Composable () -> Unit)? = null,
+    onOpenAgent: () -> Unit = { navigation.open(DesktopDestination.AGENT) },
     content: @Composable (DesktopDestination) -> Unit) {
     Surface(Modifier.fillMaxSize(), color = LocalTemvioColors.current.surface) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -67,7 +68,7 @@ internal fun DesktopAppShell(navigation: DesktopNavigation, dark: Boolean, onThe
                     Text(navigation.current.label, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.align(Alignment.CenterVertically))
                     if (navigation.canGoBack) NavigationControl("Back", false, { navigation.back() })
                     NavigationControl("Open Agent", navigation.current == DesktopDestination.AGENT,
-                        { navigation.open(DesktopDestination.AGENT) }, Modifier.testTag("global-agent"))
+                        onOpenAgent, Modifier.testTag("global-agent"))
                     OutlinedButton(onClick = onThemeChange, modifier = Modifier.heightIn(min = 48.dp).testTag("theme-toggle")) { Text(if (dark) "Light theme" else "Dark theme") }
                 }
                 Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {

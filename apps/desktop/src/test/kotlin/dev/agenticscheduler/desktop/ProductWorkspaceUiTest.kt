@@ -68,7 +68,8 @@ class ProductWorkspaceUiTest {
             runOnIdle {nav.open(DesktopDestination.SETTINGS)}
             onNodeWithText("Use Dark theme").performClick()
             onNodeWithText("Open Provider settings").performScrollTo().performClick()
-            runOnIdle {check(nav.current==DesktopDestination.AGENT);check((p.preview as PlannerPreview.Applicable).branch==branch)}
+            onNodeWithTag("provider-settings").assertExists()
+            runOnIdle {check(nav.current==DesktopDestination.SETTINGS);check((p.preview as PlannerPreview.Applicable).branch==branch)}
             runBlocking {check(f.base.journal.timeline().size==count);check(f.base.tasks.observeFocusBlocks().first().isEmpty())}
             check(f.base.providerRequests==0)
         }
