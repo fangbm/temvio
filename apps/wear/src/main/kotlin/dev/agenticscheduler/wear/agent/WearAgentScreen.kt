@@ -1,121 +1,155 @@
 package dev.agenticscheduler.wear.agent
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.border
-import androidx.compose.foundation.text.BasicTextField
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.graphics.SolidColor
-import androidx.wear.compose.material3.MaterialTheme
-import androidx.wear.compose.material3.Button
-import androidx.wear.compose.material3.Text
+import androidx.wear.compose.material3.SwipeToDismissBox
+import androidx.wear.compose.foundation.lazy.TransformingLazyColumnScope
 import dev.agenticscheduler.agent.history.*
 import dev.agenticscheduler.wear.capability.*
+import dev.agenticscheduler.wear.presentation.*
 import java.net.URI
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** No execution logic: actions go to the existing shared runtime through the explicit session coordinator. */
+/** Presentation intents delegate to the existing session; no second Agent runtime. */
 @Composable
 fun WearAgentScreen(
-    session: WearAgentSessionState,
-    readiness: WearReadiness,
-    config: ProviderConfig?,
-    onDraft: (String) -> Unit,
-    onSend: () -> Unit,
-    onNew: () -> Unit,
+    session: WearAgentSessionState, readiness: WearReadiness, config: ProviderConfig?,
+    onDraft: (String) -> Unit, onSend: () -> Unit, onNew: () -> Unit,
     onConfirm: (AgentToolCallId, String, Boolean) -> Unit,
-    onEnable: (Boolean) -> Unit,
-    onRetry: () -> Unit,
-    onSpeech: () -> Unit,
-    onCancelSpeech: () -> Unit,
-    onLanguage: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    bindingChoices: @Composable () -> Unit = {},
+    onEnable: (Boolean) -> Unit, onRetry: () -> Unit, onSpeech: () -> Unit,
+    onCancelSpeech: () -> Unit, onLanguage: (String) -> Unit,
+    modifier: Modifier = Modifier, bindingChoices: TransformingLazyColumnScope.() -> Unit = {},
+    navigation: WearNavigation? = null, threadTitle: String? = null,
+    onLeaveForeground: () -> Unit = {}, syncFailure: String? = null, onRetrySync: () -> Unit = {},
 ) {
-    var language by remember(readiness.capability.selectedLanguageTag) { mutableStateOf(readiness.capability.selectedLanguageTag.takeUnless { it == "und" }.orEmpty()) }
-    Column(modifier.verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 30.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Agent · ${readiness.runtimeState}", Modifier.testTag("readiness"))
-        Text("Input ${readiness.aiEntrySupported} · Enabled ${readiness.effectiveAiEntryEnabled}\nProvider ${readiness.providerReady} · Request ${readiness.requestReady}")
-        if (readiness.structuredToolsUnavailable) Text("Chat-only · structured Tools unavailable", Modifier.testTag("chat-only"))
-        Button(onClick = { onEnable(!readiness.userEnabledAiEntry) }, modifier = Modifier.testTag("entry-toggle")) {
-            Text(if (readiness.userEnabledAiEntry) "Disable AI entry" else "Enable AI entry")
-        }
-        if (config == null) Text("Select and locally approve an existing Provider configuration below. Credentials must be provisioned through the approved secure install flow.")
-        else {
-            Text("${config.model}\n${config.baseUrl}")
-            if (requiresHttpDisclosure(config)) Text("请求内容可能通过未加密 HTTP 传输", Modifier.testTag("http-warning"))
-        }
-        bindingChoices()
-        Button(onClick = onRetry) { Text("Retry readiness") }
-        Text("Conversation ${session.threadId?.value ?: "new"}")
-        Button(onClick = onNew, enabled = !session.busy && session.pending == null, modifier = Modifier.testTag("new-conversation")) { Text("New conversation") }
-        Text("Command draft")
-        BasicTextField(session.draft, onDraft, textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp),
-            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).border(1.dp, MaterialTheme.colorScheme.onSurface).padding(8.dp).testTag("agent-input"))
-        Button(onClick = onSend, enabled = readiness.requestReady && readiness.runtimeState == WearProviderRuntimeState.READY && !session.busy && session.pending == null && session.draft.isNotBlank(), modifier = Modifier.testTag("agent-send")) { Text("Send") }
-        Text("Optional on-device speech: ${readiness.capability.onDeviceSttAvailability} · ${readiness.capability.speechPermission}")
-        Text("Speech language tag${if (readiness.capability.selectedLanguageTag == "und") " · not selected" else ""}")
-        BasicTextField(language, { language = it }, textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp),
-            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).border(1.dp, MaterialTheme.colorScheme.onSurface).padding(8.dp).testTag("speech-language"))
-        Button(onClick = { onLanguage(language) }, enabled = language.isNotBlank() && language != "und") { Text("Select speech language") }
-        Button(onClick = onSpeech, enabled = !session.busy && language.isNotBlank() && language != "und" && readiness.capability.onDeviceSttAvailability !in setOf(OnDeviceSttAvailability.UNSUPPORTED, OnDeviceSttAvailability.TEMPORARILY_UNAVAILABLE), modifier = Modifier.testTag("speech-start")) { Text("Speech draft only") }
-        Button(onClick = onCancelSpeech) { Text("Cancel speech") }
-        Text("${session.phase}${session.redactedCode?.let { " · $it" }.orEmpty()}", Modifier.testTag("agent-status"))
-        session.messages.forEach { Text("${it.role}: ${it.content}") }
-        session.calls.forEach { Text("${it.name}: ${it.state}\n${it.previewJson}") }
-        session.results.forEach { Text("Tool ${it.status}\n${it.resultJson}\nMutations: ${it.mutationIds.joinToString { id -> id.value }}", Modifier.testTag("tool-result")) }
-        session.pending?.let { call ->
-            Text("Exact pending action: ${call.name}\n${call.previewJson}", Modifier.testTag("confirmation-preview"))
-            Button(onClick = { onConfirm(call.id, requireNotNull(call.previewJson), true) }, enabled = !session.busy, modifier = Modifier.testTag("agent-confirm")) { Text("Confirm on Watch") }
-            Button(onClick = { onConfirm(call.id, requireNotNull(call.previewJson), false) }, enabled = !session.busy, modifier = Modifier.testTag("agent-deny")) { Text("Deny") }
+    val nav = navigation ?: remember { WearNavigation(WearDestination.AGENT) }
+    fun leave() { onLeaveForeground(); onCancelSpeech() }
+    fun back() { leave(); nav.back() }
+    fun open(value: WearDestination) { if (nav.destination == WearDestination.AGENT) leave(); nav.open(value) }
+    BackHandler(nav.canGoBack) { back() }
+    LaunchedEffect(session.pending?.id) {
+        val pending = session.pending
+        if (pending != null && nav.destination == WearDestination.AGENT) nav.review(pending)
+        else if (pending == null) nav.closeConfirmation()
+    }
+    SwipeToDismissBox(onDismissed = { back() }, userSwipeEnabled = nav.canGoBack, modifier = modifier) { background ->
+        if (!background) {
+            val pending = nav.confirmation
+            when {
+                pending != null -> WearConfirmationScreen(pending, session.busy,
+                    { approved -> onConfirm(pending.id, requireNotNull(pending.previewJson), approved) }, { back() })
+                nav.destination == WearDestination.STATUS -> WearStatusScreen(readiness, config, onEnable, onRetry, onLanguage,
+                    { open(WearDestination.AGENT) }, { back() }, bindingChoices, syncFailure, onRetrySync)
+                else -> WearAgentConversation(session, readiness, config, threadTitle, onDraft, onSend, onNew,
+                    { session.pending?.let(nav::review) }, { open(WearDestination.STATUS) }, { back() }, onSpeech, onCancelSpeech)
+            }
         }
     }
 }
 
+@Composable
+private fun WearAgentConversation(session: WearAgentSessionState, readiness: WearReadiness, config: ProviderConfig?,
+    title: String?, onDraft: (String) -> Unit, onSend: () -> Unit, onNew: () -> Unit, onReview: () -> Unit,
+    onSetup: () -> Unit, onBack: () -> Unit, onSpeech: () -> Unit, onCancelSpeech: () -> Unit) {
+    WearPage("wear-agent") {
+        item { WearHeading("Agent") }
+        item { WearCopy(readinessCopy(readiness.runtimeState), Modifier.testTag("readiness")) }
+        if (readiness.structuredToolsUnavailable) item { WearCopy("Chat only. Actions are unavailable with this Provider.", Modifier.testTag("chat-only")) }
+        if (config != null && requiresHttpDisclosure(config)) item { WearCopy("Requests may travel unencrypted over HTTP.", Modifier.testTag("http-warning")) }
+        item { WearHeading(title?.takeIf(String::isNotBlank) ?: if (session.threadId == null) "New conversation" else "Current conversation") }
+        item { WearCopy(sessionStatusCopy(session), Modifier.testTag("agent-status")) }
+        if (session.phase == WearAgentUiPhase.PROVIDER_UNAVAILABLE && session.results.any { it.status == AgentToolResultStatus.SUCCESS && it.mutationIds.isNotEmpty() })
+            item { WearCopy("Recorded successful business changes remain committed. A Provider response error does not undo them.") }
+        if (session.pending != null) item { WearAction("Review pending action", "review-pending", primary = true, onClick = onReview) }
+        item { WearCopy("Command draft · only Send submits") }
+        item { WearDraftField(session.draft, onDraft, "agent-input") }
+        item { WearAction("Send", "agent-send", enabled = readiness.requestReady && readiness.runtimeState == WearProviderRuntimeState.READY &&
+            !session.busy && session.pending == null && session.draft.isNotBlank(), primary = true, onClick = onSend) }
+        val facts = readiness.capability
+        val speechPossible = facts.selectedLanguageTag != "und" && facts.onDeviceSttAvailability !in
+            setOf(OnDeviceSttAvailability.UNSUPPORTED, OnDeviceSttAvailability.TEMPORARILY_UNAVAILABLE)
+        item { WearCopy(speechCopy(facts)) }
+        item { WearAction("Speech draft only", "speech-start", enabled = speechPossible && !session.busy && session.pending == null, onClick = onSpeech) }
+        if (speechPossible) item { WearAction("Cancel speech", "speech-cancel", onClick = onCancelSpeech) }
+        // Failed structured results remain explicit even when subsequent assistant prose claims success.
+        session.calls.takeLast(6).forEach { call ->
+            val result = session.results.lastOrNull { it.callId == call.id }
+            item { WearHeading(toolTitle(call.name)) }
+            item { WearCopy(result?.let { toolResultCopy(it.status) } ?: toolStateCopy(call.state), Modifier.testTag("tool-result")) }
+            if (result?.status == AgentToolResultStatus.SUCCESS) item {
+                WearCopy(if (result.mutationIds.isEmpty()) "Tool completed. No business mutation recorded." else "Business change committed · audit retained")
+            }
+        }
+        val messages = session.messages.filter { it.role != AgentMessageRole.TOOL }.takeLast(12)
+        if (messages.isEmpty()) item { WearCopy("Start with an explicit text command. Speech is optional.") }
+        messages.forEach { message ->
+            item { WearHeading(if (message.role == AgentMessageRole.USER) "You" else "Assistant") }
+            item { WearCopy(message.content) }
+        }
+        if (session.messages.count { it.role != AgentMessageRole.TOOL } > messages.size) item { WearCopy("Showing recent conversation. Earlier history remains stored.") }
+        item { WearAction("New conversation", "new-conversation", enabled = !session.busy && session.pending == null, onClick = onNew) }
+        item { WearAction("Status / setup", "open-status", onClick = onSetup) }
+        item { WearAction("Today", "wear-back", onClick = onBack) }
+    }
+}
+
 fun requiresHttpDisclosure(config: ProviderConfig): Boolean {
-    val uri = URI(config.baseUrl)
+    val uri = runCatching { URI(config.baseUrl) }.getOrNull() ?: return false
     val host = uri.host?.lowercase()?.removePrefix("[")?.removeSuffix("]")
     return uri.scheme.equals("http", true) && host !in setOf("localhost", "127.0.0.1", "::1")
 }
 
 @Composable
-fun WearAgentRoute(composition: WearAgentRuntimeComposition) {
+fun WearAgentRoute(composition: WearAgentRuntimeComposition, navigation: WearNavigation,
+    syncFailure: String? = null, onRetrySync: () -> Unit = {}) {
     val scope = rememberCoroutineScope()
     val session by composition.session.ui.collectAsState()
     val readiness by composition.readiness.readiness.collectAsState()
     var configs by remember { mutableStateOf(emptyList<ProviderConfig>()) }
     var selected by remember { mutableStateOf<ProviderConfig?>(null) }
+    var title by remember { mutableStateOf<String?>(null) }
+    var setupError by remember { mutableStateOf(false) }
     LaunchedEffect(composition) {
         composition.session.restoreRecentThread()
         configs = composition.state.providerConfigs()
         selected = composition.state.selectedProviderConfigId()?.let { composition.state.providerConfig(it) }
     }
-    LaunchedEffect(session.busy) {
-        while (session.busy) { composition.session.reload(); delay(100) }
-    }
-    // Provider choice is local, explicit and exact. No credential/plaintext input or inferred route approval.
+    LaunchedEffect(session.threadId) { title = composition.state.threads().firstOrNull { it.id == session.threadId }?.title }
+    LaunchedEffect(session.busy) { while (session.busy) { composition.session.reload(); delay(100) } }
     WearAgentScreen(session, readiness, selected, composition.session::editDraft,
-            { scope.launch { composition.session.submitFromUserAction() } },
-            { scope.launch { composition.session.newConversationFromUserAction() } },
-            { call, preview, approved -> scope.launch { composition.session.confirmFromUserAction(call, preview, approved) } },
-            composition.readiness.settings::setAiEntryFromExplicitUserAction,
-            { scope.launch { composition.refreshSelectedBinding(); composition.readiness.refresh(true) } },
-            { composition.readiness.capability.useSpeechFromExplicitUserAction(composition.session::speechCandidate) },
-            composition.readiness.capability::cancel,
-            { tag -> composition.readiness.settings.selectSpeechLanguageFromExplicitUserAction(tag); composition.readiness.capability.selectLanguageFromUserAction(tag) },
-            bindingChoices = {
-        configs.forEach { config ->
-            if (config.credentialReference != null) Button(onClick = { scope.launch { composition.selectFromUserAction(config); selected = config } }) { Text("Select ${config.model}") }
-            else WearEndpointRoute.entries.forEach { route -> Button(onClick = { scope.launch { composition.approveCredentialFreeFromUserAction(config, route); selected = config } }) { Text("Approve ${config.model}: $route") } }
-        }
-    })
+        { scope.launch { composition.session.submitFromUserAction() } },
+        { scope.launch { composition.session.newConversationFromUserAction() } },
+        { call, preview, approved -> scope.launch { composition.session.confirmFromUserAction(call, preview, approved) } },
+        composition.readiness.settings::setAiEntryFromExplicitUserAction,
+        { scope.launch { composition.refreshSelectedBinding(); composition.readiness.refresh(true) } },
+        { composition.readiness.capability.useSpeechFromExplicitUserAction(composition.session::speechCandidate) },
+        composition.readiness.capability::cancel,
+        { tag -> composition.readiness.settings.selectSpeechLanguageFromExplicitUserAction(tag); composition.readiness.capability.selectLanguageFromUserAction(tag) },
+        navigation = navigation, threadTitle = title, syncFailure = syncFailure, onRetrySync = onRetrySync,
+        onLeaveForeground = composition.session::cancelForegroundRequest,
+        bindingChoices = {
+            run {
+                if (setupError) item { WearCopy("This binding could not be approved. Check its route and configuration.") }
+                configs.forEach { config ->
+                    fun choose(route: WearEndpointRoute?) { scope.launch {
+                        try {
+                            if (route == null) composition.selectFromUserAction(config) else composition.approveCredentialFreeFromUserAction(config, route)
+                            selected = config; setupError = false
+                        } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+                        catch (_: Exception) { setupError = true }
+                    } }
+                    if (config.credentialReference != null) item { WearAction("Select ${config.model}", "binding-select-${config.id.value}", onClick = { choose(null) }) }
+                    else WearEndpointRoute.entries.forEach { route ->
+                        item { WearAction("Approve ${config.model} · ${if (route == WearEndpointRoute.PUBLIC_HTTPS) "Public HTTPS" else "Local, credential-free"}",
+                            "binding-${route.name}-${config.id.value}", onClick = { choose(route) }) }
+                    }
+                }
+            }
+        })
 }

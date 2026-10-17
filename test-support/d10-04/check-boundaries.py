@@ -7,7 +7,7 @@ errors=[]
 base='17fd6e7ef117cdb899b7e2f28d3a1a8bf13a58ed'
 changed=set(subprocess.check_output(['git','diff','--name-only',base],cwd=root,text=True).splitlines())
 changed.update(subprocess.check_output(['git','ls-files','--others','--exclude-standard'],cwd=root,text=True).splitlines())
-for name in changed:
+for name in (changed if '--source-only' not in sys.argv else []):
     if name.startswith(('shared/','server/','apps/wear/','docs/tasks/fixtures/d10-01/','docs/tasks/fixtures/d10-02/','docs/tasks/fixtures/d10-03/')):
         errors.append('D10-04 scope fence: '+name)
 for folder in ('apps/presentation/src/main','apps/android/src/main','apps/desktop/src/main'):
@@ -24,10 +24,12 @@ for name in ('docs/tasks/D10_04_AGENT_PRODUCT_SURFACE.md','docs/ROADMAP_D5_D9.md
         target=target.split('#',1)[0].strip('<>')
         if target and not re.match('[a-z]+:',target) and not (p.parent/unquote(target)).exists(): errors.append('Broken link: '+name+': '+target)
 roadmap=(root/'docs/ROADMAP_D5_D9.md').read_text(encoding='utf-8')
-for required in ('D10-03 MERGED PR #35','cdc8504527cc636f5d2932b7e00785f4be9ecaad','D10-04F MERGED PR #38',base,'OD-012 OPEN','D10-05/06 unstarted','FG-02','FG-03','FG-04'):
+for required in ('D10-03 MERGED PR #35','cdc8504527cc636f5d2932b7e00785f4be9ecaad','D10-04F MERGED PR #38',base,'OD-012 OPEN','FG-02','FG-03','FG-04'):
     if required not in roadmap: errors.append('Roadmap contract lost: '+required)
-if re.search(r'D10-04(?![A-Z0-9-])[^\n]*(?:MERGED|COMPLETE)',roadmap): errors.append('D10-04 acceptance overstated')
+if '--source-only' not in sys.argv:
+    if 'D10-05/06 unstarted' not in roadmap: errors.append('D10-04 slice fence lost')
+    if re.search(r'D10-04(?![A-Z0-9-])[^\n]*(?:MERGED|COMPLETE)',roadmap): errors.append('D10-04 acceptance overstated')
 task=(root/'docs/tasks/D10_04_AGENT_PRODUCT_SURFACE.md').read_text(encoding='utf-8')
 if 'ContextAnchor foundation — RESOLVED' not in task or base not in task: errors.append('Accepted ContextAnchor foundation missing')
 if errors: raise SystemExit('\n'.join(errors))
-print('D10-04 scope/ownership/Markdown/status PASS; no semantic modules or historical candidates changed')
+print('D10-04 ownership/Markdown/status PASS' + ('; historical source-only mode; current slice owns diff/status gate' if '--source-only' in sys.argv else '; diff scope PASS'))
