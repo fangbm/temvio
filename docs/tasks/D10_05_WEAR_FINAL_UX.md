@@ -199,7 +199,11 @@ The PR check suite/run linked in the PR is the authoritative final exact-head CI
 evidence; all five jobs must actually execute and pass: build,
 desktop-windows, android-keystore, wear-keystore, agent-history-platform-e2e.
 Wear job retains real FEATURE_WATCH instrumentation, uses a round profile and uploads
-new captures/platform logs. A second real Large Round AVD supplies the 227dp
+new captures/platform logs. Connected-test UTP uninstalls the fixture APKs at the
+end of the suite, so the capture steps explicitly reinstall both built APKs before
+invoking the native runner. First CI trial passed 46/46 native XML but failed capture
+with missing instrumentation; the workflow-only correction preserves the test suite.
+A second real Large Round AVD supplies the 227dp
 physical display; the Small Round AVD supplies 192dp. Scripts reject `wm size` or
 density overrides, preserve user font scale, and repeat Today/Retry/Confirm/Deny
 interaction checks at 200% on both. No cancelled/unallocated job counts.

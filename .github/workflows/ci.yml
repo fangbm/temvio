@@ -298,6 +298,9 @@ jobs:
           script: |
             ./gradlew :apps:wear:connectedDebugAndroidTest --no-daemon
             adb logcat -d -s D90302Evidence:I > apps/wear/build/d90302-platform-evidence.txt
+            # UTP removes installed APKs after connected tests; install the built fixtures for capture.
+            adb install -r apps/wear/build/outputs/apk/debug/wear-debug.apk
+            adb install -r apps/wear/build/outputs/apk/androidTest/debug/wear-debug-androidTest.apk
             bash test-support/d10-05/capture-wear.sh
       - name: Capture large round Wear presentation candidates
         uses: reactivecircus/android-emulator-runner@v2
