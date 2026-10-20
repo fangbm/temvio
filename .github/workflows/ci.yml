@@ -188,7 +188,8 @@ jobs:
             python test-support/d10-02/check-candidates.py
             python test-support/d10-03/check-boundaries.py --source-only
             python test-support/d10-03/check-candidates.py --source-revision cdc8504527cc636f5d2932b7e00785f4be9ecaad
-            python test-support/d10-04/check-boundaries.py
+            python test-support/d10-04/check-boundaries.py --source-only
+            python test-support/d10-05f/check-boundaries.py
             python test-support/d10-04/check-candidates.py
       - name: Upload Windows presentation candidates and reports
         if: always()

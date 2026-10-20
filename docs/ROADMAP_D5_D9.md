@@ -344,6 +344,7 @@ D10-02   Today / Calendar / Tasks / Academic          MERGED PR #33 cda86a81; D1
 D10-03   Planner / History / Sync / Settings          MERGED PR #35 cdc85045; FG-01 resolved via PR #36
 D10-04F  ContextAnchor foundation                    MERGED PR #38 17fd6e7ef117cdb899b7e2f28d3a1a8bf13a58ed
 D10-04   Agent Product Surface                       IMPLEMENTED / AWAITING REVIEW; ContextAnchor foundation consumed
+D10-05F IMPLEMENTED / AWAITING REVIEW — [target provisioning foundation](tasks/D10_05F_WEAR_TARGET_PROVISIONING_COORDINATOR.md)
 D10-05   Wear Final UX                               after tokens and reviewed Wear graph
 D10-06   Accessibility / Visual Regression / Final Acceptance
 ```

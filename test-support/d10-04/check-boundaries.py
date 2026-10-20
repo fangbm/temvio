@@ -5,8 +5,10 @@ from urllib.parse import unquote
 root=Path(__file__).resolve().parents[2]
 errors=[]
 base='17fd6e7ef117cdb899b7e2f28d3a1a8bf13a58ed'
-changed=set(subprocess.check_output(['git','diff','--name-only',base],cwd=root,text=True).splitlines())
-changed.update(subprocess.check_output(['git','ls-files','--others','--exclude-standard'],cwd=root,text=True).splitlines())
+source_only='--source-only' in sys.argv
+changed=set() if source_only else set(subprocess.check_output(['git','diff','--name-only',base],cwd=root,text=True).splitlines())
+if not source_only:
+    changed.update(subprocess.check_output(['git','ls-files','--others','--exclude-standard'],cwd=root,text=True).splitlines())
 for name in changed:
     if name.startswith(('shared/','server/','apps/wear/','docs/tasks/fixtures/d10-01/','docs/tasks/fixtures/d10-02/','docs/tasks/fixtures/d10-03/')):
         errors.append('D10-04 scope fence: '+name)
@@ -30,4 +32,4 @@ if re.search(r'D10-04(?![A-Z0-9-])[^\n]*(?:MERGED|COMPLETE)',roadmap): errors.ap
 task=(root/'docs/tasks/D10_04_AGENT_PRODUCT_SURFACE.md').read_text(encoding='utf-8')
 if 'ContextAnchor foundation — RESOLVED' not in task or base not in task: errors.append('Accepted ContextAnchor foundation missing')
 if errors: raise SystemExit('\n'.join(errors))
-print('D10-04 scope/ownership/Markdown/status PASS; no semantic modules or historical candidates changed')
+print('D10-04 ownership/Markdown/status PASS' + ('; historical diff scope not checked in source-only mode' if source_only else '; diff scope PASS'))
