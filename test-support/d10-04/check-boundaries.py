@@ -5,9 +5,17 @@ from urllib.parse import unquote
 root=Path(__file__).resolve().parents[2]
 errors=[]
 base='17fd6e7ef117cdb899b7e2f28d3a1a8bf13a58ed'
+<<<<<<< HEAD
 changed=set(subprocess.check_output(['git','diff','--name-only',base],cwd=root,text=True).splitlines())
 changed.update(subprocess.check_output(['git','ls-files','--others','--exclude-standard'],cwd=root,text=True).splitlines())
 for name in (changed if '--source-only' not in sys.argv else []):
+=======
+source_only='--source-only' in sys.argv
+changed=set() if source_only else set(subprocess.check_output(['git','diff','--name-only',base],cwd=root,text=True).splitlines())
+if not source_only:
+    changed.update(subprocess.check_output(['git','ls-files','--others','--exclude-standard'],cwd=root,text=True).splitlines())
+for name in changed:
+>>>>>>> feature/d9-02-agent-sync
     if name.startswith(('shared/','server/','apps/wear/','docs/tasks/fixtures/d10-01/','docs/tasks/fixtures/d10-02/','docs/tasks/fixtures/d10-03/')):
         errors.append('D10-04 scope fence: '+name)
 for folder in ('apps/presentation/src/main','apps/android/src/main','apps/desktop/src/main'):
@@ -32,4 +40,8 @@ if '--source-only' not in sys.argv:
 task=(root/'docs/tasks/D10_04_AGENT_PRODUCT_SURFACE.md').read_text(encoding='utf-8')
 if 'ContextAnchor foundation — RESOLVED' not in task or base not in task: errors.append('Accepted ContextAnchor foundation missing')
 if errors: raise SystemExit('\n'.join(errors))
+<<<<<<< HEAD
 print('D10-04 ownership/Markdown/status PASS' + ('; historical source-only mode; current slice owns diff/status gate' if '--source-only' in sys.argv else '; diff scope PASS'))
+=======
+print('D10-04 ownership/Markdown/status PASS' + ('; historical diff scope not checked in source-only mode' if source_only else '; diff scope PASS'))
+>>>>>>> feature/d9-02-agent-sync
