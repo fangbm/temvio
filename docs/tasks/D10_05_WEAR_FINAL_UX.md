@@ -185,7 +185,7 @@ packaging and lint PASS. The retained real foundation coordinator suite is **28/
 all targeted application provisioning/secure-store tests total **61 PASS + 1 local
 PostgreSQL skip**, wire **6/6**, migration/schema **2/2**. The local PostgreSQL skip
 is not acceptance; the final exact-head CI must execute the real PostgreSQL case.
-Logs: `D:\codex\d10-05-final-relevant.log`, `D:\codex\d10-05-final-acceptance-build.log`.
+Logs: `D:\codex\d10-05-final-relevant.log`, `D:\codex\d10-05-capture-host-build.log`.
 
 The six added Wear native cases include real Room/Tink/Android Keystore coordinator
 recreation, explicit source/request/fetch, independently entered wrong/correct codes,
@@ -193,8 +193,9 @@ separate Install, installed/failed-ACK restart, ACK-only retry, passive theme/Ba
 new-comparison draft clearing and no-secret UI assertions. Only directory/mailbox
 transport ports are fake in the two real-coordinator cases. Existing runtime/D9
 assertions are retained. Small Round full native suite: **52/52**, no skip/failure
-(`D:\codex\d10-05-final-small-native52.log`). Large Round full native suite also
-passes **52/52**, no skip/failure (`D:\codex\d10-05-final-large-native52.log`).
+(`D:\codex\d10-05-charger-fixed-small52.log`). Large Round full native suite also
+passes **52/52**, no skip/failure (`D:\codex\d10-05-host-fixed-large52.log`), including
+the test-host/idle follow-up below.
 The new circular-bounds regression initially exposed the editable field's 32dp inner
 semantics; moving padding into the field decoration makes the full >=48dp editable
 surface observable without relaxing assertions. Final build and six-case rerun pass.
@@ -207,8 +208,8 @@ Final renderer evidence is **38 actual PNG candidates**: the original 30-state m
 plus eight bounded credential-setup views. Both actual AVD profiles pass the five
 200% interaction cases (**5/5 each**), and normal/scaled screenshot methods pass
 on both (**4/4 method executions**). Logs are under `build/d10-05/logs`; local
-capture transcripts are `D:\codex\d10-05-final-small-capture38.log` and
-`D:\codex\d10-05-final-large-capture38.log`. The manifest records the current
+capture transcripts are `D:\codex\d10-05-final-power-small-capture.log` and
+`D:\codex\d10-05-final-power-large-capture.log`. The manifest records the current
 foundation base and exact normalized source/PNG hashes. Representative 192/227
 comparison, Installed/ACK and 200% Install images were visually inspected; candidates
 still require maintainer visual review. An initial Large AVD ADB connection failure
@@ -217,6 +218,46 @@ successful final suite/capture. No `wm size`/density override or fake platform w
 
 Final exact-head CI is linked from PR #39 to avoid a self-referential committed SHA;
 old run `39050722819` is historical only.
+
+Post-push capture-host follow-up: head `a14fb9130c9d010799b8e9a224cabfcd52e98bc6`
+received run `40003271676`. Build, Windows, Android and platform E2E passed; Wear
+native XML was **52 tests / 0 failures / 0 errors / 0 skipped**, with Small Round
+capture passing. Two attempts failed in different pre-existing Large Round scenes
+with `No compose hierarchies found`, before the new credential scenes. Those attempts
+are historical partial evidence, not final all-green acceptance. A fresh local Large
+AVD did not reproduce the Linux failure, so the specific system trigger is not claimed.
+
+The screenshot fixture now explicitly keeps only its test Activity's window interactive,
+waits up to 10 seconds for the expected scene semantics to attach, and requires a
+RESUMED host before the existing scroll/bounds/content assertions. Normal Large
+Round capture includes a **35-second passive idle interval** before its first scene
+assertion, guarding the host's interactivity beyond a short capture. No retry, skip or
+relaxed assertion was added. Failure paths retain ActivityTaskManager/top-activity
+diagnostics and restore font scale. This is test-only capture setup, not production
+always-on/ambient behavior or D10-06 work; no product lifecycle/power flag changed.
+See [Wear screen-state testing guidance](https://developer.android.com/training/wearables/always-on#debugging-and-testing).
+
+A subsequent local Small Round full-suite attempt reproduced the same missing-root
+failure in the retained authentication/config/network test. ActivityTaskManager
+recorded `ComponentActivity` starting at 19:07:26 and system
+`ChargingContainerActivity` taking the foreground at 19:07:27; the test then lost its
+Compose hierarchy (`D:\codex\d10-05-small-host-lifecycle.log`). With the real emulator's
+AC off and battery discharging, the unchanged full suite passed **52/52**
+(`D:\codex\d10-05-charger-fixed-small52.log`). This establishes a local platform
+interference path; the original Linux attempts did not retain that lifecycle trace.
+Dedicated CI Wear AVDs now disconnect their virtual charger before native tests.
+Capture scripts snapshot/restore the exact AC/battery status and font scale, require
+the charging overlay to leave the foreground within 20 seconds, and retain the same
+real hardware/API/profile/bounds checks. They do not retry failed tests or stub the
+Android platform. No application/runtime/persistence/protocol behavior changed.
+The controls are the documented [emulator power commands](https://developer.android.com/studio/run/emulator-console#power).
+Final local capture ran PowerShell on Small Round and the actual Bash helper on
+Large Round (Git Bash with path conversion disabled). Both normal/scaled captures
+and five-case scaled interaction sets passed, and both helpers restored the observed
+original **AC=true / battery status=2**. The 38 PNGs were regenerated again; their
+visual bytes are unchanged while the manifest updates the test-source hash and
+records the actual fresh Large AVD name. The new full exact-head CI is required
+after this test/CI/evidence-only follow-up; run `40003271676` is not final acceptance.
 
 Historical pre-foundation verification (2026-10-18): **82/82 Wear JVM tests, 46/46 actual
 Wear instrumentation tests, compile/APK packaging and lint PASS**. The JVM set

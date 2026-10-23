@@ -11,7 +11,23 @@ if($size -match 'Override size:' -or $density -match 'Override density:'){throw 
 $dp=if($size -match '384x384'){192}elseif($size -match '454x454'){227}else{throw 'Expected physical 384 or 454 round profile'}
 if($density -notmatch 'Physical density: 320'){throw 'Expected profile density 320'}
 $originalFont=(Adb shell settings get system font_scale).Trim()
+$battery=(Adb shell dumpsys battery) -join "`n"
+if($battery -notmatch '(?m)^\s*AC powered: (true|false)\s*$'){throw 'Cannot snapshot emulator charger state'}
+$originalAc=if($Matches[1] -eq 'true'){'on'}else{'off'}
+if($battery -notmatch '(?m)^\s*status: ([1-5])\s*$'){throw 'Cannot snapshot emulator battery status'}
+$originalStatus=@{'1'='unknown';'2'='charging';'3'='discharging';'4'='not-charging';'5'='full'}[$Matches[1]]
 try {
+    # A cold Wear image can launch ChargingContainerActivity over the test host.
+    Adb emu power ac off
+    Adb emu power status discharging
+    Adb shell input keyevent KEYCODE_WAKEUP
+    $drained=$false
+    for($i=0;$i -lt 20;$i++){
+        $top=(Adb shell dumpsys activity activities | Select-String 'topResumedActivity|mResumedActivity') -join "`n"
+        if($top -and $top -notmatch '\bCharging(?:Container)?Activity\b'){$drained=$true;break}
+        Start-Sleep -Seconds 1
+    }
+    if(-not $drained){throw 'Wear charging overlay did not leave the foreground'}
     foreach($spec in @(@($dp,0,'1.0'),@($dp,0,'2.0'))){
         Adb shell am force-stop dev.agenticscheduler.wear
         Adb shell settings put system font_scale $spec[2]
@@ -28,6 +44,12 @@ try {
     }
     Adb pull /sdcard/Android/data/dev.agenticscheduler.wear/files/d10-05-screenshots build/d10-05/wear-captures/
     Adb logcat -d -s D1005Evidence:I | Set-Content -Encoding utf8 "build/d10-05/platform-evidence-$dp.txt"
+} catch {
+    Adb shell dumpsys activity activities | Select-String 'topResumedActivity|mResumedActivity' | Set-Content -Encoding utf8 "build/d10-05/logs/failed-activity-$dp.txt"
+    Adb logcat -d -s ActivityTaskManager:I | Set-Content -Encoding utf8 "build/d10-05/logs/failed-lifecycle-$dp.txt"
+    throw
 } finally {
     if($originalFont -eq 'null'){Adb shell settings delete system font_scale}else{Adb shell settings put system font_scale $originalFont}
+    Adb emu power status $originalStatus
+    Adb emu power ac $originalAc
 }

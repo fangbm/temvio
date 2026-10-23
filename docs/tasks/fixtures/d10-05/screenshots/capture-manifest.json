@@ -12,7 +12,7 @@
       ]
     },
     {
-      "name": "temvio-d10-05-large",
+      "name": "temvio-d10-05-cold-large",
       "profile": "wearos_large_round",
       "physicalPixels": [
         454,
@@ -50,7 +50,7 @@
     "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/presentation/WearTodayScreen.kt": "400f6fbc4e3c15c0c18b7956e1e519340f96a87bbcf33f6616ea4b19a9117d2d",
     "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/provisioning/WearTargetProviderProvisioningComposition.kt": "57104bf3bbc353b19e1c6989de1f25208c00c83ed1cfc151a240b6baa06b3d3d",
     "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/WearMainActivity.kt": "91ec2898e6f18a15d59947b3cb0302c8bcdb9edf0f02e796c2c5dc87ae2be2a7",
-    "apps/wear/src/androidTest/kotlin/dev/agenticscheduler/wear/WearFinalUxInstrumentedTest.kt": "fe633577ad0c43cad4f14cccde23dabbc53f898cda145fea9e4663f6d9ecb766",
+    "apps/wear/src/androidTest/kotlin/dev/agenticscheduler/wear/WearFinalUxInstrumentedTest.kt": "4d302d70302f099951198246925b9caa5f7b3f2a6a07bfe6c5b7d06146b84f27",
     "apps/wear/src/androidTest/kotlin/dev/agenticscheduler/wear/CredentialSetupFixtures.kt": "652373e89d3193f6fe2364036ceb9d9f2fa35223c314639e87a2730dc7f8257e",
     "apps/wear/src/androidTest/kotlin/dev/agenticscheduler/wear/WearCredentialSetupInstrumentedTest.kt": "85a98f5101d7efd1990a2b0045ea233179a2ce48e2fc4d3f2d1b93e8cfe8c7f9",
     "apps/wear/build.gradle.kts": "736966d17804e4654526914a695d974cf036d98015191a68e7fedff50e233024"

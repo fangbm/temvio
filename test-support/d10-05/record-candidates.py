@@ -18,7 +18,7 @@ paths=sorted((root/'apps/wear/src/main/kotlin').rglob('*.kt'))
 paths+=[root/'apps/wear/src/androidTest/kotlin/dev/agenticscheduler/wear/WearFinalUxInstrumentedTest.kt',root/'apps/wear/src/androidTest/kotlin/dev/agenticscheduler/wear/CredentialSetupFixtures.kt',root/'apps/wear/src/androidTest/kotlin/dev/agenticscheduler/wear/WearCredentialSetupInstrumentedTest.kt',root/'apps/wear/build.gradle.kts']
 manifest=dict(baseSha='6f7071239df3addf6fbc2031aa8baf556d3c4f13',status='CANDIDATES / AWAITING MAINTAINER VISUAL REVIEW',
     platform='Wear emulator acceptance; no physical Watch or speech recognition success claim',
-    avds=[dict(name='temvio-d10-05',profile='wearos_small_round',physicalPixels=[384,384]),dict(name='temvio-d10-05-large',profile='wearos_large_round',physicalPixels=[454,454])],apiLevel=35,systemImage='android-35-ext15/android-wear/x86_64',round=True,
+    avds=[dict(name='temvio-d10-05',profile='wearos_small_round',physicalPixels=[384,384]),dict(name='temvio-d10-05-cold-large',profile='wearos_large_round',physicalPixels=[454,454])],apiLevel=35,systemImage='android-35-ext15/android-wear/x86_64',round=True,
     fixture='Synthetic typed presentation inputs; retained real AgentRunService/Room/Android HTTP E2E is separate execution evidence',
     containsRealSecrets=False,sourceHashNormalization='UTF-8 without BOM / LF',
     sourceHashes={p.relative_to(root).as_posix():hashlib.sha256(p.read_text(encoding='utf-8-sig').replace('\r\n','\n').encode()).hexdigest() for p in paths},

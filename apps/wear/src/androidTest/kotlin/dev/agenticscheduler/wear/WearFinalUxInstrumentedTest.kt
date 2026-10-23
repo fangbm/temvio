@@ -169,6 +169,9 @@ class WearFinalUxInstrumentedTest {
         args.getString("captureWidth")?.let{assertEquals(it.toInt(),width);assertEquals(it.toInt(),height)}
         args.getString("captureFont")?.let{assertEquals((it.toFloat()*100).toInt(),font)}
         assertTrue("Acceptance must use round Wear hardware profile",config.isScreenRound)
+        // Capture is a passive rendering fixture, not a stream of touch input. Keep only
+        // this test Activity interactive; its rule closes the window after the test.
+        ui.activityRule.scenario.onActivity { it.window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
         val capture=mutableStateOf<Pair<String,Boolean>?>(null)
         ui.setContent {WearProductTheme(capture.value?.second?:true) {
             capture.value?.first?.let { scene -> key(scene,capture.value?.second) {
@@ -204,6 +207,22 @@ class WearFinalUxInstrumentedTest {
         val out=File(context.getExternalFilesDir(null),"d10-05-screenshots").also{it.mkdirs()}
         for(scene in scenes)for(dark in if(scene.startsWith("credential-"))listOf(scene !in listOf("credential-ready","credential-installed")) else if(font>=190 || scene in listOf("chat-only","sync-stopped"))listOf(true)else listOf(false,true)) {
             ui.runOnIdle{capture.value=scene to dark};ui.waitForIdle();ui.mainClock.advanceTimeByFrame();ui.waitForIdle()
+            val page=when(scene) {
+                "today","sync-stopped" -> "wear-today"
+                "confirmation","confirmation-actions" -> "wear-confirmation"
+                "status" -> "wear-status"
+                else -> if(scene.startsWith("credential-")) "wear-credential-setup" else "wear-agent"
+            }
+            // Idleness alone does not guarantee an attached/resumed semantics owner.
+            ui.waitUntil(10_000) { ui.onAllNodes(hasTestTag(page)).fetchSemanticsNodes(atLeastOneRootRequired=false).isNotEmpty() }
+            if(width>192 && font<190 && scene==scenes.first() && !dark) {
+                // Exercise the passive host past an idle interval on the fresh large AVD.
+                android.os.SystemClock.sleep(35_000)
+            }
+            ui.activityRule.scenario.onActivity {
+                assertTrue("Capture host must remain resumed: $scene",it.lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED))
+            }
+            ui.onNodeWithTag(page).assertIsDisplayed()
             when(scene){
                 "confirmation-actions"->assertSafe("wear-confirmation","agent-confirm")
                 "status"->assertSafe("wear-status","entry-toggle")

@@ -70,3 +70,16 @@ At 200% both profiles also execute the existing Today/confirmation controls and
 new Request/retry/fetch, separately entered approval, Install/ACK retry, recovery
 and Back interactions. All action/input bounds are checked against the actual
 round face and >=48dp. No physical Watch acceptance is claimed.
+
+Capture keeps only the fixture Activity's window interactive and fences each attached,
+resumed scene before the existing assertions. The normal Large Round method also
+waits through a 35-second passive idle interval. This prevents implicit reliance on
+touch activity during screenshot iteration; it does not add production always-on or
+ambient behavior. A fresh `temvio-d10-05-cold-large` AVD supplies the final 227dp
+capture; Small Round remains `temvio-d10-05`. Failing runs retain lifecycle/top-activity
+diagnostics, keep their nonzero status, and restore font scale.
+The real AVD is temporarily off its virtual charger so the system charging Activity
+cannot cover the fixture. Capture requires that overlay to leave the foreground,
+then restores the exact previous AC/battery status as well as font scale. Dedicated
+CI AVDs use the same noncharging precondition before the full native suite. This is
+test-environment control, not a fake platform or an application battery/power feature.
