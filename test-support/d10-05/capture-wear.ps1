@@ -20,10 +20,10 @@ try {
         $log | Set-Content -Encoding utf8 "build/d10-05/logs/wear-$($spec[0])-font$($spec[2]).txt"
         if(-not ($log -match 'OK \(1 test\)')){throw ($log -join "`n")}
         if($spec[2] -eq '2.0') {
-            $checks='dev.agenticscheduler.wear.WearFinalUxInstrumentedTest#todayAgentStatusRetryAndOverflowAreReachableAndPassive,dev.agenticscheduler.wear.WearFinalUxInstrumentedTest#exactConfirmationBackThemeAndRecompositionAreNotDecisions'
+            $checks='dev.agenticscheduler.wear.WearFinalUxInstrumentedTest#todayAgentStatusRetryAndOverflowAreReachableAndPassive,dev.agenticscheduler.wear.WearFinalUxInstrumentedTest#exactConfirmationBackThemeAndRecompositionAreNotDecisions,dev.agenticscheduler.wear.WearCredentialSetupInstrumentedTest#sourceRequestUnconfirmedRetryAndFetchAreOnlyExplicit,dev.agenticscheduler.wear.WearCredentialSetupInstrumentedTest#separateSendingCodeAndExplicitInstallAndAckRetry,dev.agenticscheduler.wear.WearCredentialSetupInstrumentedTest#recoveryAndInstalledCopyHaveReachableSafeActionsWithoutSecretFields'
             $scaled=Adb shell am instrument -w -r -e class $checks dev.agenticscheduler.wear.test/androidx.test.runner.AndroidJUnitRunner
             $scaled | Set-Content -Encoding utf8 "build/d10-05/logs/scaled-actions-$($spec[0]).txt"
-            if(-not ($scaled -match 'OK \(2 tests\)')){throw ($scaled -join "`n")}
+            if(-not ($scaled -match 'OK \(5 tests\)')){throw ($scaled -join "`n")}
         }
     }
     Adb pull /sdcard/Android/data/dev.agenticscheduler.wear/files/d10-05-screenshots build/d10-05/wear-captures/

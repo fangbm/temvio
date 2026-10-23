@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
@@ -18,17 +19,21 @@ import dev.agenticscheduler.wear.agent.requiresHttpDisclosure
 import dev.agenticscheduler.wear.capability.*
 
 @Composable
-fun WearDraftField(value: String, onChange: (String) -> Unit, tag: String) {
+fun WearDraftField(value: String, onChange: (String) -> Unit, tag: String, label: String? = null) {
     BasicTextField(value, onChange, textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary), modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
-            .border(1.dp, MaterialTheme.colorScheme.outline).padding(8.dp).testTag(tag)
-            .semantics { contentDescription = if (tag == "agent-input") "Command draft" else "Speech language tag" })
+            .testTag(tag).semantics { contentDescription = label ?: if (tag == "agent-input") "Command draft" else "Speech language tag" },
+        decorationBox = { inner ->
+            Box(Modifier.fillMaxWidth().heightIn(min = 48.dp).border(1.dp, MaterialTheme.colorScheme.outline).padding(8.dp),
+                contentAlignment = Alignment.CenterStart) { inner() }
+        })
 }
 
 @Composable
 fun WearStatusScreen(readiness: WearReadiness, config: ProviderConfig?, onEnable: (Boolean) -> Unit, onRetry: () -> Unit,
     onLanguage: (String) -> Unit, onAgent: () -> Unit, onBack: () -> Unit,
-    bindingChoices: TransformingLazyColumnScope.() -> Unit = {}, syncFailure: String? = null, onRetrySync: () -> Unit = {}) {
+    bindingChoices: TransformingLazyColumnScope.() -> Unit = {}, syncFailure: String? = null, onRetrySync: () -> Unit = {},
+    onCredentialSetup: (() -> Unit)? = null) {
     var language by remember(readiness.capability.selectedLanguageTag) { mutableStateOf(readiness.capability.selectedLanguageTag.takeUnless { it == "und" }.orEmpty()) }
     WearPage("wear-status") {
         item { WearHeading("Status / setup") }
@@ -52,7 +57,7 @@ fun WearStatusScreen(readiness: WearReadiness, config: ProviderConfig?, onEnable
         item { WearAction("Retry readiness", "readiness-retry", onClick = onRetry) }
         item { WearHeading("Provider selection") }
         bindingChoices()
-        item { WearCopy("Secure credential setup is not available on this Watch yet. Existing approved Providers can still be selected.") }
+        if (onCredentialSetup != null) item { WearAction("Set up credential", "credential-open", onClick = onCredentialSetup) }
         item { WearHeading("Optional speech") }
         item { WearCopy(speechCopy(readiness.capability), Modifier.testTag("speech-status")) }
         item { WearCopy(when(readiness.capability.speechPermission) {

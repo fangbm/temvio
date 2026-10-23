@@ -4,7 +4,7 @@ import hashlib,json,struct
 root=Path(__file__).resolve().parents[2]
 folder=root/'docs/tasks/fixtures/d10-05/screenshots'
 m=json.loads((folder/'capture-manifest.json').read_text(encoding='utf-8'))
-assert m['baseSha']=='93a2aab9714a729ed2f53e60e0077372a237cbf7'
+assert m['baseSha']=='6f7071239df3addf6fbc2031aa8baf556d3c4f13'
 assert m['round'] is True and m['containsRealSecrets'] is False
 names=set()
 for item in m['candidates']:
@@ -24,5 +24,12 @@ for size,scenes in [(192,['today','ready','offline','confirmation','confirmation
 for scene in ('chat-only','sync-stopped'): assert f'wear-192x192-font100-dark-{scene}.png' in names
 for size in (192,227):
     for scene in ('confirmation-actions','status'): assert f'wear-{size}x{size}-font200-dark-{scene}.png' in names
+for size,scenes in ((192,['credential-ready','credential-comparison','credential-approved','credential-installed']), (227,['credential-comparison','credential-installed'])):
+    for scene in scenes:
+        theme='light' if scene in ('credential-ready','credential-installed') else 'dark'
+        assert f'wear-{size}x{size}-font100-{theme}-{scene}.png' in names
+for size in (192,227):
+    assert f'wear-{size}x{size}-font200-dark-credential-approved.png' in names
+assert len(names)==38
 assert {p.name for p in folder.glob('*.png')}==names
 print(f'{len(names)} actual Wear PNG/source hashes + 192/227 round/Light/Dark/scaled matrix PASS; visual review pending')

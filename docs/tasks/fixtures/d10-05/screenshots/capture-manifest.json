@@ -1,5 +1,5 @@
 {
-  "baseSha": "93a2aab9714a729ed2f53e60e0077372a237cbf7",
+  "baseSha": "6f7071239df3addf6fbc2031aa8baf556d3c4f13",
   "status": "CANDIDATES / AWAITING MAINTAINER VISUAL REVIEW",
   "platform": "Wear emulator acceptance; no physical Watch or speech recognition success claim",
   "avds": [
@@ -29,7 +29,7 @@
   "sourceHashes": {
     "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/agent/WatchPermissionPolicy.kt": "83840038d186bdae74a26ffdb06e103eaff0e8d3dc167f216df7941e02d27936",
     "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/agent/WearAgentRuntimeComposition.kt": "c6ad9b1f843ba023e333068ef4262c8c0c6f99ed3e96d580c3d6688491d1a150",
-    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/agent/WearAgentScreen.kt": "4fd6554dce291b0cf99e9fb4f85557ae2b25bb199cbac200c1b1a9100d9b69dd",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/agent/WearAgentScreen.kt": "8c0bc9696c847b90715554cbe41900e15f61bb8133e22f527f539166162148a4",
     "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/agent/WearAgentSessionController.kt": "e8b4ca4ebd2886c9644a423356cb29fa920673be5d879bd4909f820d80acea9f",
     "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/AndroidWearSpeechPlatform.kt": "65e04ee4e50919cbdb5cd7733124fa204467ad1d6e73b0bb9d812030fdfa4c0e",
     "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearCapabilityService.kt": "f11fce0d3c9ad226991a1a6a464201c686a8e535640736248623f64746d0f123",
@@ -39,15 +39,20 @@
     "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearProviderProbe.kt": "15138d6d33ea013643d6ea59cbba888d358dd6b0db9ee881744d571e2f76b001",
     "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearReadiness.kt": "5a27ba0dce952c1b919e8baf27ec82b25e454c6de06b946be07c2853926b2251",
     "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/capability/WearReadinessComposition.kt": "778c061dacd05f90a7a987e5867f44f982545ae9723e66f1fa4b4b0ee5404093",
-    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/presentation/WearApp.kt": "a6b29bda1c72317eb96454e0d7075bc387522980a0777274762d7b6cee06393f",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/presentation/WearApp.kt": "915cdf2cd803a1472bdfe26a117b997431128fba3d32bd1b1f671f32f4fb695d",
     "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/presentation/WearComponents.kt": "1de14b74d2666816e5687a6138953ec8927ff33e77c273e007a2bde9c0fe8867",
     "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/presentation/WearConfirmationScreen.kt": "3350b0fb9c2c8eba127a267a0694a5764154533c38280b84e736be3826f2fef6",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/presentation/WearCredentialSetupPresentation.kt": "239b1900b4536a49326c7b5ff57f78fc93d0d5cc4b2d65080af8ed26ee7f941b",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/presentation/WearCredentialSetupScreen.kt": "f7c8f59f2680d8f247c48bdac899db46986929edc9dcc072dd7b0d321757ea86",
     "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/presentation/WearNavigation.kt": "32eb845710604375defb7d8b769bd88f0b915c91b897a2b98cbbd9b20a6a3146",
     "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/presentation/WearPresentation.kt": "a4671e6fc306b79aea40e979fe12c08e471111ff8b8b5010c156730e0da64a28",
-    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/presentation/WearStatusScreen.kt": "144e5cb4b771e8bc055b9d6d1896e92c1d63e2e47d4e23189111460324dde52b",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/presentation/WearStatusScreen.kt": "b8c360646234475da693db13ca72bc87230b480c9130f15ae4acc10d040768b1",
     "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/presentation/WearTodayScreen.kt": "400f6fbc4e3c15c0c18b7956e1e519340f96a87bbcf33f6616ea4b19a9117d2d",
-    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/WearMainActivity.kt": "f9225c6ea8c2187c3ff31d41c917fa253f58006d1913e6ad69173038c360de07",
-    "apps/wear/src/androidTest/kotlin/dev/agenticscheduler/wear/WearFinalUxInstrumentedTest.kt": "4b427c435e7a9f9086fb046c150e0fb0dadf0c6876a28c0d17fc62b04993eec8",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/provisioning/WearTargetProviderProvisioningComposition.kt": "57104bf3bbc353b19e1c6989de1f25208c00c83ed1cfc151a240b6baa06b3d3d",
+    "apps/wear/src/main/kotlin/dev/agenticscheduler/wear/WearMainActivity.kt": "91ec2898e6f18a15d59947b3cb0302c8bcdb9edf0f02e796c2c5dc87ae2be2a7",
+    "apps/wear/src/androidTest/kotlin/dev/agenticscheduler/wear/WearFinalUxInstrumentedTest.kt": "fe633577ad0c43cad4f14cccde23dabbc53f898cda145fea9e4663f6d9ecb766",
+    "apps/wear/src/androidTest/kotlin/dev/agenticscheduler/wear/CredentialSetupFixtures.kt": "652373e89d3193f6fe2364036ceb9d9f2fa35223c314639e87a2730dc7f8257e",
+    "apps/wear/src/androidTest/kotlin/dev/agenticscheduler/wear/WearCredentialSetupInstrumentedTest.kt": "85a98f5101d7efd1990a2b0045ea233179a2ce48e2fc4d3f2d1b93e8cfe8c7f9",
     "apps/wear/build.gradle.kts": "736966d17804e4654526914a695d974cf036d98015191a68e7fedff50e233024"
   },
   "candidates": [
@@ -101,6 +106,40 @@
       "theme": "dark",
       "scene": "confirmation",
       "sha256": "29aeaeb39dd601a251fbdb37f251c1352b089597ed6cd2afa92d8d582810c545"
+    },
+    {
+      "file": "wear-192x192-font100-dark-credential-approved.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "scene": "credential-approved",
+      "sha256": "4a52060a4d6b0d14c3ae4e526352ebe96075990cf43fba065899d60a72096c07"
+    },
+    {
+      "file": "wear-192x192-font100-dark-credential-comparison.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "scene": "credential-comparison",
+      "sha256": "809b9da445bd2071ba06e61feece4a36002aa1bff6415702f3c1dd2b662b32be"
     },
     {
       "file": "wear-192x192-font100-dark-offline.png",
@@ -222,6 +261,40 @@
       "sha256": "53b125fcb3a6a91b34b19b2be32a15001a08fa7c09918e74267ced5228db81a2"
     },
     {
+      "file": "wear-192x192-font100-light-credential-installed.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "light",
+      "scene": "credential-installed",
+      "sha256": "4638014fe23a2b140c3e2ef1ec6d4c2b127e27bc1f3d85aa327e560a7112cad2"
+    },
+    {
+      "file": "wear-192x192-font100-light-credential-ready.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "light",
+      "scene": "credential-ready",
+      "sha256": "7be7f82627c5dc7158483d988c955d828935a03092a848ee28f7c34b86626af3"
+    },
+    {
       "file": "wear-192x192-font100-light-offline.png",
       "logicalDp": [
         192,
@@ -307,6 +380,23 @@
       "sha256": "db6786427a2549b5721dc76205e06523ec4c4afba72960e6a9eb0b54d3976341"
     },
     {
+      "file": "wear-192x192-font200-dark-credential-approved.png",
+      "logicalDp": [
+        192,
+        192
+      ],
+      "bitmapPixels": [
+        384,
+        384
+      ],
+      "profile": "wearos_small_round",
+      "densityDpi": 320,
+      "fontScale": 2.0,
+      "theme": "dark",
+      "scene": "credential-approved",
+      "sha256": "8f66d465a7c1f440b87c065e87792f0149c8b33e1f5b20dfb3144266c83d96f0"
+    },
+    {
       "file": "wear-192x192-font200-dark-status.png",
       "logicalDp": [
         192,
@@ -321,7 +411,7 @@
       "fontScale": 2.0,
       "theme": "dark",
       "scene": "status",
-      "sha256": "e6d73f6a9a13dc3f5a941c31ceda10a66395c3a9cc5d398313c782aa99b2b60c"
+      "sha256": "e3938bf247fec24ce7fdee92e005d6184fc0622911a84793cfecc42506fc11b2"
     },
     {
       "file": "wear-227x227-font100-dark-confirmation-actions.png",
@@ -373,6 +463,23 @@
       "theme": "dark",
       "scene": "conversation",
       "sha256": "4b31743314a1a4722e3d235b80fd233d3984915f40ba608754224793388e3bf4"
+    },
+    {
+      "file": "wear-227x227-font100-dark-credential-comparison.png",
+      "logicalDp": [
+        227,
+        227
+      ],
+      "bitmapPixels": [
+        454,
+        454
+      ],
+      "profile": "wearos_large_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "dark",
+      "scene": "credential-comparison",
+      "sha256": "cc8676deedd3df3fa20437e832b14ed37c4a8e182596fd1cda7259ae71d9bff2"
     },
     {
       "file": "wear-227x227-font100-dark-status.png",
@@ -477,6 +584,23 @@
       "sha256": "5e5d125b0e3ce197f56bad70bfb0f8848691a23288ee4a628d9fc7a0d3ee8255"
     },
     {
+      "file": "wear-227x227-font100-light-credential-installed.png",
+      "logicalDp": [
+        227,
+        227
+      ],
+      "bitmapPixels": [
+        454,
+        454
+      ],
+      "profile": "wearos_large_round",
+      "densityDpi": 320,
+      "fontScale": 1.0,
+      "theme": "light",
+      "scene": "credential-installed",
+      "sha256": "0d705000eddb05dfeb9989af2927c2bcd4730f64c547d0e9fcd7231d4d220c2b"
+    },
+    {
       "file": "wear-227x227-font100-light-status.png",
       "logicalDp": [
         227,
@@ -545,6 +669,23 @@
       "sha256": "cfa9d794cbd0e5fa8bbddb9edd948db7bf11c4cce4c7e637bf5b385dc4853596"
     },
     {
+      "file": "wear-227x227-font200-dark-credential-approved.png",
+      "logicalDp": [
+        227,
+        227
+      ],
+      "bitmapPixels": [
+        454,
+        454
+      ],
+      "profile": "wearos_large_round",
+      "densityDpi": 320,
+      "fontScale": 2.0,
+      "theme": "dark",
+      "scene": "credential-approved",
+      "sha256": "4949d929ca3f52d13c0e8317045379dd6625950bbed0673dff751419200e218c"
+    },
+    {
       "file": "wear-227x227-font200-dark-status.png",
       "logicalDp": [
         227,
@@ -559,7 +700,7 @@
       "fontScale": 2.0,
       "theme": "dark",
       "scene": "status",
-      "sha256": "9998aa9b1eeb23cb054fca88e5716c3df2d3ccaeb4ff59da42df44e9868ae242"
+      "sha256": "e019375bc794fdc120713921f99ea99cb5250b670d053c4c2f0f47fd180dfe17"
     }
   ]
 }

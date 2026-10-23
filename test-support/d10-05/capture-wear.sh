@@ -25,10 +25,10 @@ for font in 1.0 2.0; do
     -e captureWidth "$dp" -e captureFont "$font" dev.agenticscheduler.wear.test/androidx.test.runner.AndroidJUnitRunner | tee "$log"
   grep -q 'OK (1 test)' "$log"
   if [[ "$font" == 2.0 ]]; then
-    checks='dev.agenticscheduler.wear.WearFinalUxInstrumentedTest#todayAgentStatusRetryAndOverflowAreReachableAndPassive,dev.agenticscheduler.wear.WearFinalUxInstrumentedTest#exactConfirmationBackThemeAndRecompositionAreNotDecisions'
+    checks='dev.agenticscheduler.wear.WearFinalUxInstrumentedTest#todayAgentStatusRetryAndOverflowAreReachableAndPassive,dev.agenticscheduler.wear.WearFinalUxInstrumentedTest#exactConfirmationBackThemeAndRecompositionAreNotDecisions,dev.agenticscheduler.wear.WearCredentialSetupInstrumentedTest#sourceRequestUnconfirmedRetryAndFetchAreOnlyExplicit,dev.agenticscheduler.wear.WearCredentialSetupInstrumentedTest#separateSendingCodeAndExplicitInstallAndAckRetry,dev.agenticscheduler.wear.WearCredentialSetupInstrumentedTest#recoveryAndInstalledCopyHaveReachableSafeActionsWithoutSecretFields'
     scaled="build/d10-05/logs/scaled-actions-${dp}.txt"
     adb_cmd shell am instrument -w -r -e class "$checks" dev.agenticscheduler.wear.test/androidx.test.runner.AndroidJUnitRunner | tee "$scaled"
-    grep -q 'OK (2 tests)' "$scaled"
+    grep -q 'OK (5 tests)' "$scaled"
   fi
 done
 adb_cmd pull /sdcard/Android/data/dev.agenticscheduler.wear/files/d10-05-screenshots build/d10-05/wear-captures/

@@ -1,7 +1,7 @@
 # D10-05 — Wear Final UX
 
-Status: **IN PROGRESS / DRAFT**. Target credential provisioning has the FOUNDATION_GAP below.
-Authoritative baseline: `93a2aab9714a729ed2f53e60e0077372a237cbf7`, accepted D10-04 / merged PR #37.
+Status: **IMPLEMENTED / AWAITING REVIEW / DRAFT**. Target credential provisioning is RESOLVED via D10-05F PR #40.
+Authoritative current slice baseline: `6f7071239df3addf6fbc2031aa8baf556d3c4f13`, merged D10-05F PR #40. D10-04 was accepted in PR #37 at `93a2aab9714a729ed2f53e60e0077372a237cbf7`.
 Branch: `feature/d10-05-wear-final-ux`; target `feature/d9-02-agent-sync`.
 Keep Draft; do not merge or start D10-06.
 
@@ -108,42 +108,117 @@ Platform API references: [Wear foundation](https://developer.android.com/referen
 Pinned local 1.6.2 API/actual emulator execution, rather than latest docs alone,
 determine compatibility. These references do not prove physical hardware acceptance.
 
-## FOUNDATION_GAP — Watch target provisioning orchestration
+## Target provisioning — RESOLVED via D10-05F PR #40
 
-**User interaction:** choose/approve exact Watch-local credentialed binding and source,
-request delivery, review independent SAS, explicitly approve/install and recover safely
-after navigation/restart; see honest pending/installation result.
+Merge baseline: `6f7071239df3addf6fbc2031aa8baf556d3c4f13`.
+Normal sync merge: `f45d90478d7b609748430114c442a6fe5ea4c458`, followed by a
+separate conflict-cleanup commit (no rebase, amend or force-push). Foundation
+coordinator/composition/regression source blobs remain identical to that base;
+`test-support/d10-05f/check-boundaries.py --source-only` enforces all three.
 
-**Existing API inspected:**
-`ProviderCredentialProvisioningService.reserveForExplicitUser`, `compare`,
-`approveComparisonByExplicitLocalUser`, `installApproved`, `recover`;
-`ProviderCredentialTransport.publish/fetch/acknowledge` and
-`KtorProviderCredentialTransport`; `ProviderCredentialProvisioningRepository`;
-`WearAgentRuntimeComposition` and `WearProviderBindingSource`.
+`WearMainActivity` owns the existing target composition/HTTP client, using only the
+actual successfully activated D8 account/server configuration. No configured active
+account means honest setup unavailable, never an invented account or mailbox.
+Opening has a separate local loading state; a generation check discards an obsolete
+repository read after Back or a newer explicit selection.
+Activity destruction cancels/joins owned intents before closing the client. Leaving
+setup closes ephemeral presentation and cancels its listener/work, without wipe or
+rollback. Reopening explicitly resumes durable truth with the same coordinator.
+The frozen Agent runtime composition is unchanged.
 
-**Why insufficient:** the install service consumes envelope/private-key-backed
-composition and exposes protocol comparison objects; transport supplies separate
-mailbox primitives. The repository has the durable revision/journal facts, but no
-reviewed Watch target interaction facade connects current enrollment/selected source,
-request publication, fetched comparison, explicit user approval, install/recovery and
-informational ACK into sanitized resumable presentation state. Source delivery has
-its own service; it is not a target coordinator. Implementing that in Compose would
-duplicate protocol/recovery orchestration. The existing Agent composition only selects
-already-existing configs and observes binding readiness; it does not own provisioning.
+Status / Setup contains credential setup; no top-level route is added. Credential-free
+PUBLIC_HTTPS / EXPLICIT_CREDENTIAL_FREE_LOCAL approval and HTTP disclosure remain.
+An explicit credential-required Provider selection only selects the existing config;
+it does not reserve/publish. Set up credential explicitly opens/resumes the nested
+section. The feature presentation owns only local source/code drafts and delegates
+typed intents to `ProviderCredentialTarget`, never mailbox/service/HPKE primitives.
 
-**Minimal requested foundation (proposal, not implemented):** a separately reviewed
-Watch target application/platform coordinator over those existing primitives, with
-typed sanitized state and explicit reserve/refresh/approve/install/recover intents,
-proper enrollment/ACTIVE-directory/config ownership and cancellation/restart behavior.
-UI receives necessary comparison digits/status only, no secret/private key/envelope
-or SecretRef. No wire/HPKE/revision/approval/ACK/retention semantics change is requested.
+| Target state | Human presentation / explicit action |
+| --- | --- |
+| NotStarted | Opening setup; no transfer claim |
+| NotEligible | Human eligibility reason; Back to review account/configuration |
+| Ready | Provider label and sending-device identity suffixes; no default source; Request credential |
+| Reserved / UNCONFIRMED | Local request saved, publication unknown; Retry request delegates `retry()` |
+| Reserved / PUBLISHED | Continue on selected sender; Check for credential delegates `fetchDelivery()` |
+| Reserved / comparisonRefreshRequired | Reload comparison; never reuse an old UI handle |
+| ComparisonReady | Exact Watch eight digits; separately typed sender digits; Approve match |
+| UserApproved | Comparison approved, NOT installed; separate Install credential button |
+| Installing | Busy; duplicate progression disabled; no success claim |
+| Installed | Local committed installation; independent ACK confirmed/pending/expired/blocked copy; Retry acknowledgement calls only `retry()` |
+| Expired | Explicit expired request; only explicit Request again reuses the displayed source |
+| RetryableFailure | Sanitized work/failure copy; explicit target retry |
+| Blocked | Sanitized authorization/approval/integrity/store/state reason; explicit safe target retry, never automatic |
+| RecoveryRequired | Resume setup delegates recovery, never local approval or install |
 
-This path is visibly unavailable, not fake setup success. Independent Wear UX proceeds.
-No source-device provisioning UI or new protocol path is implemented.
+Source choice retains exact opaque DeviceId bytes. The accepted Ready list can
+include the Watch itself; presentation does not filter it or choose it automatically.
+No friendly device name is invented. Only a stable suffix is primary copy.
+
+SAS approval is independent from Agent Tool confirmation. The sender-code field
+starts blank, is not saveable/persisted, and accepts approval only for exactly eight
+ASCII decimal digits. It never takes `comparison.code` as input. It clears on exact
+comparison/config/source/revision replacement, successful approval or presentation
+close. The exact received comparison instance and separately entered value are
+passed to the facade. A stale-observer race rejects rather than borrowing a new
+handle. A wrong eight-digit code reaches the real service, fails closed, and can
+be explicitly re-reviewed via the existing target retry/project behavior.
+
+No request/fetch/approval/install is triggered by ordinary Status, Today/Agent entry,
+readiness, theme/font change, recomposition, Back/swipe or navigation. No polling.
+USER_APPROVED recreation still requires explicit install; ACTIVE recreation shows
+Installed with a possibly pending ACK and never reimports merely to get an ACK.
+After Installed the trusted root re-reads ProviderConfig, calls the existing
+`refreshSelectedBinding()` / `readiness.refresh(true)` and refreshes local display.
+It never sets readiness booleans, SecretRef or the Agent preference itself.
+
+UI receives no plaintext, ciphertext, SecretReference, binding digest, key, bearer,
+install journal or server body. Synthetic screenshot handles are test fixtures only;
+production never constructs or reconstructs `ProviderTargetComparison`.
+
+D10-05 FOUNDATION_GAP: none. D10-05 BLOCKED_BY_DECISION: none.
 
 ## Verification and evidence
 
-Local final verification (2026-10-18): **82/82 Wear JVM tests, 46/46 actual
+Current foundation-consumption verification (2026-10-24): **93/93 Wear JVM tests**
+(the original 82 plus 11 credential presentation regressions), Wear debug/test APK
+packaging and lint PASS. The retained real foundation coordinator suite is **28/28**;
+all targeted application provisioning/secure-store tests total **61 PASS + 1 local
+PostgreSQL skip**, wire **6/6**, migration/schema **2/2**. The local PostgreSQL skip
+is not acceptance; the final exact-head CI must execute the real PostgreSQL case.
+Logs: `D:\codex\d10-05-final-relevant.log`, `D:\codex\d10-05-final-acceptance-build.log`.
+
+The six added Wear native cases include real Room/Tink/Android Keystore coordinator
+recreation, explicit source/request/fetch, independently entered wrong/correct codes,
+separate Install, installed/failed-ACK restart, ACK-only retry, passive theme/Back,
+new-comparison draft clearing and no-secret UI assertions. Only directory/mailbox
+transport ports are fake in the two real-coordinator cases. Existing runtime/D9
+assertions are retained. Small Round full native suite: **52/52**, no skip/failure
+(`D:\codex\d10-05-final-small-native52.log`). Large Round full native suite also
+passes **52/52**, no skip/failure (`D:\codex\d10-05-final-large-native52.log`).
+The new circular-bounds regression initially exposed the editable field's 32dp inner
+semantics; moving padding into the field decoration makes the full >=48dp editable
+surface observable without relaxing assertions. Final build and six-case rerun pass.
+The 192dp/200% check also exposed oversized sending-device / acknowledgement /
+request labels. Concise contextual actions retain the full state explanation and
+the same typed target delegation. The strict five-case 200% interaction rerun passes;
+neither font scaling nor round-bound assertions are reduced.
+
+Final renderer evidence is **38 actual PNG candidates**: the original 30-state matrix
+plus eight bounded credential-setup views. Both actual AVD profiles pass the five
+200% interaction cases (**5/5 each**), and normal/scaled screenshot methods pass
+on both (**4/4 method executions**). Logs are under `build/d10-05/logs`; local
+capture transcripts are `D:\codex\d10-05-final-small-capture38.log` and
+`D:\codex\d10-05-final-large-capture38.log`. The manifest records the current
+foundation base and exact normalized source/PNG hashes. Representative 192/227
+comparison, Installed/ACK and 200% Install images were visually inspected; candidates
+still require maintainer visual review. An initial Large AVD ADB connection failure
+was discarded and the real profile restarted on a distinct local port before its
+successful final suite/capture. No `wm size`/density override or fake platform was used.
+
+Final exact-head CI is linked from PR #39 to avoid a self-referential committed SHA;
+old run `39050722819` is historical only.
+
+Historical pre-foundation verification (2026-10-18): **82/82 Wear JVM tests, 46/46 actual
 Wear instrumentation tests, compile/APK packaging and lint PASS**. The JVM set
 contains 22 new presentation cases and all 60 prior cases. The native set retains
 all 20 prior Agent runtime E2E cases and adds three runtime/navigation cases;
@@ -172,6 +247,7 @@ Commands actually run locally (CI connected runner shown separately):
 
 ```text
 gradlew :apps:wear:assembleDebug :apps:wear:assembleDebugAndroidTest :apps:wear:testDebugUnitTest :apps:wear:lintDebug --no-daemon --no-configuration-cache --console=plain --gradle-user-home D:\codex\asp-d10-gradle-home
+gradlew :shared:application:desktopTest --tests '*ProviderCredential*Test' --tests '*DesktopPlatformSecureStoreTest' :shared:sync:desktopTest --tests '*ProviderCredentialWireTest' :shared:database:desktopTest --tests '*ProviderCredentialMigrationTest' --no-daemon --no-configuration-cache --console=plain --gradle-user-home D:\codex\asp-d10-gradle-home
 adb -s emulator-5556 install -r apps/wear/build/outputs/apk/debug/wear-debug.apk
 adb -s emulator-5556 install -r apps/wear/build/outputs/apk/androidTest/debug/wear-debug-androidTest.apk
 adb -s emulator-5556 shell pm revoke dev.agenticscheduler.wear android.permission.RECORD_AUDIO
@@ -208,7 +284,7 @@ physical display; the Small Round AVD supplies 192dp. Scripts reject `wm size` o
 density overrides, preserve user font scale, and repeat Today/Retry/Confirm/Deny
 interaction checks at 200% on both. No cancelled/unallocated job counts.
 
-30 renderer candidates cover normal Light/Dark states at both sizes plus 200%
+The historical 30-state renderer matrix covers normal Light/Dark states at both sizes plus 200%
 Confirm/Enable at each size. A first local sizing trial using `wm size` preserved
 the small panel mask; those trial images are discarded and are not acceptance
 for 227dp. Final evidence uses two actual physical profiles. Screenshot capture
@@ -219,7 +295,7 @@ capturing a prior or blank surface immediately after configuration changes.
 
 LOCAL_REVERSIBLE: app-local names, concise English copy, three visible schedule rows,
 recent transcript rendering bounds, inscribed padding and route layout.
-No semantic blocker/decision was selected. Target provisioning FOUNDATION_GAP is above.
+No semantic blocker/decision was selected. Target provisioning foundation is resolved and consumed above.
 No Domain/Application/Planner/D7/D8/D9 semantic change, Tool/permission change, schema,
 migration, wire/crypto/server change, Phone bridge, nearby provisioning, new context
 authority, conflict resolution or production-sensitive V3 enablement. OD-012 OPEN;
@@ -229,8 +305,9 @@ INTERNET + VALIDATED; on-device recognizer is absent (`onDeviceService=false`),
 capability remains text-supported with STT UNSUPPORTED. The granted-permission
 path and explicit attempt/cancel return ServiceUnavailable without Agent submission.
 This proves the unavailable path, not successful physical speech recognition.
-Both physical profile sizes pass 200% Today/Agent/Retry/Confirm/Deny interaction
-checks (2/2 each, in addition to four successful capture-method executions).
+Both physical profile sizes pass 200% Today/Agent/Retry/Confirm/Deny plus credential
+source/request/fetch/approval/install/ACK/recovery/Back interactions (5/5 each,
+in addition to four successful capture-method executions).
 
 Evidence is Wear emulator acceptance only; no physical Watch, live external Provider
 or actual on-device speech recognition success is claimed without measurement.

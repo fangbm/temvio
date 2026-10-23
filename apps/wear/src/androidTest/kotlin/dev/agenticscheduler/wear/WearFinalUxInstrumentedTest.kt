@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.agenticscheduler.agent.history.*
 import dev.agenticscheduler.application.calendar.*
+import dev.agenticscheduler.application.sync.*
 import dev.agenticscheduler.domain.id.*
 import dev.agenticscheduler.domain.time.*
 import dev.agenticscheduler.wear.agent.*
@@ -175,6 +176,16 @@ class WearFinalUxInstrumentedTest {
                     "today","sync-stopped" -> WearTodayScreen(todayModel(date,TimeZone.UTC,projection()),if(scene=="sync-stopped")"AUTHENTICATION_REQUIRED" else null,true,{},{},{})
                     "confirmation","confirmation-actions" -> WearConfirmationScreen(call,false,{}, {})
                     "status" -> WearStatusScreen(ready.copy(userEnabledAiEntry=false),displayConfig,{},{},{},{},{})
+                    "credential-ready","credential-comparison","credential-approved","credential-installed" -> {
+                        val state=when(scene){
+                            "credential-ready"->CredentialSetupFixtures.ready()
+                            "credential-comparison"->ProviderTargetState.ComparisonReady(CredentialSetupFixtures.comparison())
+                            "credential-approved"->ProviderTargetState.UserApproved(CredentialSetupFixtures.flow)
+                            else->ProviderTargetState.Installed(CredentialSetupFixtures.flow,ProviderTargetAcknowledgement(ProviderTargetAckStatus.PENDING))
+                        }
+                        WearCredentialSetupScreen(WearCredentialSetupView(state,CredentialSetupFixtures.binding.model,
+                            enteredCode=if(scene=="credential-comparison"&&width>192)"87654321" else ""),{},{},{},{})
+                    }
                     else -> {
                         val r=when(scene){"offline"->ready.copy(networkReachable=false);"chat-only"->ready.copy(providerProbeFailure=WearProbeFailure.UNSUPPORTED_TOOLS);else->ready}
                         val messages=listOf(AgentMessage(mid,tid,0,AgentMessageRole.USER,"What is next?",0),
@@ -187,11 +198,11 @@ class WearFinalUxInstrumentedTest {
                 }
             }}
         }}
-        val scenes=if(font>=190) listOf("confirmation-actions","status") else if(width<=192)
-            listOf("today","ready","offline","confirmation","confirmation-actions","status","chat-only","sync-stopped")
-            else listOf("today","conversation","tool-result","confirmation","confirmation-actions","status")
+        val scenes=if(font>=190) listOf("confirmation-actions","status","credential-approved") else if(width<=192)
+            listOf("today","ready","offline","confirmation","confirmation-actions","status","chat-only","sync-stopped","credential-ready","credential-comparison","credential-approved","credential-installed")
+            else listOf("today","conversation","tool-result","confirmation","confirmation-actions","status","credential-comparison","credential-installed")
         val out=File(context.getExternalFilesDir(null),"d10-05-screenshots").also{it.mkdirs()}
-        for(scene in scenes)for(dark in if(font>=190 || scene in listOf("chat-only","sync-stopped"))listOf(true)else listOf(false,true)) {
+        for(scene in scenes)for(dark in if(scene.startsWith("credential-"))listOf(scene !in listOf("credential-ready","credential-installed")) else if(font>=190 || scene in listOf("chat-only","sync-stopped"))listOf(true)else listOf(false,true)) {
             ui.runOnIdle{capture.value=scene to dark};ui.waitForIdle();ui.mainClock.advanceTimeByFrame();ui.waitForIdle()
             when(scene){
                 "confirmation-actions"->assertSafe("wear-confirmation","agent-confirm")
@@ -201,6 +212,12 @@ class WearFinalUxInstrumentedTest {
                 "sync-stopped"->assertSafe("wear-today","sync-retry")
                 "conversation"->ui.onNodeWithTag("wear-agent").performScrollToNode(hasText("Your next event is at 14:00."))
                 "today"->{assertSafe("wear-today","today-agent");ui.onNodeWithTag("wear-today").performScrollToNode(hasText("Event · Research session"))}
+                "credential-ready"->assertSafe("wear-credential-setup","credential-source-0")
+                "credential-approved"->assertSafe("wear-credential-setup","credential-install")
+                "credential-installed"->assertSafe("wear-credential-setup","credential-retry")
+                "credential-comparison"->if(width>192)assertSafe("wear-credential-setup","credential-code") else {
+                    scroll("wear-credential-setup","credential-watch-code");ui.onNodeWithTag("credential-watch-code").assertIsDisplayed().assertTextContains("1234 5678")
+                }
             }
             // First prove Send bounds, then show the actual blocker/limitation in its review image.
             if(scene=="offline") scroll("wear-agent","readiness")

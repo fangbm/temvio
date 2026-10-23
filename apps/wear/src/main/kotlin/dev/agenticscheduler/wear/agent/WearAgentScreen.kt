@@ -27,6 +27,7 @@ fun WearAgentScreen(
     modifier: Modifier = Modifier, bindingChoices: TransformingLazyColumnScope.() -> Unit = {},
     navigation: WearNavigation? = null, threadTitle: String? = null,
     onLeaveForeground: () -> Unit = {}, syncFailure: String? = null, onRetrySync: () -> Unit = {},
+    onCredentialSetup: (() -> Unit)? = null,
 ) {
     val nav = navigation ?: remember { WearNavigation(WearDestination.AGENT) }
     fun leave() { onLeaveForeground(); onCancelSpeech() }
@@ -45,7 +46,7 @@ fun WearAgentScreen(
                 pending != null -> WearConfirmationScreen(pending, session.busy,
                     { approved -> onConfirm(pending.id, requireNotNull(pending.previewJson), approved) }, { back() })
                 nav.destination == WearDestination.STATUS -> WearStatusScreen(readiness, config, onEnable, onRetry, onLanguage,
-                    { open(WearDestination.AGENT) }, { back() }, bindingChoices, syncFailure, onRetrySync)
+                    { open(WearDestination.AGENT) }, { back() }, bindingChoices, syncFailure, onRetrySync, onCredentialSetup)
                 else -> WearAgentConversation(session, readiness, config, threadTitle, onDraft, onSend, onNew,
                     { session.pending?.let(nav::review) }, { open(WearDestination.STATUS) }, { back() }, onSpeech, onCancelSpeech)
             }
@@ -107,7 +108,7 @@ fun requiresHttpDisclosure(config: ProviderConfig): Boolean {
 
 @Composable
 fun WearAgentRoute(composition: WearAgentRuntimeComposition, navigation: WearNavigation,
-    syncFailure: String? = null, onRetrySync: () -> Unit = {}) {
+    syncFailure: String? = null, onRetrySync: () -> Unit = {}, onOpenCredential: (ProviderConfigId) -> Unit = {}, providerRefresh: Int = 0) {
     val scope = rememberCoroutineScope()
     val session by composition.session.ui.collectAsState()
     val readiness by composition.readiness.readiness.collectAsState()
@@ -115,8 +116,11 @@ fun WearAgentRoute(composition: WearAgentRuntimeComposition, navigation: WearNav
     var selected by remember { mutableStateOf<ProviderConfig?>(null) }
     var title by remember { mutableStateOf<String?>(null) }
     var setupError by remember { mutableStateOf(false) }
+    var selectedForCredential by remember { mutableStateOf(false) }
     LaunchedEffect(composition) {
         composition.session.restoreRecentThread()
+    }
+    LaunchedEffect(composition, providerRefresh) {
         configs = composition.state.providerConfigs()
         selected = composition.state.selectedProviderConfigId()?.let { composition.state.providerConfig(it) }
     }
@@ -133,6 +137,8 @@ fun WearAgentRoute(composition: WearAgentRuntimeComposition, navigation: WearNav
         { tag -> composition.readiness.settings.selectSpeechLanguageFromExplicitUserAction(tag); composition.readiness.capability.selectLanguageFromUserAction(tag) },
         navigation = navigation, threadTitle = title, syncFailure = syncFailure, onRetrySync = onRetrySync,
         onLeaveForeground = composition.session::cancelForegroundRequest,
+        onCredentialSetup = selected?.takeIf { selectedForCredential || readiness.provider.credentialRequired || it.credentialReference != null }
+            ?.let { config -> { onOpenCredential(config.id) } },
         bindingChoices = {
             run {
                 if (setupError) item { WearCopy("This binding could not be approved. Check its route and configuration.") }
@@ -140,7 +146,7 @@ fun WearAgentRoute(composition: WearAgentRuntimeComposition, navigation: WearNav
                     fun choose(route: WearEndpointRoute?) { scope.launch {
                         try {
                             if (route == null) composition.selectFromUserAction(config) else composition.approveCredentialFreeFromUserAction(config, route)
-                            selected = config; setupError = false
+                            selected = config; selectedForCredential = route == null; setupError = false
                         } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
                         catch (_: Exception) { setupError = true }
                     } }
@@ -148,6 +154,9 @@ fun WearAgentRoute(composition: WearAgentRuntimeComposition, navigation: WearNav
                     else WearEndpointRoute.entries.forEach { route ->
                         item { WearAction("Approve ${config.model} · ${if (route == WearEndpointRoute.PUBLIC_HTTPS) "Public HTTPS" else "Local, credential-free"}",
                             "binding-${route.name}-${config.id.value}", onClick = { choose(route) }) }
+                    }
+                    if (config.credentialReference == null && config.baseUrl.startsWith("https://")) item {
+                        WearAction("Select ${config.model} for credential setup", "binding-credential-${config.id.value}", onClick = { choose(null) })
                     }
                 }
             }

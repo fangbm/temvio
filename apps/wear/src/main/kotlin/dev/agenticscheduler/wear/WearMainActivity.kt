@@ -12,6 +12,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import dev.agenticscheduler.wear.agent.*
 import dev.agenticscheduler.wear.presentation.*
+import dev.agenticscheduler.wear.provisioning.WearTargetProviderProvisioningComposition
+import dev.agenticscheduler.agent.history.ProviderConfigId
+import dev.agenticscheduler.agent.history.provisioningBinding
 import dev.agenticscheduler.wear.capability.WearLocalSettings
 import dev.agenticscheduler.database.repository.RoomAgentStateRepository
 import dev.agenticscheduler.database.repository.RoomLocalEnrollmentRepository
@@ -59,6 +62,45 @@ class WearMainActivity : ComponentActivity() {
     private val agentRuntime = mutableStateOf<WearAgentRuntimeComposition?>(null)
     private val agentInitialization = mutableStateOf(false)
     private val agentFailure = mutableStateOf<String?>(null)
+    @Volatile private var activeD8Configuration: ActiveSyncRuntimeConfiguration? = null
+    private var targetProvisioning: WearTargetProviderProvisioningComposition? = null
+    private val credentialSetup = mutableStateOf<WearCredentialSetupPresentation?>(null)
+    private val credentialSetupVisible = mutableStateOf(false)
+    private val credentialSetupOpening = mutableStateOf(false)
+    private var credentialSetupGeneration = 0
+    private val providerRefresh = mutableStateOf(0)
+    private var credentialOpening: kotlinx.coroutines.Job? = null
+    private fun closeCredentialSetup() {
+        credentialSetupGeneration++
+        credentialOpening?.cancel(); credentialSetup.value?.close()
+        credentialSetup.value = null; credentialSetupVisible.value = false; credentialSetupOpening.value = false
+    }
+    private fun openCredentialSetup(id: ProviderConfigId) {
+        closeCredentialSetup(); credentialSetupVisible.value = true
+        val configuration = activeD8Configuration ?: return
+        val generation = credentialSetupGeneration
+        credentialSetupOpening.value = true
+        credentialOpening = agentScope.launch {
+            try {
+                val state = RoomAgentStateRepository(database)
+                if (state.selectedProviderConfigId() != id) return@launch
+                val config = state.providerConfig(id) ?: return@launch
+                if (generation != credentialSetupGeneration || !credentialSetupVisible.value) return@launch
+                val root = targetProvisioning ?: WearTargetProviderProvisioningComposition.create(this@WearMainActivity, database, configuration)
+                    .also { targetProvisioning = it }
+                credentialSetup.value = WearCredentialSetupPresentation(root.target, config.provisioningBinding(id, true), agentScope) {
+                    // Re-read committed association; readiness remains its existing independent authority.
+                    if (state.providerConfig(id) != null) {
+                        agentRuntime.value?.refreshSelectedBinding()
+                        agentRuntime.value?.readiness?.refresh(true)
+                        providerRefresh.value++
+                    }
+                }.also { it.open() }
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { credentialSetup.value = null }
+            finally { if (generation == credentialSetupGeneration) credentialSetupOpening.value = false }
+        }
+    }
     private var microphoneResult: ((Boolean) -> Unit)? = null
     private val microphonePermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         val callback = microphoneResult; microphoneResult = null; callback?.invoke(granted)
@@ -109,6 +151,7 @@ class WearMainActivity : ComponentActivity() {
                         ?: d8Runtime.activateWithoutConfiguration()
                     when (creation) {
                         is ActiveSyncRuntimeCreation.Active -> {
+                            activeD8Configuration = configuration
                             val trigger = d8Runtime.newCatchUpTrigger(
                                 d8Scope,
                                 pollingIntervalMillis = ActiveSyncCatchUpTrigger.WEAR_POLL_INTERVAL_MILLIS,
@@ -148,7 +191,10 @@ class WearMainActivity : ComponentActivity() {
                         agentInitialization.value, agentFailure.value != null,
                         onInitializeAgent = { agentFailure.value = null; openAgent() },
                         syncFailure = d8SyncFailure.value,
-                        onRetrySync = { d8SyncFailure.value = null; d8SyncTrigger?.retryNow() })
+                        onRetrySync = { d8SyncFailure.value = null; d8SyncTrigger?.retryNow() },
+                        credentialSetupVisible = credentialSetupVisible.value, credentialSetup = credentialSetup.value,
+                        credentialSetupOpening = credentialSetupOpening.value,
+                        onOpenCredential = ::openCredentialSetup, onCloseCredential = ::closeCredentialSetup, providerRefresh = providerRefresh.value)
                     D8StartupState.Activating -> WearStartupScreen(false)
                     D8StartupState.Blocked -> WearStartupScreen(true)
                 }
@@ -185,6 +231,9 @@ class WearMainActivity : ComponentActivity() {
         if (d8RuntimeLazy.isInitialized()) {
             d8ShutdownScope.launch {
                 try {
+                    agentScope.coroutineContext[kotlinx.coroutines.Job]?.join()
+                    credentialSetup.value?.close()
+                    targetProvisioning?.close()
                     agentRuntime.value?.close()
                     d8Runtime.deactivate()
                 } finally {

@@ -15,8 +15,8 @@ for p in sorted(source.glob('*.png')):
         profile='wearos_small_round' if m[1]=='192' else 'wearos_large_round',densityDpi=320,fontScale=int(m[2])/100,theme=m[3],scene=m[4],sha256=hashlib.sha256(data).hexdigest()))
 assert items,'No actual Wear captures'
 paths=sorted((root/'apps/wear/src/main/kotlin').rglob('*.kt'))
-paths+=[root/'apps/wear/src/androidTest/kotlin/dev/agenticscheduler/wear/WearFinalUxInstrumentedTest.kt',root/'apps/wear/build.gradle.kts']
-manifest=dict(baseSha='93a2aab9714a729ed2f53e60e0077372a237cbf7',status='CANDIDATES / AWAITING MAINTAINER VISUAL REVIEW',
+paths+=[root/'apps/wear/src/androidTest/kotlin/dev/agenticscheduler/wear/WearFinalUxInstrumentedTest.kt',root/'apps/wear/src/androidTest/kotlin/dev/agenticscheduler/wear/CredentialSetupFixtures.kt',root/'apps/wear/src/androidTest/kotlin/dev/agenticscheduler/wear/WearCredentialSetupInstrumentedTest.kt',root/'apps/wear/build.gradle.kts']
+manifest=dict(baseSha='6f7071239df3addf6fbc2031aa8baf556d3c4f13',status='CANDIDATES / AWAITING MAINTAINER VISUAL REVIEW',
     platform='Wear emulator acceptance; no physical Watch or speech recognition success claim',
     avds=[dict(name='temvio-d10-05',profile='wearos_small_round',physicalPixels=[384,384]),dict(name='temvio-d10-05-large',profile='wearos_large_round',physicalPixels=[454,454])],apiLevel=35,systemImage='android-35-ext15/android-wear/x86_64',round=True,
     fixture='Synthetic typed presentation inputs; retained real AgentRunService/Room/Android HTTP E2E is separate execution evidence',
