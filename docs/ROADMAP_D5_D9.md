@@ -343,14 +343,9 @@ D10-01   Design System + App Shell                   MERGED PR #32 / 19d6a077; a
 D10-02   Today / Calendar / Tasks / Academic          MERGED PR #33 cda86a81; D10-02F resolved/merged
 D10-03   Planner / History / Sync / Settings          MERGED PR #35 cdc85045; FG-01 resolved via PR #36
 D10-04F  ContextAnchor foundation                    MERGED PR #38 17fd6e7ef117cdb899b7e2f28d3a1a8bf13a58ed
-<<<<<<< HEAD
 D10-04   Agent Product Surface                       MERGED PR #37 / 93a2aab9714a729ed2f53e60e0077372a237cbf7
-D10-05   Wear Final UX                               IN PROGRESS; target provisioning FOUNDATION_GAP; independent UX proceeds
-=======
-D10-04   Agent Product Surface                       IMPLEMENTED / AWAITING REVIEW; ContextAnchor foundation consumed
-D10-05F IMPLEMENTED / AWAITING REVIEW — [target provisioning foundation](tasks/D10_05F_WEAR_TARGET_PROVISIONING_COORDINATOR.md)
-D10-05   Wear Final UX                               after tokens and reviewed Wear graph
->>>>>>> feature/d9-02-agent-sync
+D10-05F  Target provisioning foundation              MERGED PR #40 / 6f7071239df3addf6fbc2031aa8baf556d3c4f13
+D10-05   Wear Final UX                               IN PROGRESS; consuming merged target provisioning foundation
 D10-06   Accessibility / Visual Regression / Final Acceptance
 ```
 
