@@ -20,6 +20,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":shared:ui"))
     implementation(project(":shared:domain"))
     implementation(project(":shared:application"))
     implementation(project(":shared:database"))

@@ -292,7 +292,7 @@ does not approve production-sensitive-data release or implicitly resolve OD-012.
 # D10 — Final Product UI / UX
 
 Status: **D10-00 FROZEN / MAINTAINER APPROVED / MERGED `f8efbde`; D10-00A MERGED
-`dfb9652`; D10-01 MERGED PR #32 `19d6a077`; D10-02 MERGED PR #33 `cda86a81`; D10-03 MERGED PR #35 cdc8504527cc636f5d2932b7e00785f4be9ecaad; D10-04 IMPLEMENTED / AWAITING REVIEW; D10-05/06 unstarted**.
+`dfb9652`; D10-01 MERGED PR #32 `19d6a077`; D10-02 MERGED PR #33 `cda86a81`; D10-03 MERGED PR #35 cdc8504527cc636f5d2932b7e00785f4be9ecaad; D10-04 MERGED PR #37 93a2aab9714a729ed2f53e60e0077372a237cbf7; D10-05 IMPLEMENTED / AWAITING REVIEW; D10-06 unstarted**.
 
 D10-02 originally exposed a Room aggregate observation FOUNDATION_GAP. The
 separate [D10-02F correction](tasks/D10_02F_ROOM_AGGREGATE_SNAPSHOT_FIX.md) is
@@ -307,9 +307,9 @@ the canonical Planner / Settings editor consumes the optimistic ordinary User
 Save; FG-01 is resolved. FG-02 typed conflict candidates and FG-03 complete pairing
 orchestration are DEFERRED / NON-BLOCKING. FG-04 richer directional progress is
 DEFERRED / NON-BLOCKING OPTIONAL CAPABILITY. OD-012 OPEN remains independent.
-D10-04 [IMPLEMENTED / AWAITING REVIEW](tasks/D10_04_AGENT_PRODUCT_SURFACE.md);
+D10-04 MERGED PR #37 at `93a2aab9714a729ed2f53e60e0077372a237cbf7` ([accepted Agent surface](tasks/D10_04_AGENT_PRODUCT_SURFACE.md));
 ContextAnchor foundation is RESOLVED via D10-04F MERGED PR #38 `17fd6e7ef117cdb899b7e2f28d3a1a8bf13a58ed`.
-D10-04 consumes the reviewed ephemeral typed entry; D10-05/06 unstarted.
+D10-04 consumes the reviewed ephemeral typed entry. [D10-05 Wear Final UX](tasks/D10_05_WEAR_FINAL_UX.md) is IMPLEMENTED / AWAITING REVIEW; target provisioning is RESOLVED via D10-05F MERGED PR #40 `6f7071239df3addf6fbc2031aa8baf556d3c4f13`. D10-06 unstarted.
 
 D10 turns the completed product capabilities from D5-D9 into the final coherent cross-platform product experience. It is the first milestone whose acceptance explicitly includes final visual language and complete product-level interaction polish.
 
@@ -343,9 +343,9 @@ D10-01   Design System + App Shell                   MERGED PR #32 / 19d6a077; a
 D10-02   Today / Calendar / Tasks / Academic          MERGED PR #33 cda86a81; D10-02F resolved/merged
 D10-03   Planner / History / Sync / Settings          MERGED PR #35 cdc85045; FG-01 resolved via PR #36
 D10-04F  ContextAnchor foundation                    MERGED PR #38 17fd6e7ef117cdb899b7e2f28d3a1a8bf13a58ed
-D10-04   Agent Product Surface                       IMPLEMENTED / AWAITING REVIEW; ContextAnchor foundation consumed
-D10-05F IMPLEMENTED / AWAITING REVIEW — [target provisioning foundation](tasks/D10_05F_WEAR_TARGET_PROVISIONING_COORDINATOR.md)
-D10-05   Wear Final UX                               after tokens and reviewed Wear graph
+D10-04   Agent Product Surface                       MERGED PR #37 / 93a2aab9714a729ed2f53e60e0077372a237cbf7
+D10-05F  Target provisioning foundation              MERGED PR #40 / 6f7071239df3addf6fbc2031aa8baf556d3c4f13
+D10-05   Wear Final UX                               IMPLEMENTED / AWAITING REVIEW; merged target provisioning foundation consumed
 D10-06   Accessibility / Visual Regression / Final Acceptance
 ```
 

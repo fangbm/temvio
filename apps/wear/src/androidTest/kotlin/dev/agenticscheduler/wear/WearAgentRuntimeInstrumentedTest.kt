@@ -13,6 +13,7 @@ import androidx.wear.compose.material3.MaterialTheme
 import dev.agenticscheduler.agent.history.*
 import dev.agenticscheduler.agent.permission.*
 import dev.agenticscheduler.application.history.MutationWallClock
+import dev.agenticscheduler.application.history.ConflictAwareSourceFactReadService
 import dev.agenticscheduler.application.id.*
 import dev.agenticscheduler.agent.runtime.AgentClock
 import dev.agenticscheduler.application.sync.*
@@ -24,6 +25,7 @@ import dev.agenticscheduler.domain.task.*
 import dev.agenticscheduler.domain.id.TaskId
 import kotlin.time.Duration.Companion.ZERO
 import dev.agenticscheduler.wear.agent.*
+import dev.agenticscheduler.wear.presentation.*
 import dev.agenticscheduler.wear.capability.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
@@ -53,6 +55,9 @@ class WearAgentRuntimeInstrumentedTest {
     private val renderedAgent = mutableStateOf<WearAgentRuntimeComposition?>(null)
     private val renderedConfig = mutableStateOf<ProviderConfig?>(null)
     private var rendered = false
+    private val navigation = WearNavigation(WearDestination.AGENT)
+    private val renderedDark = mutableStateOf(true)
+    private val rootReads = mutableStateOf<ConflictAwareSourceFactReadService?>(null)
     private val cleanupReferences = mutableListOf<SecretReference>()
     private var nextIdEpoch = 1_800_000_000_000L
     private var nextEventEpoch = 1_800_000_000_000L
@@ -104,21 +109,26 @@ class WearAgentRuntimeInstrumentedTest {
             val current = requireNotNull(renderedAgent.value)
             val state by current.session.ui.collectAsState()
             val readiness by current.readiness.readiness.collectAsState()
-            MaterialTheme { WearAgentScreen(state, readiness, renderedConfig.value, current.session::editDraft,
+            WearProductTheme(renderedDark.value) {
+                val reads = rootReads.value
+                if (reads != null) WearApp(reads,current,true,false,false,{},null,{})
+                else WearAgentScreen(state, readiness, renderedConfig.value, current.session::editDraft,
                 { scope.launch { current.session.submitFromUserAction() } }, { scope.launch { current.session.newConversationFromUserAction() } },
                 { call, preview, approve -> scope.launch { current.session.confirmFromUserAction(call, preview, approve) } },
                 current.readiness.settings::setAiEntryFromExplicitUserAction, { scope.launch { current.readiness.refresh(true) } },
                 { current.readiness.capability.useSpeechFromExplicitUserAction(current.session::speechCandidate) }, current.readiness.capability::cancel,
-                current.readiness.capability::selectLanguageFromUserAction) }
+                current.readiness.capability::selectLanguageFromUserAction, navigation = navigation, onLeaveForeground = current.session::cancelForegroundRequest) }
         }
     }
+    private fun scroll(page: String, tag: String) { compose.onNodeWithTag(page).performScrollToNode(hasTestTag(tag)) }
     private fun send(text: String) {
-        compose.onNodeWithTag("agent-input").performScrollTo().performTextReplacement(text)
-        compose.onNodeWithTag("agent-send").performScrollTo().performClick()
+        scroll("wear-agent", "agent-input"); compose.onNodeWithTag("agent-input").performTextReplacement(text)
+        scroll("wear-agent", "agent-send"); compose.onNodeWithTag("agent-send").performClick()
         compose.waitUntil(20000) { !agent.session.ui.value.busy && agent.session.ui.value.messages.any { it.role == AgentMessageRole.USER && it.content == text } }
     }
     private fun confirm(approved: Boolean) {
-        compose.onNodeWithTag(if (approved) "agent-confirm" else "agent-deny").performScrollTo().performClick()
+        compose.waitUntil(15000) { navigation.confirmation != null }; val tag = if (approved) "agent-confirm" else "agent-deny"
+        scroll("wear-confirmation", tag); compose.onNodeWithTag(tag).performClick()
         compose.waitUntil(20000) { !agent.session.ui.value.busy && agent.session.ui.value.pending == null }
     }
     private suspend fun reopen() {
@@ -150,6 +160,66 @@ class WearAgentRuntimeInstrumentedTest {
         assertFalse(fixture.bodies.any { it.contains("SecretRef") || it.contains("credential_secret_ref") || it.contains("bindingDigest") })
     }
 
+    @Test fun pendingReviewLaterStatusThemeAndNativeBackKeepExactPersistedAction() = runBlocking {
+        send("create task")
+        val pending = requireNotNull(agent.session.ui.value.pending)
+        val count = fixture.commandRequests
+        compose.waitUntil(15000) { navigation.confirmation != null }
+        compose.runOnIdle { renderedDark.value = false }
+        scroll("wear-confirmation", "confirmation-later"); compose.onNodeWithTag("confirmation-later").performClick()
+        assertNull(navigation.confirmation)
+        scroll("wear-agent", "open-status"); compose.onNodeWithTag("open-status").performClick()
+        scroll("wear-status", "wear-back"); compose.onNodeWithTag("wear-back").performClick()
+        assertEquals(pending, agent.state.toolCalls(pending.threadId).single())
+        scroll("wear-agent", "review-pending"); compose.onNodeWithTag("review-pending").performClick()
+        compose.waitUntil(15000) { navigation.confirmation?.id == pending.id }
+        // Fence the replacement page and native queue before injecting system Back.
+        compose.onNodeWithTag("wear-confirmation").assertExists()
+        compose.waitForIdle()
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK)
+        compose.waitUntil(15000) { navigation.confirmation == null }
+        assertEquals(pending, agent.state.toolCalls(pending.threadId).single())
+        assertEquals(count, fixture.commandRequests)
+        assertTrue(RoomMutationJournalRepository(database).timeline().isEmpty())
+        scroll("wear-agent", "review-pending"); compose.onNodeWithTag("review-pending").performClick()
+        assertEquals(pending.previewJson, navigation.confirmation?.previewJson)
+        confirm(false)
+        assertEquals(AgentToolResultStatus.PERMISSION_DENIED, agent.session.ui.value.results.single().status)
+        assertTrue(RoomMutationJournalRepository(database).timeline().isEmpty())
+    }
+    @Test fun speechCandidateUpdatesOnlyExistingDraftAndNeverSendsOrConfirms() = runBlocking {
+        val before=fixture.commandRequests
+        agent.session.speechCandidate(SpeechCandidateResult.TextCandidate("Editable speech candidate"))
+        assertEquals("Editable speech candidate",agent.session.ui.value.draft)
+        assertEquals(before,fixture.commandRequests)
+        assertEquals(0,permissionRequests)
+        assertTrue(agent.session.ui.value.messages.isEmpty())
+        assertTrue(agent.session.ui.value.calls.isEmpty())
+        assertTrue(RoomMutationJournalRepository(database).timeline().isEmpty())
+    }
+    @Test fun actualWearRootStartsTodayAndNavigationKeepsDraftWithoutSending() = runBlocking {
+        val before=fixture.commandRequests
+        compose.runOnIdle { rootReads.value=ConflictAwareSourceFactReadService(RoomEventRepository(database),RoomTaskRepository(database),
+            RoomPlanningProfileRepository(database),RoomAcademicRepository(database),d8.sourceFacts) }
+        compose.waitUntil(15000) {compose.onAllNodesWithTag("wear-today").fetchSemanticsNodes().isNotEmpty()}
+        scroll("wear-today","today-agent");compose.onNodeWithTag("today-agent").performClick()
+        compose.waitUntil(15000) {compose.onAllNodesWithTag("wear-agent").fetchSemanticsNodes().isNotEmpty()}
+        scroll("wear-agent","agent-input");compose.onNodeWithTag("agent-input").performTextReplacement("Unsent root draft")
+        scroll("wear-agent","open-status");compose.onNodeWithTag("open-status").performClick()
+        scroll("wear-status","wear-back");compose.onNodeWithTag("wear-back").performClick()
+        assertEquals("Unsent root draft",agent.session.ui.value.draft)
+        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK)
+        compose.waitUntil(15000) {compose.onAllNodesWithTag("wear-today").fetchSemanticsNodes().isNotEmpty()}
+        assertEquals(before,fixture.commandRequests);assertEquals(0,permissionRequests)
+        scroll("wear-today","today-agent");compose.onNodeWithTag("today-agent").performClick()
+        compose.waitUntil(15000) {compose.onAllNodesWithTag("wear-agent").fetchSemanticsNodes().isNotEmpty()}
+        assertEquals("Unsent root draft",agent.session.ui.value.draft)
+        send("read tasks")
+        assertTrue(agent.session.ui.value.messages.any {it.role==AgentMessageRole.USER && it.content=="read tasks"})
+        assertTrue(RoomMutationJournalRepository(database).timeline().isEmpty())
+    }
+
     @Test fun unsupportedStructuredProbeAllowsExplicitChatWithZeroToolSchemasOrMutations() = runBlocking {
         fixture.probeSupported = false
         agent.readiness.refresh(true)
@@ -157,7 +227,7 @@ class WearAgentRuntimeInstrumentedTest {
         val snapshot = requireNotNull(agent.readiness.requestSnapshot())
         assertEquals(dev.agenticscheduler.agent.provider.ProviderProbeResult.Unsupported, agent.readiness.structuredCapability(snapshot))
         assertEquals(WearProviderRuntimeState.READY, agent.readiness.readiness.value.runtimeState)
-        compose.onNodeWithTag("chat-only").performScrollTo().assertTextContains("Chat-only · structured Tools unavailable")
+        scroll("wear-agent", "chat-only"); compose.onNodeWithTag("chat-only").assertTextContains("Chat only. Actions are unavailable with this Provider.")
         val probes = fixture.probeRequests
         val firstBody = fixture.bodies.size
         for (prompt in listOf("normal chat", "create a task", "update the task")) {
@@ -187,7 +257,7 @@ class WearAgentRuntimeInstrumentedTest {
             assertEquals(WearProviderRuntimeState.PROVIDER_UNAVAILABLE, agent.readiness.readiness.value.runtimeState)
             assertNull(agent.readiness.requestSnapshot())
             agent.session.editDraft("create task despite HTTP $status")
-            compose.onNodeWithTag("agent-send").performScrollTo().assertIsNotEnabled()
+            scroll("wear-agent", "agent-send"); compose.onNodeWithTag("agent-send").assertIsNotEnabled()
             val requests = fixture.commandRequests
             agent.session.submitFromUserAction()
             assertEquals(requests, fixture.commandRequests)
@@ -197,7 +267,7 @@ class WearAgentRuntimeInstrumentedTest {
         assertEquals(WearProviderRuntimeState.OFFLINE, agent.readiness.readiness.value.runtimeState)
         assertNull(agent.readiness.requestSnapshot())
         agent.session.editDraft("create task despite network loss")
-        compose.onNodeWithTag("agent-send").performScrollTo().assertIsNotEnabled()
+        scroll("wear-agent", "agent-send"); compose.onNodeWithTag("agent-send").assertIsNotEnabled()
         val requests = fixture.commandRequests
         agent.session.submitFromUserAction()
         assertEquals(requests, fixture.commandRequests)
@@ -314,7 +384,7 @@ class WearAgentRuntimeInstrumentedTest {
         agent.state.saveProviderConfig(config)
         agent.approveCredentialFreeFromUserAction(config, WearEndpointRoute.EXPLICIT_CREDENTIAL_FREE_LOCAL)
         awaitReady(); renderedConfig.value = config
-        compose.onNodeWithTag("http-warning").performScrollTo().assertTextContains("请求内容可能通过未加密 HTTP 传输")
+        scroll("wear-agent", "http-warning"); compose.onNodeWithTag("http-warning").assertTextContains("Requests may travel unencrypted over HTTP.")
         send("read tasks")
         assertEquals(AgentToolResultStatus.SUCCESS, agent.session.ui.value.results.single().status)
         assertTrue(fixture.authorizationHeaders.all { it == null })

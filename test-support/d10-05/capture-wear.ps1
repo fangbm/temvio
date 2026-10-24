@@ -1,0 +1,55 @@
+param([string]$Serial='emulator-5556',[string]$Sdk='C:\ProgramData\Android')
+$ErrorActionPreference='Stop'
+$adb=Join-Path $Sdk 'platform-tools\adb.exe'
+function Adb { & $adb -s $Serial @args; if($LASTEXITCODE -ne 0){throw "adb failed: $args"} }
+if((Adb shell getprop ro.boot.qemu).Trim() -ne '1'){throw 'Wear emulator required'}
+if(-not ((Adb shell pm list features) -match 'android.hardware.type.watch')){throw 'Watch feature required'}
+New-Item -ItemType Directory -Force build/d10-05/logs,build/d10-05/wear-captures | Out-Null
+$size=(Adb shell wm size) -join "`n"
+$density=(Adb shell wm density) -join "`n"
+if($size -match 'Override size:' -or $density -match 'Override density:'){throw 'Use a physical round AVD profile without wm overrides'}
+$dp=if($size -match '384x384'){192}elseif($size -match '454x454'){227}else{throw 'Expected physical 384 or 454 round profile'}
+if($density -notmatch 'Physical density: 320'){throw 'Expected profile density 320'}
+$originalFont=(Adb shell settings get system font_scale).Trim()
+$battery=(Adb shell dumpsys battery) -join "`n"
+if($battery -notmatch '(?m)^\s*AC powered: (true|false)\s*$'){throw 'Cannot snapshot emulator charger state'}
+$originalAc=if($Matches[1] -eq 'true'){'on'}else{'off'}
+if($battery -notmatch '(?m)^\s*status: ([1-5])\s*$'){throw 'Cannot snapshot emulator battery status'}
+$originalStatus=@{'1'='unknown';'2'='charging';'3'='discharging';'4'='not-charging';'5'='full'}[$Matches[1]]
+try {
+    # A cold Wear image can launch ChargingContainerActivity over the test host.
+    Adb emu power ac off
+    Adb emu power status discharging
+    Adb shell input keyevent KEYCODE_WAKEUP
+    $drained=$false
+    for($i=0;$i -lt 20;$i++){
+        $top=(Adb shell dumpsys activity activities | Select-String 'topResumedActivity|mResumedActivity') -join "`n"
+        if($top -and $top -notmatch '\bCharging(?:Container)?Activity\b'){$drained=$true;break}
+        Start-Sleep -Seconds 1
+    }
+    if(-not $drained){throw 'Wear charging overlay did not leave the foreground'}
+    foreach($spec in @(@($dp,0,'1.0'),@($dp,0,'2.0'))){
+        Adb shell am force-stop dev.agenticscheduler.wear
+        Adb shell settings put system font_scale $spec[2]
+        Start-Sleep -Seconds 2
+        $log=Adb shell am instrument -w -r -e class 'dev.agenticscheduler.wear.WearFinalUxInstrumentedTest#actualWearD10FinalScreenshotCandidates' -e captureWidth $spec[0] -e captureFont $spec[2] dev.agenticscheduler.wear.test/androidx.test.runner.AndroidJUnitRunner
+        $log | Set-Content -Encoding utf8 "build/d10-05/logs/wear-$($spec[0])-font$($spec[2]).txt"
+        if(-not ($log -match 'OK \(1 test\)')){throw ($log -join "`n")}
+        if($spec[2] -eq '2.0') {
+            $checks='dev.agenticscheduler.wear.WearFinalUxInstrumentedTest#todayAgentStatusRetryAndOverflowAreReachableAndPassive,dev.agenticscheduler.wear.WearFinalUxInstrumentedTest#exactConfirmationBackThemeAndRecompositionAreNotDecisions,dev.agenticscheduler.wear.WearCredentialSetupInstrumentedTest#sourceRequestUnconfirmedRetryAndFetchAreOnlyExplicit,dev.agenticscheduler.wear.WearCredentialSetupInstrumentedTest#separateSendingCodeAndExplicitInstallAndAckRetry,dev.agenticscheduler.wear.WearCredentialSetupInstrumentedTest#recoveryAndInstalledCopyHaveReachableSafeActionsWithoutSecretFields'
+            $scaled=Adb shell am instrument -w -r -e class $checks dev.agenticscheduler.wear.test/androidx.test.runner.AndroidJUnitRunner
+            $scaled | Set-Content -Encoding utf8 "build/d10-05/logs/scaled-actions-$($spec[0]).txt"
+            if(-not ($scaled -match 'OK \(5 tests\)')){throw ($scaled -join "`n")}
+        }
+    }
+    Adb pull /sdcard/Android/data/dev.agenticscheduler.wear/files/d10-05-screenshots build/d10-05/wear-captures/
+    Adb logcat -d -s D1005Evidence:I | Set-Content -Encoding utf8 "build/d10-05/platform-evidence-$dp.txt"
+} catch {
+    Adb shell dumpsys activity activities | Select-String 'topResumedActivity|mResumedActivity' | Set-Content -Encoding utf8 "build/d10-05/logs/failed-activity-$dp.txt"
+    Adb logcat -d -s ActivityTaskManager:I | Set-Content -Encoding utf8 "build/d10-05/logs/failed-lifecycle-$dp.txt"
+    throw
+} finally {
+    if($originalFont -eq 'null'){Adb shell settings delete system font_scale}else{Adb shell settings put system font_scale $originalFont}
+    Adb emu power status $originalStatus
+    Adb emu power ac $originalAc
+}

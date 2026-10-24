@@ -189,8 +189,10 @@ jobs:
             python test-support/d10-03/check-boundaries.py --source-only
             python test-support/d10-03/check-candidates.py --source-revision cdc8504527cc636f5d2932b7e00785f4be9ecaad
             python test-support/d10-04/check-boundaries.py --source-only
-            python test-support/d10-05f/check-boundaries.py
+            python test-support/d10-05f/check-boundaries.py --source-only
             python test-support/d10-04/check-candidates.py
+            python test-support/d10-05/check-boundaries.py
+            python test-support/d10-05/check-candidates.py
       - name: Upload Windows presentation candidates and reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -293,9 +295,32 @@ jobs:
           system-image-api-level: 35-ext15
           target: android-wear
           arch: x86_64
+          profile: wearos_small_round
           script: |
+            # Dedicated Wear AVD: prevent the system charging overlay from covering native tests.
+            adb emu power ac off
+            adb emu power status discharging
             ./gradlew :apps:wear:connectedDebugAndroidTest --no-daemon
             adb logcat -d -s D90302Evidence:I > apps/wear/build/d90302-platform-evidence.txt
+            # UTP removes installed APKs after connected tests; install the built fixtures for capture.
+            adb install -r apps/wear/build/outputs/apk/debug/wear-debug.apk
+            adb install -r apps/wear/build/outputs/apk/androidTest/debug/wear-debug-androidTest.apk
+            bash test-support/d10-05/capture-wear.sh
+      - name: Capture large round Wear presentation candidates
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          system-image-api-level: 35-ext15
+          target: android-wear
+          arch: x86_64
+          profile: wearos_large_round
+          avd-name: d10-05-large
+          script: |
+            adb emu power ac off
+            adb emu power status discharging
+            adb install -r apps/wear/build/outputs/apk/debug/wear-debug.apk
+            adb install -r apps/wear/build/outputs/apk/androidTest/debug/wear-debug-androidTest.apk
+            bash test-support/d10-05/capture-wear.sh
       - name: Upload Wear provisioning reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -304,5 +329,6 @@ jobs:
           path: |
             apps/wear/build/outputs/androidTest-results/connected/**/TEST-*.xml
             apps/wear/build/d90302-platform-evidence.txt
+            build/d10-05/
           if-no-files-found: warn
           retention-days: 14

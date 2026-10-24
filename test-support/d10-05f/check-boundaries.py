@@ -3,6 +3,7 @@ from pathlib import Path
 from urllib.parse import unquote
 import re
 import subprocess
+import sys
 
 root = Path(__file__).resolve().parents[2]
 base = '93a2aab9714a729ed2f53e60e0077372a237cbf7'
@@ -19,6 +20,16 @@ allowed = {
 changed = set(subprocess.check_output(['git', 'diff', '--name-only', base], cwd=root, text=True).splitlines())
 changed.update(subprocess.check_output(['git', 'ls-files', '--others', '--exclude-standard'], cwd=root, text=True).splitlines())
 errors = ['D10-05F scope fence: ' + name for name in sorted(changed - allowed)]
+if '--source-only' in sys.argv:
+    accepted = '6f7071239df3addf6fbc2031aa8baf556d3c4f13'
+    protected = [name for name in allowed if name.endswith('.kt')]
+    for name in protected:
+        expected = subprocess.check_output(['git', 'rev-parse', accepted + ':' + name], cwd=root, text=True).strip()
+        actual = subprocess.check_output(['git', 'hash-object', '--path=' + name, name], cwd=root, text=True).strip()
+        if actual != expected:
+            raise SystemExit('Accepted D10-05F semantic source/test changed: ' + name)
+    print('D10-05F accepted coordinator, Wear composition and regression test blob identities PASS; current slice owns diff/status')
+    raise SystemExit(0)
 for name in ('docs/tasks/D10_05F_WEAR_TARGET_PROVISIONING_COORDINATOR.md', 'docs/ROADMAP_D5_D9.md'):
     path = root / name
     content = path.read_text(encoding='utf-8')
